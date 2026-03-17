@@ -105,6 +105,9 @@ Both tools must use the same architecture for a fair comparison. FINN is the lim
 - MLP `small` [128, 64]
 - CNN `small` [16, 32]
 
+To add a new size configuration, edit the `configs` dict in `models/mlp.py` or
+`models/cnn.py` and give it a name. Then pass that name with `--size` when training.
+
 ## Vitis AI Pipeline (Overlay)
 
 > Commands below assume the project is mounted at `/workspace/project` (see setup above).

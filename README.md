@@ -89,15 +89,14 @@ See `docs/workflow.md` for full instructions including Docker setup, mounting, a
 - FINN pipeline working through compilation (MLP tiny and CNN tiny bitstreams generated)
 - Benchmark infrastructure with automated power measurement and JSON output
 
-### In Progress
+### TODO
 - FINN deployment to board and benchmarking
 - Finding largest model that fits both tools for direct comparison
 - CNN deployment through both tools
 
-### TODO
 - Vitis AI results for tiny models (to match FINN for head-to-head comparison)
 - FINN side of benchmark.py (different inference API than Vitis AI)
-- Transformer deployment via FINN-T/FINN+ (stretch goal)
+- Transformer deployment via FINN-T/FINN+
 - Full ablation studies with benchmarks for comparison
 
 ## References

@@ -12,7 +12,8 @@ MNIST/
 cifar-10-batches-py/
 
 # repos
-finn-repo/ # NOTE original is finn/ -- renamed upon clone to avoid naming collision
+# NOTE original is finn/ -- renamed upon clone to avoid naming collision
+finn-repo/
 Vitis-AI/
 
 # Vitis AI generated
