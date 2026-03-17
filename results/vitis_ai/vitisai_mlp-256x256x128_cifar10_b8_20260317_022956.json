@@ -1,0 +1,105 @@
+{
+  "config": {
+    "model_path": "/home/ubuntu/models/vitis_ai/mlp_cifar10_b8.xmodel",
+    "dataset": "cifar10",
+    "batch_size": 8,
+    "num_runs": 5,
+    "num_images": 10000,
+    "image_shape": [
+      3,
+      32,
+      32
+    ],
+    "dpu_input_shape": [
+      1,
+      64,
+      8,
+      48
+    ],
+    "dpu_output_shape": [
+      1,
+      8,
+      1,
+      10
+    ],
+    "timestamp": "2026-03-17T02:29:30.674095",
+    "board": "KV260",
+    "dpu": "DPUCZDX8G_ISA1_B4096"
+  },
+  "idle_power": {
+    "mean": 4.477200000000001,
+    "std": 0.04745692783988449,
+    "n_samples": 500
+  },
+  "runs": [
+    {
+      "run": 1,
+      "accuracy": 50.91,
+      "time_s": 1.121678352355957,
+      "throughput_fps": 8915.211726245892,
+      "latency_ms": 0.1121678352355957,
+      "avg_power_w": 5.045384615384616,
+      "energy_total_j": 5.659298702386709,
+      "energy_per_image_mj": 0.5659298702386709,
+      "power_samples": 104
+    },
+    {
+      "run": 2,
+      "accuracy": 50.91,
+      "time_s": 1.1015679836273193,
+      "throughput_fps": 9077.968993862101,
+      "latency_ms": 0.11015679836273193,
+      "avg_power_w": 5.0502912621359215,
+      "energy_total_j": 5.563239162361737,
+      "energy_per_image_mj": 0.5563239162361737,
+      "power_samples": 103
+    },
+    {
+      "run": 3,
+      "accuracy": 50.91,
+      "time_s": 1.1158742904663086,
+      "throughput_fps": 8961.58293585305,
+      "latency_ms": 0.11158742904663085,
+      "avg_power_w": 5.063846153846153,
+      "energy_total_j": 5.6506157339536225,
+      "energy_per_image_mj": 0.5650615733953622,
+      "power_samples": 104
+    },
+    {
+      "run": 4,
+      "accuracy": 50.91,
+      "time_s": 1.1017866134643555,
+      "throughput_fps": 9076.167633364985,
+      "latency_ms": 0.11017866134643554,
+      "avg_power_w": 5.0479611650485445,
+      "energy_total_j": 5.561776036938419,
+      "energy_per_image_mj": 0.5561776036938418,
+      "power_samples": 103
+    },
+    {
+      "run": 5,
+      "accuracy": 50.91,
+      "time_s": 1.1076092720031738,
+      "throughput_fps": 9028.45457578595,
+      "latency_ms": 0.11076092720031738,
+      "avg_power_w": 5.055631067961164,
+      "energy_total_j": 5.599663846701093,
+      "energy_per_image_mj": 0.5599663846701093,
+      "power_samples": 103
+    }
+  ],
+  "summary": {
+    "accuracy": 50.91,
+    "throughput_fps_mean": 9011.877173022396,
+    "throughput_fps_std": 64.26495351014,
+    "latency_ms_mean": 0.11097033023834228,
+    "latency_ms_std": 0.0007933791700087785,
+    "idle_power_w": 4.477200000000001,
+    "idle_power_std": 0.04745692783988449,
+    "avg_power_w_mean": 5.052622852875279,
+    "avg_power_w_std": 0.006550901822295973,
+    "dynamic_power_w": 0.5754228528752785,
+    "energy_per_image_mj_mean": 0.5606918696468316,
+    "energy_per_image_mj_std": 0.004159685170622454
+  }
+}
