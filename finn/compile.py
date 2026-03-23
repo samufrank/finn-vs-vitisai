@@ -14,7 +14,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--model', required=True, help='Path to ONNX model')
 parser.add_argument('--fps', type=int, default=1000, help='Target FPS')
 parser.add_argument('--output', default=None, help='Output directory')
-parser.add_argument('--board', default='KV260_SOM', help='Target board')
+parser.add_argument('--board', default='Ultra96', help='Target board')
+parser.add_argument('--fpga-part', default=None, help='Override FPGA part string (e.g. xczu3eg-sbva484-1-e)')
 args = parser.parse_args()
 
 output_dir = args.output or f"output_{args.model.replace('.onnx', '')}"
@@ -23,7 +24,8 @@ cfg = build_cfg.DataflowBuildConfig(
     output_dir=output_dir,
     target_fps=args.fps,
     synth_clk_period_ns=10.0,
-    board=args.board,
+    board=args.board if args.fpga_part is None else None,
+    fpga_part=args.fpga_part,
     shell_flow_type=build_cfg.ShellFlowType.VIVADO_ZYNQ,
     generate_outputs=[
         build_cfg.DataflowOutputType.ESTIMATE_REPORTS,

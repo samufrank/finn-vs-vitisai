@@ -17,6 +17,7 @@ import finn.builder.build_dataflow_config as build_cfg
 parser = argparse.ArgumentParser()
 parser.add_argument('--model', required=True, help='Path to ONNX model')
 parser.add_argument('--fps', type=int, default=1000, help='Target FPS')
+parser.add_argument('--board', default="Ultra96", help='Board to target (Ultra96 or KV260)')
 parser.add_argument('--output', default=None, help='Output directory')
 args = parser.parse_args()
 
@@ -26,7 +27,7 @@ cfg = build_cfg.DataflowBuildConfig(
     output_dir=output_dir,
     target_fps=args.fps,
     synth_clk_period_ns=10.0,
-    board="KV260_SOM",
+    board=args.board,
     shell_flow_type=build_cfg.ShellFlowType.VIVADO_ZYNQ,
     generate_outputs=[
         build_cfg.DataflowOutputType.ESTIMATE_REPORTS,
@@ -45,5 +46,9 @@ for report in ['estimate_layer_resources.json', 'estimate_network_performance.js
     except:
         pass
 
-print(f"\nKV260 limits: 288 BRAM18, 117120 LUTs, 1248 DSPs")
+board_limits = {
+    "Ultra96": "AUP-ZU3 limits: 432 BRAM18, 70560 LUTs, 360 DSPs",
+    "KV260_SOM": "KV260 limits: 288 BRAM18, 117120 LUTs, 1248 DSPs",
+}
+print(f"\n{board_limits.get(args.board, f'Board: {args.board}')}")
 print("WARNING: These are pre-HLS estimates. Actual usage may be significantly higher.")
