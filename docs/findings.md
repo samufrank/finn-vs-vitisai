@@ -1,6 +1,9 @@
 # Key Findings
 
-Observations and discoveries so far.
+> **March 2026 status:** Vitis AI results below are from the Kria KV260.
+> FINN results are from the AUP-ZU3. Board decision and full comparison pending
+> resolution of Vitis AI / XRT 2.17 incompatibility on the ZU3.
+> See troubleshooting.md for details.
 
 ## Vitis AI (Overlay) Observations
 

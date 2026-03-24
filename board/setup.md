@@ -2,150 +2,198 @@
 
 ## Hardware
 
-- **Board:** Kria KV260 Vision AI Starter Kit
-- **Chip:** K26 SoM (Zynq UltraScale+ MPSoC)
-- **DPU:** DPUCZDX8G_ISA1_B4096
-- **FPGA Resources:** ~1,248 DSPs, 288 BRAM18 (144 BRAM36), ~117K LUTs
+- **Board:** AUP-ZU3 (Real Digital)
+- **Chip:** XCZU3EG (Zynq UltraScale+ MPSoC), SFVC784 package
+- **PYNQ:** 3.1.1 (8GB image)
+- **Resources:** 360 DSPs, 432 BRAM18, ~70K LUTs
+- **DPU:** DPUCZDX8G_ISA1_B1600 (B2304 does not fit -- requires 437 DSPs)
 
 ## SD Card
 
-The SD card is pre-configured with:
-- Ubuntu 22.04 for Kria
-- Kria-PYNQ installed
-- Benchmark script, datasets, and model directories
+The SD card is configured with PYNQ 3.1.1 for AUP-ZU3 (8GB variant).
 
-Do not reflash the SD card unless something is broken. If you need to start fresh,
-download the Ubuntu 22.04 Kria image from https://ubuntu.com/download/amd and
-follow the Kria getting started guide, then install Kria-PYNQ:
-```bash
-git clone https://github.com/Xilinx/Kria-PYNQ.git
-cd Kria-PYNQ/
-sudo bash install.sh -b KV260
+To reflash from scratch:
+1. Download the AUP-ZU3 v3.1.1 8GB image from pynq.io/boards.html
+2. Flash with `dd` (unmount first):
+   ```bash
+   sudo umount /dev/sdX1
+   sudo dd if=AUP-ZU3-3.1.1-8gb.img of=/dev/sdX bs=4M status=progress conv=fsync
+   sudo eject /dev/sdX
+   ```
+3. Insert SD card, set BOOT switch to SD position, power on
+
+After reflashing, re-run the board setup steps below (pynq-dpu install, datasets, etc.)
+
+## Connecting to the Board
+
+The AUP-ZU3 has no ethernet port. Connection is via USB networking (RNDIS gadget).
+
+### Required cables
+- USB-C to USB-C (or USB-A): EXT PWR port --> power source (9V/3A USB PD)
+- USB-C to USB-A (or USB-C): USB 3.0 DRP port --> your computer (networking)
+
+### First time SSH setup
+Add to `~/.ssh/config` on your host machine to avoid host key errors:
+```
+Host 192.168.3.1
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    User xilinx
 ```
 
-## Connecting to the board
+After that, `ssh 192.168.3.1` is all you need.
 
-### Option 1: Ethernet (recommended)
-1. Plug the board into a router via ethernet cable
-2. Power on the board, wait ~60 seconds for boot
-3. Find the board's IP — check your router's DHCP clients, or scan:
-   ```bash
-   nmap -sn 192.168.0.0/24
-   ```
-4. SSH in:
-   ```bash
-   ssh ubuntu@<board_ip>
-   ```
-
-### Option 2: Serial console (terminal only, no file transfer)
-1. Connect a micro-USB data cable from the board's PROG UART port to your PC
-2. Find the device: `ls /dev/ttyUSB*`
-3. Connect:
-   ```bash
-   minicom -D /dev/ttyUSB1 -b 115200
-   ```
-4. Press Enter to get a login prompt
-
-You still need ethernet or USB networking to transfer files (scp).
+### SSH
+```bash
+ssh 192.168.3.1
+# password: xilinx
+```
 
 ## Credentials
 
-- **Username:** ubuntu
-- **Password:** kria2026!
+- **Username:** xilinx
+- **Password:** xilinx
 
-## Running Benchmarks
+## Network Setup (USB NAT)
 
-PYNQ requires root and the PYNQ virtual environment:
+The board needs internet access for pip installs. Run these scripts after each host reboot:
+
+**On host (once per host session):**
 ```bash
-sudo su
+bash board/host_nat_setup.sh
+```
+This auto-detects the USB interface (enx...) and sets up NAT through your internet connection.
+
+**On board (once per board boot, as root):**
+```bash
+sudo bash /home/xilinx/board_net_setup.sh
+```
+
+Note: The USB interface name (enx...) changes every time the board is reflashed or the host reboots. `host_nat_setup.sh` handles this automatically.
+
+## PYNQ Environment Setup
+
+PYNQ requires root and specific environment sourcing. Add to `/root/.bashrc` for automatic setup:
+```bash
+source /etc/profile.d/xrt_setup.sh
 source /etc/profile.d/pynq_venv.sh
 ```
 
-Then run benchmarks with absolute paths:
+After adding these lines, every `sudo su` will auto-source both. Without this, you'll need to run them manually each session.
+
+## Installing pynq-dpu
+
+> **Note:** Vitis AI deployment on the AUP-ZU3 is currently blocked due to XRT 2.17
+> incompatibility with pynq-dpu. See `docs/troubleshooting.md` for details.
+> These steps install the package but inference will fail at runtime.
+
 ```bash
-python3 /home/ubuntu/benchmark.py \
-  --model /home/ubuntu/models/vitis_ai/model_name.xmodel \
-  --name vitisai_mlp-64x32 \
-  --dataset mnist \
-  --batch 1 \
-  --runs 5
+sudo su
+source /etc/profile.d/xrt_setup.sh   # must source BEFORE pynq_venv
+source /etc/profile.d/pynq_venv.sh
+pip3 install pynq-dpu --no-build-isolation
 ```
 
-Results are saved as JSON to `/home/ubuntu/results/`.
+**Critical:** Source `xrt_setup.sh` before `pynq_venv.sh`, and use `--no-build-isolation`.
+Plain `pip install pynq-dpu` without these steps will fail.
 
 ## Board Directory Structure
 
 ```
-/home/ubuntu/
+/home/xilinx/
 ├── benchmark.py              # Main benchmarking script
+├── board_net_setup.sh        # Internet access setup script
 ├── models/
-│   ├── vitis_ai/             # Compiled xmodels go here
-│   └── finn/                 # FINN deployment packages go here
+│   ├── vitis_ai/             # Compiled xmodels + dpu.bit/hwh/xclbin
+│   └── finn/                 # FINN deployment packages
+│       └── <model_name>/
+│           └── deploy/
+│               ├── bitfile/  # .bit and .hwh
+│               ├── driver/   # Python driver files
+│               └── *.npy     # CPU layer weights (if partial hardware mapping)
 ├── results/                  # JSON benchmark results
-├── MNIST/                    # MNIST test dataset (pre-loaded)
-│   └── raw/
-├── cifar-10-batches-py/      # CIFAR-10 test dataset (pre-loaded)
-├── run_batch_ablation.sh     # Batch ablation script (currently MLP only, CIFAR-10)
-├── run_batch_ablation_mnist.sh
-└── archive/                  # Old iteration scripts, kept for reference
+├── MNIST/
+│   └── raw/                  # t10k-*.gz test files
+└── cifar-10-batches-py/
+    └── test_batch
 ```
 
 ## Transferring Files
 
 ### Copying models to the board
 ```bash
-# Vitis AI xmodel
-scp compiled/model_name.xmodel ubuntu@<board_ip>:~/models/vitis_ai/
-
 # FINN deployment package
-scp -r output_dir/deploy/ ubuntu@<board_ip>:~/models/finn/model_name/
+scp -r finn/output_<model>/deploy/ xilinx@192.168.3.1:~/models/finn/<model>/
+
+# CPU layer weights (if model has partial hardware mapping)
+scp finn/<prefix>_*.npy xilinx@192.168.3.1:~/models/finn/<model>/deploy/
+
+# Vitis AI xmodel
+scp vitis_ai/compiled/<model>.xmodel xilinx@192.168.3.1:~/models/vitis_ai/
+```
+
+Note: Create directories on the board before scp, or scp will fail:
+```bash
+ssh xilinx@192.168.3.1 "mkdir -p ~/models/finn/<model>"
 ```
 
 ### Copying results from the board
 ```bash
-scp ubuntu@<board_ip>:~/results/*.json $REPO_ROOT/results/vitis_ai/
+scp xilinx@192.168.3.1:~/results/*.json results/finn/
 ```
+
+## Running Benchmarks
+
+```bash
+sudo su
+# (xrt_setup.sh and pynq_venv.sh auto-source if added to /root/.bashrc)
+
+# FINN model
+python3 /home/xilinx/benchmark.py \
+  --toolchain finn \
+  --model /home/xilinx/models/finn/mlp_mnist_tiny/deploy \
+  --name finn_mlp-64x32 \
+  --dataset mnist --runs 5
+
+# Vitis AI model (currently blocked on ZU3 — see troubleshooting.md)
+cd /home/xilinx/models/vitis_ai   # dpu.bit must be in current directory
+python3 /home/xilinx/benchmark.py \
+  --toolchain vitis_ai \
+  --model /home/xilinx/models/vitis_ai/mlp_mnist_tiny.xmodel \
+  --name vitisai_mlp-64x32 \
+  --dataset mnist --runs 5
+```
+
+The `--name` flag controls the result filename. Use the format `{tool}_{arch}-{sizes}`:
+- `finn_mlp-64x32`
+- `vitisai_mlp-64x32`
+- `finn_cnn-8x16`
 
 ## Power Measurement
 
-The board has an INA260 power sensor that measures total board power.
-The benchmark script reads it automatically via sysfs at ~100 Hz:
-```
-/sys/class/hwmon/hwmon2/power1_input
-```
-Value is in microwatts. This measures total board power (PS + PL + memory + I/O),
-not just the FPGA fabric.
+The AUP-ZU3 has no on-board power monitor IC (no INA260). Power is measured via:
 
-If the hwmon number changes after a reboot, the benchmark script auto-discovers it
-by scanning for the ina260 sensor name.
+- **External:** FNB58 USB power meter inline on the EXT PWR USB-C port (100Hz sampling)
+- **On-chip SYSMON:** PS/PL temperature and supply voltages via `/sys/bus/iio/devices/iio:device0`
+  - `in_temp7`: PS die temperature
+  - `in_temp8`: PL die temperature
+  - `in_voltage6`: VCCINT (PL core, ~0.84V)
+  - `in_voltage9`: VCCBRAM (~0.84V)
+  - `in_voltage11`: VCCAUX (PL aux, ~1.8V)
+
+benchmark.py logs SYSMON data automatically. FNB58 integration is pending.
 
 ## Shutting Down
 
-Shut down cleanly to avoid SD card corruption:
 ```bash
 sudo shutdown -h now
 ```
 
 ## Troubleshooting
 
-### DPU locked
-If you see `waiting for process to release the resource: DPU_0`, a previous
-process still holds the DPU:
-```bash
-sudo pkill -f jupyter
-sudo pkill -f python3
-```
+See `docs/troubleshooting.md` for common issues. Key ones specific to this board:
 
-### pynq_dpu not found
-You're not in the PYNQ venv:
-```bash
-sudo su
-source /etc/profile.d/pynq_venv.sh
-```
-
-### Can't find board on network
-- Make sure the board has finished booting (~60 seconds)
-- Check that the ethernet cable is plugged in and the link light is on
-- Try `nmap -sn` on your subnet
-- As a fallback, use serial console to check the board's IP: `ip addr`
-
+- **XRT 2.17 / pynq-dpu incompatibility:** Vitis AI inference fails with `undefined symbol: xclProbe`. Known open issue, no current fix.
+- **i2c bus 3 hangs:** Never run `i2cdetect -y 3` — it hangs uninterruptibly until power cycle.
+- **USB interface name changes:** The `enx...` interface name changes on every host reboot. Use `host_nat_setup.sh` which detects it automatically.
+- **DPU resource locked:** `sudo pkill -f python3` to release.

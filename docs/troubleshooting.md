@@ -150,3 +150,55 @@ with open(power_file) as f:
 **Cause:** Kria-PYNQ installs libvart 2.5.0, but apt has vitis-ai-runtime 2.0.
 **Impact:** Cannot install `libvart-cpu-runner.so` for automatic multi-subgraph routing.
 **Workaround:** Handle CPU subgraph operations (reshapes) manually in numpy. The DPU handles all real compute; CPU subgraphs are just data reformatting.
+
+
+## AUP-ZU3 Specific
+
+### Vitis AI fails with "undefined symbol: xclProbe"
+**Symptom:** `python3: symbol lookup error: /lib/libvart-buffer-object.so.2: undefined symbol: xclProbe`
+**Cause:** AUP-ZU3 PYNQ 3.1.1 ships with XRT 2.17. pynq-dpu 2.5.1 was built against XRT ≤2.15. AMD made `xclProbe` and related symbols private in XRT 2.17, breaking binary compatibility.
+**Status:** Known open issue (discuss.pynq.io/t/pynq-xrt-version-compatibility/7832). No fix available in current pynq-dpu release. Investigating alternative overlay architectures.
+
+### i2c bus 3 hangs the board
+**Symptom:** `i2cdetect -y 3` hangs indefinitely, Ctrl+C has no effect, board requires power cycle.
+**Cause:** Bus 3 is the PL-side i2c controller (xiic-i2c). Without a loaded bitstream that includes the i2c IP, the bus transaction never completes.
+**Fix:** Never run `i2cdetect -y 3`. Buses 0 and 1 are safe.
+
+### USB network interface name changes on every reboot
+**Symptom:** `Cannot find device "enxXXXXXX"` when running NAT setup commands.
+**Cause:** The USB gadget generates a new MAC address after reflashing or host reboot.
+**Fix:** Use `board/host_nat_setup.sh` which auto-detects the current interface name.
+
+### SSH "permission denied (publickey,password)"
+**Symptom:** `ssh xilinx@192.168.3.1` fails even with correct password.
+**Cause:** Stale host key in `~/.ssh/known_hosts` from a previous board image.
+**Fix:** 
+```bash
+ssh-keygen -R 192.168.3.1
+```
+Or add to `~/.ssh/config` to permanently skip host key checking for this address:
+```
+Host 192.168.3.1
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    User xilinx
+```
+
+### pynq-dpu install fails (build error)
+**Symptom:** `ERROR: Could not build wheels for pynq-dpu`
+**Fix:** Source XRT before pynq-venv, and use `--no-build-isolation`:
+```bash
+sudo su
+source /etc/profile.d/xrt_setup.sh
+source /etc/profile.d/pynq_venv.sh
+pip3 install pynq-dpu --no-build-isolation
+```
+
+### SYSMON / base overlay hangs process
+**Symptom:** Loading `BaseOverlay('base.bit')` then loading a custom bitfile causes mmio handles to become invalid, hanging the process uninterruptibly.
+**Fix:** Use the IIO sysfs interface instead for SYSMON data — no overlay loading required:
+```bash
+cat /sys/bus/iio/devices/iio:device0/in_temp8_raw   # PL temperature
+cat /sys/bus/iio/devices/iio:device0/in_voltage6_raw # VCCINT
+```
+benchmark.py uses this interface automatically.
