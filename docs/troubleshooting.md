@@ -202,3 +202,69 @@ cat /sys/bus/iio/devices/iio:device0/in_temp8_raw   # PL temperature
 cat /sys/bus/iio/devices/iio:device0/in_voltage6_raw # VCCINT
 ```
 benchmark.py uses this interface automatically.
+
+## VTA / TVM Setup (AUP-ZU3)
+
+### apache-tvm wheel not available for aarch64
+**Symptom:** `pip install apache-tvm` fails or installs a stub with no content.
+**Cause:** PyPI only hosts x86 wheels for apache-tvm. The aarch64 version must be built from source.
+**Fix:** Build TVM v0.12.0 from source:
+```bash
+cd /home/xilinx
+git clone --recursive https://github.com/apache/tvm tvm-src
+cd tvm-src
+git checkout v0.12.0
+git submodule update --recursive
+mkdir build
+cp cmake/config.cmake build/
+echo 'set(USE_VTA_FPGA ON)' >> build/config.cmake
+echo 'set(USE_LLVM OFF)' >> build/config.cmake
+echo 'set(USE_GTEST OFF)' >> build/config.cmake
+cd build
+cmake ..
+make runtime -j4 2>&1 | tee /home/xilinx/tvm_build.log &
+```
+Build takes ~20 minutes (if that) on the ARM cores.
+
+### `import vta` fails with ModuleNotFoundError
+**Symptom:** `ModuleNotFoundError: No module named 'vta'`
+**Cause 1:** If apache-tvm wheel is installed, it installs a stub vta namespace package that shadows the source.
+**Fix 1:** `pip3 uninstall apache-tvm`
+**Cause 2:** PYTHONPATH doesn't include the vta Python package. In TVM 0.12.0, VTA lives at `vta/python/vta`, not under `python/tvm`.
+**Fix 2:**
+```bash
+export PYTHONPATH=/home/xilinx/tvm-src/python:/home/xilinx/tvm-src/vta/python:$PYTHONPATH
+export LD_LIBRARY_PATH=/home/xilinx/tvm-src/build:$LD_LIBRARY_PATH
+```
+Add both exports to `/root/.bashrc` for persistence.
+
+### `import vta` succeeds but `dir(vta)` shows only dunder attributes
+**Symptom:** `vta.__file__` is None, `dir(vta)` shows `['__doc__', '__file__', ...]` only.
+**Cause:** Python is finding a namespace package instead of the real vta package. Either apache-tvm wheel is installed (see above) or PYTHONPATH points to `tvm-src/vta` instead of `tvm-src/vta/python`.
+**Fix:** Uninstall the wheel AND make sure PYTHONPATH includes `tvm-src/vta/python` not `tvm-src/vta`.
+
+### `PackageNotFoundError: No package metadata was found for apache-tvm-ffi`
+**Symptom:** Occurs when trying to import tvm built from the main branch (not v0.12.0).
+**Cause:** Recent TVM main branch split tvm-ffi into a separate submodule with broken package metadata on aarch64.
+**Fix:** Use v0.12.0 tag instead of main branch:
+```bash
+cd /home/xilinx/tvm-src
+git checkout v0.12.0
+git submodule update --recursive
+# rebuild
+```
+
+### VTA bitstream download fails with 404
+**Symptom:** `RuntimeError: https://github.com/uwsampl/vta-distro/.../ultra96/... is not available`
+**Cause:** vta-distro only hosts pre-built bitstreams for PYNQ-Z1/Z2. No Ultra96 bitstream is hosted.
+**Fix:** Generate the bitstream using the Chisel flow on your Ubuntu machine. See STATUS.md for the full procedure. Output goes to:
+`/root/.vta_cache/ultra96/0_0_2/1x16_i8w8a32_15_15_18_17.bit`
+
+### cmake GTest error during TVM build
+**Symptom:** `CMake Error: Neither GTest::GTest nor GTest::gtest targets defined IMPORTED_LOCATION`
+**Fix:**
+```bash
+echo 'set(USE_GTEST OFF)' >> /home/xilinx/tvm-src/build/config.cmake
+cd /home/xilinx/tvm-src/build
+cmake ..
+```

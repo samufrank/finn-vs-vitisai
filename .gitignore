@@ -2,17 +2,20 @@
 *.xmodel
 *.pth
 *.onnx
+*.npy
+
+# Bitstreams (track archived ones explicitly)
 *.bit
 *.hwh
-*.dtbo
+!bitstreams/*.bit
+!bitstreams/*.hwh
 
 # Datasets
 data/
 MNIST/
 cifar-10-batches-py/
 
-# repos
-# NOTE original is finn/ -- renamed upon clone to avoid naming collision
+# Repos (cloned locally, not part of this project)
 finn-repo/
 Vitis-AI/
 
@@ -25,6 +28,18 @@ output_*/
 estimate_*/
 /tmp/finn_dev_*/
 
+# Results data (reproducible from board)
+*.json
+*.csv
+!vitis_ai/arch_*.json
+
+# Power plots
+*.png
+
+# KV260 archives (historical, kept locally)
+results/kv260_archive/
+vitis_ai/kv260_archive/
+
 # Docker
 .docker/
 
@@ -32,7 +47,6 @@ estimate_*/
 __pycache__/
 *.pyc
 *.egg-info/
-*.npy
 
 # OS
 .DS_Store
@@ -41,7 +55,3 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-
-# Board results (keep in results/ only)
-*.json
-!results/**/*.json
