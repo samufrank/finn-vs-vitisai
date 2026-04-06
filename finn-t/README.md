@@ -66,4 +66,4 @@ python3 extract_resources.py outputs/estimate_hls
 See `../results/finn-t/` for committed resource estimation outputs.
 
 Config A (2h, D=32, T=16, 2-bit, target_fps=10000) HLS-synthesized totals:
-LUT=20,886 (29.6%), DSP=63 (17.5%), BRAM=25 (11.6%). Fits ZU3EG. Full bistream and board deployment pending.
+LUT=20,886 (29.6%), DSP=63 (17.5%), BRAM=25 (5.8%). Fits ZU3EG. Full bistream and board deployment pending.

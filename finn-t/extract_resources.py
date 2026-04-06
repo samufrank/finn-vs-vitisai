@@ -13,8 +13,12 @@ from pathlib import Path
 
 # ZU3EG (AUP-ZU3) and ZU5EG (PYNQ-ZU) resource budgets
 BOARDS = {
-    "ZU3EG": {"LUT": 70560, "FF": 141120, "BRAM_18K": 216, "DSP": 360, "URAM": 0},
-    "ZU5EG": {"LUT": 117120, "FF": 234240, "BRAM_18K": 216, "DSP": 1120, "URAM": 64},
+    # Vivado-verified: xczu3eg-sfvc784-1-e (BLOCK_RAMS=216, DSP=360, no URAM)
+    # BRAM_18K = BLOCK_RAMS * 2 (each RAMB36 tile splits into two RAMB18)
+    "ZU3EG": {"LUT": 70560, "FF": 141120, "BRAM_18K": 432, "DSP": 360, "URAM": 0},
+    # Vivado-verified: xczu5eg-sfvc784-2-e (BLOCK_RAMS=144, DSP=1248, URAM=64)
+    # BRAM_18K = BLOCK_RAMS * 2 (each RAMB36 tile splits into two RAMB18)
+    "ZU5EG": {"LUT": 117120, "FF": 234240, "BRAM_18K": 288, "DSP": 1248, "URAM": 64},
 }
 
 
