@@ -28,17 +28,21 @@ output_*/
 estimate_*/
 /tmp/finn_dev_*/
 
-# Results data (reproducible from board)
+# Results — commit summaries and plots, skip raw power traces
 *.json
 *.csv
-!vitis_ai/arch_*.json
-
-# Power plots
 *.png
+!results/**/*.json
+!results/**/*.png
+!vitis_ai/arch_*.json
+!finn-t/results/**/*.json
 
 # KV260 archives (historical, kept locally)
 results/kv260_archive/
 vitis_ai/kv260_archive/
+
+# Other archives
+**/archive/
 
 # Docker
 .docker/

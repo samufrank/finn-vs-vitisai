@@ -1,0 +1,9 @@
+defaults:
+  MVAU_hls:
+    resType: dsp
+    mem_mode: internal_decoupled
+    ram_style: auto
+  ScaledDotProductAttention_hls:
+    mac_resource: dsp
+    ram_style: block
+    ram_style_thresholds: block
