@@ -30,21 +30,29 @@ FINN and VTA use the same Brevitas-trained weights. Vitis AI uses its own quanti
 
 ### CNN, MNIST (Conv [8,16] + FC, INT8)
 
-| Metric | FINN | VTA (Python) |
-|--------|------|--------------|
-| Accuracy | 92.0% | 90.3% |
-| Throughput (FPS) | 24.4 | 26.9 |
-| Latency (ms) | 41.0 | 37.1 |
-| Dynamic power (W) | 0.29 | 0.23 |
-| Energy/inference (mJ) | 135.7 | 162.9 |
+| Metric | FINN | VTA (Python) | Vitis AI DPU |
+|--------|------|--------------|--------------|
+| Accuracy | 92.0% | 90.4% | 86.7% |
+| Throughput (FPS) | 24.4 | 27.0 | 2910 |
+| Latency (ms) | 41.0 | 37.0 | 0.34 |
+| Dynamic power (W) | 0.28 | 0.24 | 0.23 |
+| Energy/inference (mJ) | 148.2 | 170.8 | 1.58 |
 
-CNN tiny is intentionally undersized (float baseline 91.2%), selected to fit FINN's on-chip BRAM constraints at INT8 on the ZU3. DPU CNN results pending.
+CNN tiny is intentionally undersized (float baseline 91.2%), selected to fit FINN's on-chip BRAM constraints at INT8 on the ZU3. DPU accuracy loss (~5% vs float) is from vai_q_pytorch post-training quantization on an already-small model.
 
 ### Key Findings
 
 - DPU dominance on small FPGAs is consistent with prior work. Hamanaka et al. predicted overlays would outperform dataflow on resource-constrained devices. Our results confirm this: FINN's CPU fallback on the ZU3 is the bottleneck, not a flaw in FINN's architecture.
 - Dynamic power is nearly identical (~0.23-0.29 W) across all three frameworks. Energy per inference is throughput-dominated.
 - Runtime overhead matters. VTA's C runner (1270 FPS) vs Python runner (257 FPS) shows that software stack overhead can dominate hardware execution time for tiny models.
+
+### Transformer Feasibility
+
+Initial testing for extending the comparison to transformers:
+
+- The Vitis AI DPU compiles linear projections but partitions all attention operations (Q@K^T, softmax, transpose, layer normalization) to CPU. The DPU only supports weight-by-activation matmuls, not the activation-by-activation pattern required by attention.
+- VTA can execute all six transformer GEMM operations including the activation-by-activation matmuls the DPU rejects. CPU fallback is needed only for softmax and layer normalization.
+- FINN-T resource estimation (HLS-synthesized, via finn-plus 1.4.0) shows a minimal configuration (2 heads, D=32, T=16, 2-bit) fits ZU3EG at ~30% LUT for operators alone. FIFOs, DMA, and shell overhead are not yet included.
 
 ## Hardware
 
@@ -140,13 +148,15 @@ finn-vs-vitisai/
 ├── bitstreams/             # Archived VTA bitstreams (100 MHz, 250 MHz)
 ├── models/                 # Shared model definitions (mlp.py, cnn.py)
 ├── finn/                   # FINN pipeline: train (Brevitas QAT), export, compile
+├── finn-t/                 # FINN-T transformer resource estimation (finn-plus 1.4.0)
 ├── vitis_ai/               # Vitis AI pipeline: quantize, compile + DPU arch files
 ├── vta/                    # VTA host-side RPC test scripts (development/debugging)
 ├── results/                # Benchmark JSONs, power CSVs, timeline plots (gitignored)
 │   ├── finn/
+│   ├── finn-t/             # FINN-T resource estimation outputs
 │   ├── vta/
 │   └── vitis_ai/
-└── docs/                   # Setup guides, troubleshooting
+└── docs/                   # Build guides (DPU, VTA)
 ```
 
 Tool repos (`finn-repo/`, `Vitis-AI/`) and datasets (`data/`) are cloned/downloaded locally but gitignored.
@@ -155,27 +165,30 @@ Tool repos (`finn-repo/`, `Vitis-AI/`) and datasets (`data/`) are cloned/downloa
 
 - `board/setup.md` - Board setup, connectivity, and deployment instructions
 - `board/fnb58_guide.md` - FNB58 power measurement workflow
-- `docs/dpu_setup_guide.md` - Building the DPU PetaLinux image for AUP-ZU3
-- `docs/workflow.md` - End-to-end pipeline instructions *(predates VTA and PetaLinux DPU, update pending)*
-- `docs/troubleshooting.md` - Common issues and solutions *(partial, covers FINN and basic board/VTA setup)*
+- `docs/dpu_setup_guide.md` - Building the DPU PetaLinux image for AUP-ZU3 (Vivado block design, PetaLinux, VART)
+- `docs/vta_build_guide.md` - Building the VTA bitstream and TVM runtime (split-tool HLS flow, board-side build)
 
 ## Status
 
 ### Complete
 - Three-way MLP comparison (FINN, VTA, DPU) with matched INT8 precision and physical power measurement
-- Two-way CNN comparison (FINN, VTA) with power measurement
+- Three-way CNN comparison (FINN, VTA, DPU) with power measurement
 - Board-side inference for all toolchains (no RPC overhead for VTA)
 - FNB58 power measurement infrastructure (logger, merge, timeline plots)
 - VTA C inference runner eliminating Python overhead
+- DPU transformer compilation test (linear projections on DPU, attention ops partition to CPU)
+- VTA transformer GEMM verification (all 6 dimensions tile correctly)
+- FINN-T resource estimation for minimal transformer configuration
 
 ### In Progress
-- Vitis AI CNN on DPU (completes three-way CNN comparison)
 - VTA CNN C runner accuracy regression (86% vs 91% in Python, under investigation)
+- FINN-T full bitstream (add FIFOs, DMA, shell to estimate; determines if ZU3EG is sufficient)
 
 ### Planned
-- Larger model benchmarks (MLP small [128,64], CNN small [16,32]) if resources permit
-- INT4 VTA bitstream (demonstrates overlay precision flexibility vs DPU's fixed INT8)
-- RadioML signal classification (extends comparison beyond image classification)
+- FINN at INT4 (validates comparison methodology against prior work)
+- VTA at INT4/INT2 bitstream (demonstrates overlay precision flexibility vs DPU's fixed INT8)
+- Matched low-precision comparison (FINN vs VTA at INT4/INT2 for CNN and transformer)
+- Transformer CPU fallback baseline (full transformer on VTA with softmax/layernorm on CPU)
 
 ## References
 
@@ -183,5 +196,7 @@ Tool repos (`finn-repo/`, `Vitis-AI/`) and datasets (`data/`) are cloned/downloa
 - [Apache TVM / VTA](https://github.com/apache/tvm) - open-source DNN compiler + overlay
 - [Vitis AI](https://github.com/Xilinx/Vitis-AI) - AMD production DNN toolchain
 - [DPUCZDX8G](https://github.com/Xilinx/Vitis-AI/tree/master/dpu) - AMD DNN Processing Unit IP
-- Hamanaka et al., "Comparison of DNN Deployment Frameworks on Resource-Constrained FPGA" (IEEE Access, 2023)
-- Boutros, Arora & Betz, "FPGA Architecture for Deep Learning: Survey and Future Directions" (2024)
+- [FINN-T](https://github.com/eki-project/FINN-T) - Transformer dataflow accelerator (Berganski et al., FPT 2024)
+- Hamanaka et al., "An Exploration of State-of-the-Art Automation Frameworks for FPGA-Based DNN Acceleration" (IEEE Access, 2023)
+- Boutros, Arora & Betz, "FPGA Architecture for Deep Learning: Survey and Future Directions" (TRETS, 2024)
+- Machura et al., "Embedded Object Detection with Custom LittleNet, FINN and Vitis AI DCNN Accelerators" (JLPEA, 2022)

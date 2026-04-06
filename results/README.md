@@ -42,3 +42,7 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 
 ### vitis_ai/
 - MLP tiny [64,32] MNIST — INT8, B512 DPU, 300/600 MHz
+- CNN tiny [8,16] MNIST — INT8, B512 DPU, 300/600 MHz
+
+### finn-t/
+- Config A (2h, D=32, T=16, 2-bit) resource estimation: cycles, performance, HLS-synthesized resources
