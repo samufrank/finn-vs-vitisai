@@ -42,3 +42,14 @@ echo "  Patched build_dataflow_steps.py (PosixPath)"
 
 echo ""
 echo "All patches applied."
+
+# --- Patch 7: gate Alveo-only deployment package code on shell_flow_type ---
+# step_deployment_package unconditionally runs Alveo-only path rewriting
+# (looking for finn-accel.xclbin and acceleratorconfig.json) when CPP_DRIVER
+# is in generate_outputs. This crashes vivado_zynq builds where neither file
+# exists. Gate it on shell_flow_type.
+sed -i \
+  's|if DataflowOutputType.CPP_DRIVER in cfg.generate_outputs:|if DataflowOutputType.CPP_DRIVER in cfg.generate_outputs and cfg.shell_flow_type == "vivado_alveo":|' \
+  "$SITE/finn/builder/build_dataflow_steps.py"
+echo "  Patched build_dataflow_steps.py (Alveo-only deployment gate)"
+

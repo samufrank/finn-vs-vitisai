@@ -1,0 +1,32 @@
+tag: "sweep_A_2h_d32_t16_2b"
+seed: 12
+calibration_passes: 32
+model:
+  num_heads: 2
+  num_layers: 1
+  bias: True
+  emb_dim: 32
+  mlp_dim: 128
+  seq_len: 16
+  bits: 2
+  norm: none
+  mask: none
+  positional_encoding: binary
+export:
+  opset_version: 14
+  do_constant_folding: true
+build:
+  output_dir: outputs/sweep_A_ipgen
+  stitched_ip_gen_dcp: False
+  synth_clk_period_ns: 10.0
+  board: Ultra96
+  shell_flow_type: vivado_zynq
+  folding_config_file: folding.yaml
+  specialize_layers_config_file: specialize_layers.json
+  standalone_thresholds: True
+  max_multithreshold_bit_width: 16
+  mvau_wwidth_max: 2048
+  split_large_fifos: true
+metrics:
+    report: outputs/sweep_A_ipgen/report/post_synth_resources.json
+    filter: (top)

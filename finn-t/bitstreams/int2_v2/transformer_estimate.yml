@@ -1,0 +1,89 @@
+# finn-plus build config: Transformer resource estimation for ZU3EG
+# Usage:
+#   finn build transformer_estimate.yml outputs/model.onnx -o outputs/estimate_run
+#
+# To stop at estimate reports (no HLS):
+#   finn build transformer_estimate.yml outputs/model.onnx -o outputs/estimate_run --stop step_generate_estimate_reports
+#
+# To include HLS IP generation for per-operator resource numbers:
+#   finn build transformer_estimate.yml outputs/model.onnx -o outputs/estimate_run --stop step_hw_ipgen
+
+# --- Target hardware ---
+# Ultra96 uses the same part as AUP-ZU3: xczu3eg-sfvc784-1-e
+# NOTE: Ultra96 is the closest supported PYNQ board in FINN's board database.
+# If FINN doesn't recognize "Ultra96", use fpga_part directly and comment out
+# board + shell_flow_type. For estimate-only runs, board/shell aren't needed.
+board: AUP-ZU3_8GB
+shell_flow_type: vivado_zynq
+# fpga_part: xczu3eg-sfvc784-1-e
+
+# --- Clock ---
+synth_clk_period_ns: 10.0  # 100 MHz, conservative for ZU3EG
+
+# --- Steps ---
+# Uses transformer-specific custom steps for hw conversion and folding.
+# The standard FINN frontend (step_qonnx_to_finn through step_streamline) should
+# work for QONNX models exported via the FINN-T export.py.
+steps:
+  - finn.builder.passes.export
+  - step_qonnx_to_finn
+  - step_tidy_up
+  - step_streamline
+  - custom_steps.step_convert_attention_to_hw
+  - custom_steps.step_convert_elementwise_binary_to_hw
+  - custom_steps.step_replicate_streams
+  - step_convert_to_hw
+  - step_create_dataflow_partition
+  - step_specialize_layers
+  - finn.builder.custom_step_library.transformer_adhoc.step_set_folding
+  - step_minimize_bit_width
+  - step_generate_estimate_reports
+  - step_hw_codegen
+  - step_hw_ipgen
+  - custom_steps.step_set_fifo_depths
+  - step_create_stitched_ip
+  - step_synthesize_bitfile
+  - step_make_driver
+  - step_deployment_package
+
+# --- Folding / parallelism ---
+# Option A: Set a target FPS and let auto-folding figure it out.
+# For estimate-only, pick something conservative. The transformer_adhoc
+# step_set_folding will try to meet this for attention ops, then hand off
+# to FINN auto-folding for MVAUs/thresholds.
+target_fps: 10000
+folding_config_file: folding_dsp.yaml
+
+# Option B: Provide a manual folding config (comment out target_fps above,
+# uncomment this). Copy transformer_folding.yml from
+# finn/benchmarking/dut/transformer_folding.yml and customize.
+# folding_config_file: transformer_folding.yml
+
+# --- Specialization ---
+# Prefer RTL implementation for MVAU and Thresholding where possible.
+# Create this file or copy from finn/benchmarking/dut/transformer_specialization.json
+# specialize_layers_config_file: transformer_specialization.json
+
+# --- Thresholds and quantization ---
+# Force standalone thresholds for flexibility (required for RTL MVAU)
+standalone_thresholds: true
+# Maximum bit-width of quantizers converted to multi-thresholds
+max_multithreshold_bit_width: 16
+# Widen MVAU stream for aggressive unfolding if needed
+mvau_wwidth_max: 2048
+
+# --- FIFO sizing ---
+# Disable auto FIFO sizing for estimate-only runs (saves significant time)
+auto_fifo_depths: false
+
+# Add FIFO splitting
+split_large_fifos: true
+
+# --- Verification (optional, enable for debugging) ---
+# verify_steps:
+#   - finn_onnx_python
+#   - streamlined_python
+
+# --- Debugging ---
+save_intermediate_models: true
+verbose: false

@@ -4,12 +4,6 @@
 *.onnx
 *.npy
 
-# Bitstreams (track archived ones explicitly)
-*.bit
-*.hwh
-!bitstreams/*.bit
-!bitstreams/*.hwh
-
 # Datasets
 data/
 MNIST/
@@ -59,3 +53,11 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# Bitstreams (track archived ones explicitly under any bitstreams/ dir)
+*.bit
+*.hwh
+!**/bitstreams/**
+
+# Big build tarballs (regenerable from source)
+*_full_build.tar.gz

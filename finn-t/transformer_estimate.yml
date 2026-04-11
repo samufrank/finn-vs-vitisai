@@ -13,7 +13,7 @@
 # NOTE: Ultra96 is the closest supported PYNQ board in FINN's board database.
 # If FINN doesn't recognize "Ultra96", use fpga_part directly and comment out
 # board + shell_flow_type. For estimate-only runs, board/shell aren't needed.
-board: Ultra96
+board: AUP-ZU3_8GB
 shell_flow_type: vivado_zynq
 # fpga_part: xczu3eg-sfvc784-1-e
 
@@ -40,6 +40,11 @@ steps:
   - step_generate_estimate_reports
   - step_hw_codegen
   - step_hw_ipgen
+  - custom_steps.step_set_fifo_depths
+  - step_create_stitched_ip
+  - step_synthesize_bitfile
+  - step_make_driver
+  - step_deployment_package
 
 # --- Folding / parallelism ---
 # Option A: Set a target FPS and let auto-folding figure it out.
@@ -70,6 +75,9 @@ mvau_wwidth_max: 2048
 # --- FIFO sizing ---
 # Disable auto FIFO sizing for estimate-only runs (saves significant time)
 auto_fifo_depths: false
+
+# Add FIFO splitting
+split_large_fifos: true
 
 # --- Verification (optional, enable for debugging) ---
 # verify_steps:

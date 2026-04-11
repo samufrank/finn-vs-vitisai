@@ -1,0 +1,72 @@
+{
+  "driver_information": {
+    "driver_type": "FINNDMAOverlay",
+    "io_shape_dict": {
+      "idt": [
+        "DataType['FLOAT32']"
+      ],
+      "idma_names": [
+        "idma0"
+      ],
+      "ishape_normal": [
+        [
+          1,
+          16,
+          32
+        ]
+      ],
+      "ishape_folded": [
+        [
+          1,
+          16,
+          32,
+          1
+        ]
+      ],
+      "ishape_packed": [
+        [
+          1,
+          16,
+          32,
+          4
+        ]
+      ],
+      "odt": [
+        "DataType['INT3']"
+      ],
+      "odma_names": [
+        "odma0"
+      ],
+      "oshape_normal": [
+        [
+          1,
+          16,
+          32
+        ]
+      ],
+      "oshape_folded": [
+        [
+          1,
+          16,
+          32,
+          1
+        ]
+      ],
+      "oshape_packed": [
+        [
+          1,
+          16,
+          32,
+          1
+        ]
+      ],
+      "num_inputs": 1,
+      "num_outputs": 1
+    },
+    "external_weights": false,
+    "runtime_weights": false,
+    "platform": "zynq-iodma",
+    "fclk_mhz": 100.0
+  },
+  "experiment_information": {}
+}
