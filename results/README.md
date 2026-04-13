@@ -38,6 +38,7 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 
 ### vta/
 - MLP tiny [64,32] MNIST — INT8, 250 MHz, Python and C runners
+- MLP tiny [64,32] MNIST — INT4, 200 MHz, Python runner (Brevitas QAT w4a4, 93.08%)
 - CNN tiny [8,16] MNIST — INT8, 250 MHz, Python runner
 
 ### vitis_ai/

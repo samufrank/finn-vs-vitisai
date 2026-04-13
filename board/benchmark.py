@@ -10,6 +10,70 @@ import threading
 import glob
 from datetime import datetime
 
+
+# ============================================================
+# INT4 nibble packing/unpacking for VTA
+#
+# VTA int4 stores two values per byte: lo nibble = even element,
+# hi nibble = odd element.  DMA transfers INP_ELEM_BYTES = 8 bytes
+# per 16-element vector (16 × 4 bits = 64 bits).
+#
+# numpy int8 arrays store one value per byte.  When used as VTA int4
+# tensors, the first half of the bytes are read by DMA and each byte
+# is interpreted as two packed nibbles.  Without explicit packing,
+# every odd-indexed element is silently zero.
+#
+# These helpers convert between the two representations.  They are
+# no-ops for int8 (called only on the vta_native int4 path).
+# ============================================================
+
+def pack_int4_for_vta(vals_int8):
+    """Pack int8 array of int4 values into VTA nibble format.
+
+    VTA int4 DMA reads the buffer flat — byte[flat_index / 2] for element
+    at flat_index.  Two values per byte: lo nibble = even flat index,
+    hi nibble = odd flat index.  Packing must be contiguous across the
+    ENTIRE flattened tensor, not per-row, because VTA's byte addressing
+    spans all dimensions without gaps.
+
+    Input:  int8 array, any shape.  Each element is one int4 value.
+    Output: int8 array, same shape.  First half of flat buffer holds
+            packed nibble pairs; second half is zero-padded.
+    """
+    vals = np.asarray(vals_int8, dtype=np.int8)
+    flat = vals.flatten()
+    n = len(flat)
+    lo = flat[0::2].view(np.uint8) & 0xF
+    hi = flat[1::2].view(np.uint8) & 0xF
+    packed = ((hi << 4) | lo).astype(np.int8)
+    out = np.zeros(n, dtype=np.int8)
+    out[:n // 2] = packed
+    return out.reshape(vals.shape)
+
+
+def unpack_int4_from_vta(packed_int8):
+    """Unpack VTA nibble-packed int4 output to one-value-per-element int8.
+
+    Inverse of pack_int4_for_vta.  First half of flat buffer holds packed
+    nibble pairs.  Each pair is split into two sign-extended int4 values.
+
+    Input:  int8 array, any shape.
+    Output: int8 array, same shape.  Each element is one sign-extended
+            int4 value in [-8, 7].
+    """
+    raw = np.asarray(packed_int8, dtype=np.int8)
+    flat = raw.flatten()
+    n = len(flat)
+    packed_bytes = flat[:n // 2].view(np.uint8)
+    lo = (packed_bytes & 0xF).astype(np.int8)
+    hi = ((packed_bytes >> 4) & 0xF).astype(np.int8)
+    lo = np.where(lo > 7, lo - 16, lo).astype(np.int8)
+    hi = np.where(hi > 7, hi - 16, hi).astype(np.int8)
+    out = np.zeros(n, dtype=np.int8)
+    out[0::2] = lo
+    out[1::2] = hi
+    return out.reshape(raw.shape)
+
 # ============================================================
 # Power measurement
 # Three modes (in priority order):
@@ -628,7 +692,8 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
     model_type = vta_config.get('model_type', 'mlp')
     num_layers = vta_config['num_layers']
     is_cnn = (model_type == 'cnn')
-    print(f"  Model type: {model_type}, layers: {num_layers}")
+    requant_mode = vta_config.get('requant_mode', 'cpu_per_image')
+    print(f"  Model type: {model_type}, layers: {num_layers}, requant: {requant_mode}")
 
     if not is_cnn:
         raw_dims = vta_config['architecture']
@@ -690,6 +755,7 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
     layer_info = vta_config['layers']
     gemm_modules = []
     W_nds = []
+    D_nds = []  # bias VTA tensors (vta_native only, None for cpu_per_image)
     layer_meta = []
     BLOCK_IN = env.BLOCK_IN
     BLOCK_OUT = env.BLOCK_OUT
@@ -707,9 +773,23 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
         gemm_modules.append(f)
 
         W_tiled = np.load(os.path.join(model_dir, lc['weight_file']))
-        b_float = np.load(os.path.join(model_dir, lc['bias_file']))
+        if requant_mode == 'vta_native':
+            W_tiled = pack_int4_for_vta(W_tiled)
         W_nd = tvm.nd.array(W_tiled, ctx)
         W_nds.append(W_nd)
+
+        has_vta_bias = lc.get('has_vta_bias', False)
+        bias_data = np.load(os.path.join(model_dir, lc['bias_file']))
+
+        if requant_mode == 'vta_native' and has_vta_bias:
+            # Bias is int32 tiled (1, m_tiles, 1, BLOCK_OUT), loaded to VTA
+            D_nd = tvm.nd.array(bias_data.astype(np.int32), ctx)
+            D_nds.append(D_nd)
+            b_float_for_meta = None
+        else:
+            # Bias is float32, applied CPU-side (INT8 path or last layer)
+            D_nds.append(None)
+            b_float_for_meta = bias_data.astype(np.float32)
 
         meta = {
             'in_f': lc['in_f'],
@@ -719,7 +799,9 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
             'm_tiles': lc['m_tiles'],
             'shift': lc['shift'],
             'w_scale': lc['w_scale'],
-            'b_float': b_float,
+            'b_float': b_float_for_meta,
+            'has_vta_bias': has_vta_bias,
+            'in_scale': lc.get('in_scale', 0),
         }
         if is_cnn:
             meta['type'] = lc['type']
@@ -853,8 +935,9 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
         images_2d = images.reshape(len(images), images.shape[2], images.shape[3])
 
     else:
-        def infer_one(img_flat):
-            """Run single image through VTA MLP. Returns predicted class."""
+        def infer_one_cpu_per_image(img_flat):
+            """Run single image through VTA MLP. Returns predicted class.
+            INT8 path: per-image calibration, CPU-side dequant/requant."""
             x_abs_max = np.max(np.abs(img_flat))
             x_s = x_abs_max / 127.0 if x_abs_max > 0 else 1e-10
             h_int8 = np.clip(np.round(img_flat / x_s), -128, 127).astype(np.int8)
@@ -877,6 +960,51 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
                     h_int8 = np.clip(np.round(y_float / current_scale), -128, 127).astype(np.int8)
                 else:
                     return int(np.argmax(y_float[:lm['real_out']]))
+
+        def infer_one_vta_native(img_flat):
+            """Run single image through VTA MLP. Returns predicted class.
+            INT4 vta_native path: fixed learned scales, bias inside VTA for
+            hidden layers, CPU-side float bias for the last layer only.
+            VTA output is passed directly to the next layer (no CPU requant).
+            Input and inter-layer activations are nibble-packed for VTA int4."""
+            input_scale = vta_config['input_scale']
+            input_clip_max = vta_config['input_clip_max']
+            h_int8 = np.clip(np.round(img_flat / input_scale),
+                             0, input_clip_max).astype(np.int8)
+
+            for i, (lm, f) in enumerate(zip(layer_meta, gemm_modules)):
+                # Pack int4 values into nibble pairs for VTA DMA
+                x_packed = pack_int4_for_vta(h_int8)
+                x_tiled = x_packed.reshape(1, lm['n_tiles'], 1, BLOCK_IN)
+                A_nds[i].copyfrom(x_tiled)
+                C_nds[i].copyfrom(np.zeros((1, lm['m_tiles'], 1, BLOCK_OUT), dtype=np.int8))
+
+                if lm['has_vta_bias']:
+                    # Hidden layer: 4-arg call (A, W, D, C).
+                    # VTA does GEMM + bias_int + SHR + CLIP.
+                    # Output is packed int4 — unpack for next layer.
+                    f(A_nds[i], W_nds[i], D_nds[i], C_nds[i])
+                    vta_out_packed = C_nds[i].numpy().reshape(-1)
+                    vta_out = unpack_int4_from_vta(
+                        vta_out_packed)[:lm['real_out']]
+                    h_int8 = vta_out.copy()
+                else:
+                    # Last layer: 3-arg call (A, W, C).
+                    # VTA does GEMM + SHR + CLIP (no bias).
+                    # Unpack, then CPU adds float bias and takes argmax.
+                    f(A_nds[i], W_nds[i], C_nds[i])
+                    vta_out_packed = C_nds[i].numpy().reshape(-1)
+                    vta_out = unpack_int4_from_vta(
+                        vta_out_packed)[:lm['out_f']]
+                    combined = lm['in_scale'] * lm['w_scale'] * (2 ** lm['shift'])
+                    y_float = (vta_out[:lm['real_out']].astype(np.float32)
+                               * combined + lm['b_float'][:lm['real_out']])
+                    return int(np.argmax(y_float))
+
+        if requant_mode == 'vta_native':
+            infer_one = infer_one_vta_native
+        else:
+            infer_one = infer_one_cpu_per_image
 
         # Images: (N, 1, 28, 28) -> (N, 784) for MLP
         images_2d = None  # not used

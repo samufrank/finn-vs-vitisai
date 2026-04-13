@@ -16,7 +16,7 @@ from torchvision import datasets, transforms
 from brevitas.export import export_qonnx
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'models'))
-from mlp import MLP_Brevitas, get_mlp_config
+from mlp import MLP_Brevitas, MLP_Brevitas_INT4, get_mlp_config
 from cnn import CNN_Brevitas, get_cnn_config
 
 parser = argparse.ArgumentParser()
@@ -25,6 +25,8 @@ parser.add_argument('--dataset', required=True, choices=['mnist', 'cifar10'])
 parser.add_argument('--size', default='tiny', help='Model size config (tiny, small, medium, etc.)')
 parser.add_argument('--epochs', type=int, default=10)
 parser.add_argument('--output', default=None, help='Output ONNX filename')
+parser.add_argument('--int4', action='store_true', help='Use INT4 weights/acts instead of INT8')
+parser.add_argument('--force', action='store_true', help='Overwrite existing output files')
 args = parser.parse_args()
 
 # Dataset
@@ -44,7 +46,8 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size=64, shuffle=Fals
 # Model
 if args.model == 'mlp':
     hidden = get_mlp_config(args.size)
-    model = MLP_Brevitas(input_size=input_size, hidden_sizes=hidden)
+    ModelClass = MLP_Brevitas_INT4 if args.int4 else MLP_Brevitas
+    model = ModelClass(input_size=input_size, hidden_sizes=hidden)
     dummy = torch.randn(1, in_channels, img_size, img_size)
 elif args.model == 'cnn':
     channels = get_cnn_config(args.size)
@@ -77,6 +80,14 @@ for epoch in range(args.epochs):
 
 # Save weights
 weight_file = args.output or f"{args.model}_{args.dataset}_{args.size}"
+if args.int4:
+    weight_file += "_int4"
+
+for ext in ('pth', 'onnx'):
+    path = f"{weight_file}.{ext}"
+    if os.path.exists(path) and not args.force:
+        raise FileExistsError(f"{path} exists. Use --force to overwrite.")
+
 torch.save(model.state_dict(), f"{weight_file}.pth")
 
 # Export ONNX

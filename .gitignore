@@ -30,6 +30,7 @@ estimate_*/
 !results/**/*.png
 !vitis_ai/arch_*.json
 !finn-t/results/**/*.json
+!board/regression/*.json
 
 # KV260 archives (historical, kept locally)
 results/kv260_archive/
