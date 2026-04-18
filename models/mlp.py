@@ -1,14 +1,8 @@
 """
 MLP model definitions for overlay vs dataflow comparison.
-Same architecture for both Vitis AI (standard PyTorch) and FINN (Brevitas).
+Same architecture for both VTA, Vitis AI (standard PyTorch) and FINN (Brevitas).
 
-Confirmed working configurations on KV260:
-  - FINN INT8: 784->64->32->10 (fits)
-  - FINN INT8: 784->256->256->128->10 (does NOT fit, BRAM overflow)
-  - Vitis AI INT8: 784->256->256->128->10 (fits, DPU stores weights in DDR)
-  - Vitis AI INT8: 3072->256->256->128->10 (fits)
-
-For fair comparison, both tools must use the same architecture.
+For fair comparison, all tools must use the same architecture.
 FINN is the limiting factor for model size at INT8.
 """
 import torch
@@ -18,10 +12,13 @@ import torch.nn as nn
 def get_mlp_config(size='tiny'):
     """Return hidden layer sizes for a given configuration."""
     configs = {
-        'tiny':     [64, 32],        # Fits FINN INT8 on KV260
-        'small':    [128, 64],       # Untested on FINN
-        'medium':   [256, 128],      # Does NOT fit FINN INT8 on KV260
-        'original': [256, 256, 128], # Does NOT fit FINN INT8 on KV260
+        'tiny':         [64, 32],       # Fits FINN at INT8 and INT4
+        'tiny_plus':    [96, 48],                 
+        'small':        [128, 64],      
+        'small_plus':   [192, 96],      
+        'medium':       [256, 128],
+        'large':        [512, 256],
+        'original':     [256, 256, 128], 
     }
     if size not in configs:
         raise ValueError(f"Unknown config '{size}'. Options: {list(configs.keys())}")

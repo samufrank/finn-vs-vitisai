@@ -577,6 +577,201 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
     return config, idle, all_runs
 
 # ============================================================
+# FINN-T transformer benchmark (RadioML 2018)
+# ============================================================
+def load_radioml(hdf5_path, seed=12, split_fractions=(0.80, 0.10, 0.10),
+                 snr_range=None, reshape=(1, 1024, 2)):
+    """Load RadioML 2018 eval split. Returns (signals, labels)."""
+    if hdf5_path.endswith('.npz'):
+        data = np.load(hdf5_path)
+        return data['signals'], data['labels']
+        
+    import h5py
+    f = h5py.File(hdf5_path, 'r')
+    cls = f['Y'][:].argmax(axis=-1).squeeze()
+    snr = f['Z'][:].squeeze()
+    if snr_range is None:
+        snr_range = set(np.unique(snr))
+    else:
+        snr_range = set(snr_range)
+    indices = [i for i, (c, s) in enumerate(zip(cls, snr))
+               if s in snr_range]
+    rng = np.random.default_rng(seed)
+    indices = rng.permuted(indices)
+    n_train = int(split_fractions[0] * len(indices))
+    n_val = int(split_fractions[1] * len(indices))
+    eval_indices = indices[n_train + n_val:]
+    signals = np.stack([f['X'][int(i)].reshape(reshape) for i in eval_indices])
+    labels = cls[eval_indices]
+    f.close()
+    return signals.astype(np.float32), labels
+
+
+def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
+                         num_runs, warmup_batches, idle_seconds,
+                         stabilize_seconds, results_dir, run_name):
+    """Benchmark FINN-T RadioML transformer on ZU3EG."""
+    driver_dir = os.path.join(deploy_dir, 'driver')
+    bitfile    = os.path.join(deploy_dir, 'bitfile', 'finn-accel.bit')
+    sys.path.insert(0, driver_dir)
+
+    with open(os.path.join(driver_dir, 'settings.json')) as f:
+        settings = json.load(f)['driver_information']
+
+    io_shape_dict = settings['io_shape_dict']
+    # Read shapes directly from settings — do NOT use the overlay's
+    # ishape_normal()/oshape_normal() methods because those clobber dim 0
+    # with batch_size.  The FINN-plus driver assumes dim 0 = batch, but
+    # the transformer output [64, 96] has dim 0 = seq_len.  Calling
+    # ol.execute() would crash in unfold_output() (tries to reshape 6144
+    # elements into (1, 96)).  We bypass execute() and drive DMA manually.
+    ishape_normal = tuple(io_shape_dict['ishape_normal'][0])
+    ishape_folded = tuple(io_shape_dict['ishape_folded'][0])
+    ishape_packed = tuple(io_shape_dict['ishape_packed'][0])
+    oshape_normal = tuple(io_shape_dict['oshape_normal'][0])
+    oshape_folded = tuple(io_shape_dict['oshape_folded'][0])
+    oshape_packed = tuple(io_shape_dict['oshape_packed'][0])
+    idt_str = io_shape_dict['idt'][0]
+    odt_str = io_shape_dict['odt'][0]
+
+    from driver import FINNDMAOverlay
+    from finn.util.data_packing import finnpy_to_packed_bytearray, packed_bytearray_to_finnpy
+    from qonnx.core.datatype import DataType
+    from pynq import allocate
+
+    idt = DataType[idt_str.replace("DataType['", "").replace("']", "")]
+    odt = DataType[odt_str.replace("DataType['", "").replace("']", "")]
+
+    print(f"Loading RadioML 2018 eval set from {hdf5_path}...")
+    signals, labels = load_radioml(hdf5_path)
+    print(f"  {len(signals)} eval samples, signal shape {signals[0].shape}")
+
+    print(f"Loading FINN-T bitfile: {bitfile}")
+    ol = FINNDMAOverlay(
+        bitfile_name=bitfile,
+        platform=settings.get('platform', 'zynq-iodma'),
+        io_shape_dict=io_shape_dict,
+        batch_size=1,
+        fclk_mhz=settings.get('fclk_mhz', 100.0),
+    )
+    print(f"  Accel input: {ishape_normal}  output: {oshape_normal}")
+
+    # Allocate DMA buffers using the correct (unclobbered) packed shapes
+    ibuf_device = allocate(shape=ishape_packed, dtype=np.uint8)
+    obuf_device = allocate(shape=oshape_packed, dtype=np.uint8)
+
+    # Load CPU tail weights (extracted from dataflow_parent.onnx)
+    W_cls = np.load(os.path.join(weights_dir, 'finn_t_MatMul_7_param0.npy'))
+    thres = np.load(os.path.join(weights_dir, 'finn_t_MultiThreshold_15_param0.npy'))
+    dequant_scale = np.load(os.path.join(weights_dir, 'finn_t_Mul_12_param0.npy'))
+    print(f"  CPU tail: MatMul {W_cls.shape}, MT {thres.shape}, scale {float(dequant_scale):.4f}")
+
+    def multithreshold(x, thresholds):
+        """x: (..., C), thresholds: (C, T) -> (..., C) int"""
+        return np.sum(x[..., np.newaxis] > thresholds, axis=-1)
+
+    def cpu_tail(accel_out):
+        """accel_out: [64, 96] INT5 from FPGA → [24] float32 logits"""
+        x = accel_out.astype(np.float32)
+        x = x.T                                 # [96, 64]
+        x = x[np.newaxis, ...]                  # [1, 96, 64]
+        x = x.mean(axis=-1, keepdims=True)      # [1, 96, 1] GlobalAveragePool
+        x = x.reshape(1, -1)                    # [1, 96]
+        x = x @ W_cls                           # [1, 24]
+        x = multithreshold(x, thres)            # [1, 24] int
+        x = x[np.newaxis, ...]                  # [1, 1, 24]
+        x = x.astype(np.float32) * dequant_scale  # [1, 1, 24] float
+        return x.squeeze()                      # [24]
+
+    def infer(signal):
+        # Pack input (bypass ol.execute which clobbers dim 0)
+        ibuf_normal = signal.reshape(ishape_normal)
+        ibuf_folded = ibuf_normal.reshape(ishape_folded)
+        ibuf_packed = finnpy_to_packed_bytearray(
+            ibuf_folded, idt, reverse_endian=True, reverse_inner=True, fast_mode=True)
+        np.copyto(ibuf_device, ibuf_packed)
+        ibuf_device.flush()
+        # Raw DMA transfer
+        ol.odma[0].write(0x10, obuf_device.device_address & 0xFFFFFFFF)
+        ol.odma[0].write(0x14, (obuf_device.device_address >> 32) & 0xFFFFFFFF)
+        ol.odma[0].write(0x1C, 1)
+        ol.odma[0].write(0x00, 1)
+        ol.idma[0].write(0x10, ibuf_device.device_address & 0xFFFFFFFF)
+        ol.idma[0].write(0x14, (ibuf_device.device_address >> 32) & 0xFFFFFFFF)
+        ol.idma[0].write(0x1C, 1)
+        ol.idma[0].write(0x00, 1)
+        # Wait for output DMA done
+        status = ol.odma[0].read(0x00)
+        while status & 0x2 == 0:
+            status = ol.odma[0].read(0x00)
+        # Unpack output with correct shapes
+        obuf_device.invalidate()
+        obuf_packed = np.array(obuf_device)
+        obuf_folded = packed_bytearray_to_finnpy(
+            obuf_packed, odt, oshape_folded, reverse_endian=True, reverse_inner=True)
+        accel_out = obuf_folded.reshape(oshape_normal)
+        logits = cpu_tail(accel_out)
+        return int(np.argmax(logits))
+
+    config = {
+        'toolchain': 'finn-t',
+        'deploy_dir': deploy_dir,
+        'weights_dir': weights_dir,
+        'dataset': 'radioml2018',
+        'batch_size': 1,
+        'num_runs': num_runs,
+        'num_images': len(signals),
+        'signal_shape': list(signals[0].shape),
+        'accel_input_shape': list(ishape_normal),
+        'accel_output_shape': list(oshape_normal),
+        'cpu_tail_ops': ['Transpose', 'Unsqueeze', 'GAP', 'Flatten',
+                         'MatMul[96,24]', 'MultiThreshold[24,255]',
+                         'Unsqueeze', 'Mul(scale)'],
+        'num_classes': 24,
+        'timestamp': datetime.now().isoformat(),
+        'board': 'AUP-ZU3',
+        'fpga_part': 'xczu3eg-sbva484-1-e',
+        'power_method': 'ina260' if POWER_AVAILABLE else 'none',
+    }
+
+    print(f"Thermal stabilization ({stabilize_seconds}s)...")
+    time.sleep(stabilize_seconds)
+
+    idle = measure_idle(idle_seconds)
+
+    print(f"Warmup ({warmup_batches} samples)...")
+    for b in range(min(warmup_batches, len(signals))):
+        infer(signals[b])
+
+    print(f"Running {num_runs} measured runs over {len(signals)} eval samples...")
+    all_runs = []
+    for run in range(num_runs):
+        power_log     = []
+        sysmon_log    = []
+        sampling_flag = [True]
+        thread  = threading.Thread(target=make_sampler(power_log, sysmon_log, sampling_flag))
+        correct = 0
+        total   = 0
+        thread.start()
+        start_time = time.time()
+
+        for i in range(len(signals)):
+            pred = infer(signals[i])
+            if pred == labels[i]:
+                correct += 1
+            total += 1
+
+        elapsed = time.time() - start_time
+        end_time = time.time()
+        sampling_flag[0] = False
+        thread.join()
+        all_runs.append(build_run_result(run + 1, correct, total, elapsed, power_log, sysmon_log,
+                                         t_start=start_time, t_end=end_time))
+
+    return config, idle, all_runs
+
+
+# ============================================================
 # DPU benchmark (VART on PetaLinux, no XRT/PYNQ)
 # ============================================================
 def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
@@ -691,7 +886,7 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
 
     model_type = vta_config.get('model_type', 'mlp')
     num_layers = vta_config['num_layers']
-    is_cnn = (model_type == 'cnn')
+    is_cnn = model_type.startswith('cnn')
     requant_mode = vta_config.get('requant_mode', 'cpu_per_image')
     print(f"  Model type: {model_type}, layers: {num_layers}, requant: {requant_mode}")
 
@@ -773,7 +968,7 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
         gemm_modules.append(f)
 
         W_tiled = np.load(os.path.join(model_dir, lc['weight_file']))
-        if requant_mode == 'vta_native':
+        if requant_mode in ('vta_native', 'vta_native_o8'):
             W_tiled = pack_int4_for_vta(W_tiled)
         W_nd = tvm.nd.array(W_tiled, ctx)
         W_nds.append(W_nd)
@@ -781,9 +976,19 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
         has_vta_bias = lc.get('has_vta_bias', False)
         bias_data = np.load(os.path.join(model_dir, lc['bias_file']))
 
-        if requant_mode == 'vta_native' and has_vta_bias:
-            # Bias is int32 tiled (1, m_tiles, 1, BLOCK_OUT), loaded to VTA
-            D_nd = tvm.nd.array(bias_data.astype(np.int32), ctx)
+        if requant_mode in ('vta_native', 'vta_native_o8') and has_vta_bias:
+            # Bias is int32, loaded to VTA as 4D: (o_tile, m, 1, BLOCK_OUT).
+            # For CNN, broadcast (m, BLOCK_OUT) over the o_tile dimension.
+            # For MLP (o=1), the reshape is trivial but still produces 4D.
+            bias_i32 = bias_data.astype(np.int32)
+            o_t = lc.get('o_tile', 1)
+            m_t = lc.get('m_tiles', lc.get('m', 1))
+            bias_i32 = np.ascontiguousarray(
+                np.broadcast_to(
+                    bias_i32.reshape(1, m_t, 1, BLOCK_OUT),
+                    (o_t, m_t, 1, BLOCK_OUT)),
+                dtype=np.int32)
+            D_nd = tvm.nd.array(bias_i32, ctx)
             D_nds.append(D_nd)
             b_float_for_meta = None
         else:
@@ -934,6 +1139,112 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
         # Images: (N, 1, 28, 28) -> (N, 28, 28) for CNN
         images_2d = images.reshape(len(images), images.shape[2], images.shape[3])
 
+        # ---- INT4-o8 CNN closure (Mode G, per-channel) ----
+        if requant_mode == 'vta_native_o8':
+            _ZP = vta_config.get('zero_point', 8)
+            _act_scale = vta_config['act_scales_brevitas']
+
+            def _im2col_chw(x_chw, kH, kW, pad, pad_value=0):
+                """CHW im2col with configurable pad value for Mode G."""
+                C, H, W = x_chw.shape
+                if pad > 0:
+                    x_p = np.full((C, H+2*pad, W+2*pad), pad_value, dtype=x_chw.dtype)
+                    x_p[:, pad:pad+H, pad:pad+W] = x_chw
+                else:
+                    x_p = x_chw
+                oH = H + 2*pad - kH + 1
+                oW = W + 2*pad - kW + 1
+                cols = np.empty((oH*oW, kH*kW*C), dtype=x_chw.dtype)
+                idx = 0
+                for ii in range(oH):
+                    for jj in range(oW):
+                        cols[idx] = x_p[:, ii:ii+kH, jj:jj+kW].transpose(1,2,0).reshape(-1)
+                        idx += 1
+                return cols
+
+            def _maxpool_chw(x, k, s):
+                C, H, W = x.shape
+                oH, oW = (H-k)//s+1, (W-k)//s+1
+                sh = (C, oH, oW, k, k)
+                st = (x.strides[0], x.strides[1]*s, x.strides[2]*s,
+                      x.strides[1], x.strides[2])
+                return np.lib.stride_tricks.as_strided(
+                    x, shape=sh, strides=st, writeable=False).max(axis=(3,4))
+
+            def infer_one_vta_native_o8_cnn(img_2d):
+                """INT4-o8 CNN via Mode G: offset-encoded int4 input, int8 output,
+                per-channel dequant, im2col + o-tiling, all 4-arg VTA calls."""
+                x_bre = np.clip(np.round(img_2d[None, :, :] / _act_scale[0]),
+                               0, 15).astype(np.int32)
+                x_vta = (x_bre - _ZP).astype(np.int8)
+
+                for i, (lm, gm) in enumerate(zip(layer_meta, gemm_modules)):
+                    if lm['type'] == 'conv':
+                        o_tile = lm['o_tile']
+                        n_chunks = lm['n_chunks']
+                        C_out = lm['real_out']
+
+                        patches = _im2col_chw(x_vta, 3, 3, pad=1, pad_value=-_ZP)
+                        n_t = lm['n_tiles']
+                        if patches.shape[1] < n_t * BLOCK_IN:
+                            patches = np.pad(patches,
+                                ((0, 0), (0, n_t * BLOCK_IN - patches.shape[1])))
+                        spatial = patches.shape[0]
+
+                        full_int8 = np.zeros((spatial, BLOCK_OUT), dtype=np.int8)
+                        for ch in range(n_chunks):
+                            st = ch * o_tile
+                            en = min(st + o_tile, spatial)
+                            ao = en - st
+                            if ao <= 0: break
+                            a = patches[st:en].reshape(
+                                ao, n_t, 1, BLOCK_IN).astype(np.int8)
+                            if ao < o_tile:
+                                a = np.pad(a, ((0, o_tile-ao),(0,0),(0,0),(0,0)))
+                            A_nds[i].copyfrom(pack_int4_for_vta(a))
+                            C_nds[i].copyfrom(np.zeros(
+                                (o_tile, lm['m_tiles'], 1, BLOCK_OUT), dtype=np.int8))
+                            gm(A_nds[i], W_nds[i], D_nds[i], C_nds[i])
+                            full_int8[st:en] = C_nds[i].numpy()[:ao, 0, 0, :]
+
+                        H = int(math.sqrt(spatial))
+                        out_chw = full_int8[:, :C_out].reshape(
+                            H, H, C_out).transpose(2, 0, 1)
+                        w_sc = np.array(lm['w_scale'], dtype=np.float64)
+                        cs = w_sc * _act_scale[i] * (2.0 ** lm['shift'])
+                        fl = out_chw.astype(np.float64) * cs[:, None, None]
+                        pooled = _maxpool_chw(np.maximum(fl, 0.0), 2, 2)
+                        x_bre = np.clip(np.round(pooled / _act_scale[i + 1]),
+                                       0, 15).astype(np.int32)
+                        x_vta = (x_bre - _ZP).astype(np.int8)
+
+                    elif lm['type'] == 'dense':
+                        last_s = _act_scale[len([
+                            l for l in layer_meta if l.get('type') == 'conv'])]
+                        x_fl = (x_vta.astype(np.int32) + _ZP).astype(
+                            np.float64) * last_s
+                        x_avg = x_fl.mean(axis=(1, 2))
+                        x_d = np.clip(np.round(x_avg / last_s),
+                                     0, 15).astype(np.int32)
+                        x_d_vta = (x_d - _ZP).astype(np.int8)
+                        x_pad = np.zeros(BLOCK_IN, dtype=np.int8)
+                        x_pad[:len(x_d_vta)] = x_d_vta
+                        a_d = pack_int4_for_vta(
+                            x_pad.reshape(1, lm['n_tiles'], 1, BLOCK_IN))
+                        A_nds[i].copyfrom(a_d)
+                        C_nds[i].copyfrom(np.zeros(
+                            (1, lm['m_tiles'], 1, BLOCK_OUT), dtype=np.int8))
+                        gm(A_nds[i], W_nds[i], D_nds[i], C_nds[i])
+                        d_int8 = C_nds[i].numpy()[0, 0, 0, :]
+                        w_d = np.array(lm['w_scale'], dtype=np.float64)
+                        cs_d = w_d * last_s * (2.0 ** lm['shift'])
+                        d_fl = d_int8[:lm['real_out']].astype(np.float64) * cs_d
+                        return int(np.argmax(d_fl))
+
+                raise RuntimeError("No dense layer found")
+
+            infer_one = infer_one_vta_native_o8_cnn
+
     else:
         def infer_one_cpu_per_image(img_flat):
             """Run single image through VTA MLP. Returns predicted class.
@@ -1021,7 +1332,7 @@ def run_vta_benchmark(model_dir, dataset, batch_size, num_runs,
         'num_images': len(images),
         'image_shape': list(images[0].shape),
         'shift_amounts': [lm['shift'] for lm in layer_meta],
-        'vta_clock_mhz': 250,
+        'vta_clock_mhz': vta_config.get('clock_mhz', 250),
         'timestamp': datetime.now().isoformat(),
         'board': 'AUP-ZU3',
         'power_method': 'ina260' if POWER_AVAILABLE else 'none',
@@ -1154,11 +1465,15 @@ def save_results(config, idle, all_runs, run_name, dataset, results_dir):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--toolchain',   required=True, choices=['vitis_ai', 'finn', 'dpu', 'vta'])
+    parser.add_argument('--toolchain',   required=True, choices=['vitis_ai', 'finn', 'finn-t', 'dpu', 'vta'])
     parser.add_argument('--model',       required=True,
-                        help='Path to xmodel (vitis_ai/dpu), deploy/ dir (finn), or model dir (vta)')
+                        help='Path to xmodel (vitis_ai/dpu), deploy/ dir (finn/finn-t), or model dir (vta)')
     parser.add_argument('--name',        default=None)
-    parser.add_argument('--dataset',     required=True, choices=['mnist', 'cifar10'])
+    parser.add_argument('--dataset',     required=True, choices=['mnist', 'cifar10', 'radioml2018'])
+    parser.add_argument('--weights-dir', default=None,
+                        help='CPU tail weights dir for finn-t (default: <model>/weights)')
+    parser.add_argument('--hdf5',        default=None,
+                        help='RadioML 2018 HDF5 path (required for --dataset radioml2018)')
     parser.add_argument('--batch',       type=int, default=1)
     parser.add_argument('--runs',        type=int, default=5)
     parser.add_argument('--stabilize',   type=int, default=10)
@@ -1192,6 +1507,26 @@ if __name__ == '__main__':
     elif args.toolchain == 'finn':
         config, idle, all_runs = run_finn_benchmark(
             deploy_dir=args.model, dataset=args.dataset, batch_size=args.batch,
+            num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
+            stabilize_seconds=args.stabilize, results_dir=args.results_dir,
+            run_name=run_name)
+    elif args.toolchain == 'finn-t':
+        if args.dataset != 'radioml2018':
+            print("ERROR: finn-t requires --dataset radioml2018")
+            sys.exit(1)
+        if args.hdf5 is None:
+            for p in ['/home/xilinx/data/radioml2018_eval.npz',
+                       '/home/xilinx/data/RML2018.hdf5',
+                       '/home/petalinux/data/RML2018.hdf5']:
+                if os.path.exists(p):
+                    args.hdf5 = p
+                    break
+            else:
+                print("ERROR: RadioML HDF5 not found. Specify --hdf5 <path>")
+                sys.exit(1)
+        weights_dir = args.weights_dir or os.path.join(args.model, 'weights')
+        config, idle, all_runs = run_finn_t_benchmark(
+            deploy_dir=args.model, weights_dir=weights_dir, hdf5_path=args.hdf5,
             num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
             stabilize_seconds=args.stabilize, results_dir=args.results_dir,
             run_name=run_name)

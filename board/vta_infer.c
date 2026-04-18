@@ -94,6 +94,8 @@ static int npy_load(const char *path, NpyArray *arr) {
         arr->elem_size = 1;
     else if (strcmp(arr->dtype, "<f4") == 0)
         arr->elem_size = 4;
+    else if (strcmp(arr->dtype, "<i4") == 0)
+        arr->elem_size = 4;
     else if (strcmp(arr->dtype, "<f8") == 0)
         arr->elem_size = 8;
     else {
@@ -280,13 +282,42 @@ typedef struct {
 
     /* Loaded data */
     int8_t *W_tiled;
-    float *bias;
+    float *bias_float;    /* float bias for CPU-side (last layer or INT8 path) */
+    int32_t *bias_int;    /* int32 bias for VTA ALU ADD (hidden layers, vta_native) */
+    int has_vta_bias;     /* 1 = 4-arg module (bias in VTA), 0 = 3-arg */
+    float in_scale;       /* learned activation scale (vta_native path) */
 
     /* TVM handles */
     TVMModuleHandle mod;
     TVMFunctionHandle func;
-    DLTensor *A_dl, *B_dl, *C_dl;
+    DLTensor *A_dl, *B_dl, *C_dl, *D_dl;
 } Layer;
+
+/* ---- INT4 nibble pack/unpack (flat across entire tensor) ---- */
+
+static void pack_int4(const int8_t *vals, int8_t *out, int n) {
+    int half = n / 2;
+    for (int k = 0; k < half; k++) {
+        uint8_t lo = (uint8_t)vals[2*k]   & 0x0F;
+        uint8_t hi = (uint8_t)vals[2*k+1] & 0x0F;
+        out[k] = (int8_t)((hi << 4) | lo);
+    }
+    memset(out + half, 0, n - half);
+}
+
+static void unpack_int4(const int8_t *packed, int8_t *out, int n) {
+    int half = n / 2;
+    for (int k = 0; k < half; k++) {
+        uint8_t byte = (uint8_t)packed[k];
+        int8_t lo = (int8_t)(byte & 0x0F);
+        int8_t hi = (int8_t)((byte >> 4) & 0x0F);
+        if (lo > 7) lo -= 16;
+        if (hi > 7) hi -= 16;
+        out[2*k]   = lo;
+        out[2*k+1] = hi;
+    }
+    for (int k = half * 2; k < n; k++) out[k] = 0;
+}
 
 /* ---- Minimal JSON string field extraction ---- */
 
@@ -314,6 +345,19 @@ static int json_find_int(const char *json, const char *key) {
     if (!p) return -1;
     p += strlen(pattern);
     while (*p == ' ' || *p == '\t') p++;
+    return (int)strtol(p, NULL, 10);
+}
+
+static int json_find_bool(const char *json, const char *key) {
+    char pattern[128];
+    snprintf(pattern, sizeof(pattern), "\"%s\":", key);
+    char *p = strstr(json, pattern);
+    if (!p) return 0;
+    p += strlen(pattern);
+    while (*p == ' ' || *p == '\t') p++;
+    if (strncmp(p, "true", 4) == 0) return 1;
+    if (strncmp(p, "false", 5) == 0) return 0;
+    /* Fall back to integer (handles 1/0) */
     return (int)strtol(p, NULL, 10);
 }
 
@@ -386,17 +430,40 @@ int main(int argc, char **argv) {
     json[fsize] = '\0';
     fclose(cf);
 
-    /* Detect model type */
-    char model_type[32] = "mlp";  /* default for backward compat */
+    /* Detect model type and requant mode */
+    char model_type[32] = "mlp";
     json_find_str(json, "model_type", model_type, sizeof(model_type));
     int is_cnn = (strcmp(model_type, "cnn") == 0);
+
+    char requant_mode[32] = "cpu_per_image";
+    json_find_str(json, "requant_mode", requant_mode, sizeof(requant_mode));
+    int is_vta_native = (strcmp(requant_mode, "vta_native") == 0);
+    printf("Config: model_type='%s' requant_mode='%s' is_vta_native=%d is_cnn=%d\n",
+           model_type, requant_mode, is_vta_native, is_cnn);
+
+    float input_scale = 0;
+    int input_clip_max = 127;
+    if (is_vta_native) {
+        input_scale = json_find_float(json, "input_scale");
+        input_clip_max = json_find_int(json, "input_clip_max");
+        if (input_scale <= 0) {
+            /* Fall back to board_act_scales[0] if input_scale not present */
+            /* For MLP INT4 v2: input_scale = 1/7 = 0.142857... */
+            fprintf(stderr, "Warning: input_scale not found in config, "
+                    "trying board_act_scales\n");
+            /* Minimal: just use a known default */
+            input_scale = 1.0f / 7.0f;
+        }
+        if (input_clip_max <= 0) input_clip_max = 7;
+    }
 
     int num_layers = json_find_int(json, "num_layers");
     if (num_layers <= 0 || num_layers > MAX_LAYERS) {
         fprintf(stderr, "Invalid num_layers: %d\n", num_layers);
         return 1;
     }
-    printf("Model type: %s, layers: %d\n", model_type, num_layers);
+    printf("Model type: %s, requant: %s, layers: %d\n",
+           model_type, requant_mode, num_layers);
 
     /* ---- Parse and load layers ---- */
     Layer layers[MAX_LAYERS];
@@ -425,6 +492,11 @@ int main(int argc, char **argv) {
         layers[i].m_tiles = json_find_int(layer_json, "m_tiles");
         layers[i].shift = json_find_int(layer_json, "shift");
         layers[i].w_scale = json_find_float(layer_json, "w_scale");
+        layers[i].has_vta_bias = json_find_bool(layer_json, "has_vta_bias");
+        layers[i].in_scale = json_find_float(layer_json, "in_scale");
+        layers[i].D_dl = NULL;
+        layers[i].bias_int = NULL;
+        layers[i].bias_float = NULL;
 
         /* CNN-specific fields */
         if (is_cnn) {
@@ -485,7 +557,17 @@ int main(int argc, char **argv) {
 
         snprintf(path, sizeof(path), "%s/%s", model_dir, bfile);
         if (npy_load(path, &barr) != 0) return 1;
-        layers[i].bias = (float *)barr.data;
+        if (is_vta_native && layers[i].has_vta_bias) {
+            layers[i].bias_int = (int32_t *)barr.data;
+            printf("    bias: int32 (%zu elems), first3=[%d, %d, %d]\n",
+                   barr.total_elems,
+                   layers[i].bias_int[0], layers[i].bias_int[1], layers[i].bias_int[2]);
+        } else {
+            layers[i].bias_float = (float *)barr.data;
+            printf("    bias: float32 (%zu elems), first3=[%.4f, %.4f, %.4f]\n",
+                   barr.total_elems,
+                   layers[i].bias_float[0], layers[i].bias_float[1], layers[i].bias_float[2]);
+        }
 
         /* Allocate VTA tensors (sized for o_tile) */
         int ot = layers[i].o_tile;
@@ -500,11 +582,38 @@ int main(int argc, char **argv) {
         layers[i].B_dl = alloc_vta_tensor(b_shape, 4, dtype_int8);
         layers[i].C_dl = alloc_vta_tensor(c_shape, 4, dtype_int8);
 
-        /* Copy weights to VTA */
+        /* Copy weights to VTA (pack int4 for vta_native path) */
         DLTensor *B_cpu = alloc_cpu_tensor(b_shape, 4, dtype_int8);
-        memcpy(B_cpu->data, layers[i].W_tiled, mt * nt * BLOCK_OUT * BLOCK_IN);
+        if (is_vta_native) {
+            int w_elems = mt * nt * BLOCK_OUT * BLOCK_IN;
+            int8_t *w_packed = (int8_t *)malloc(w_elems);
+            pack_int4(layers[i].W_tiled, w_packed, w_elems);
+            memcpy(B_cpu->data, w_packed, w_elems);
+            free(w_packed);
+            printf("    weights: int4-packed (%d elems)\n", w_elems);
+        } else {
+            memcpy(B_cpu->data, layers[i].W_tiled, mt * nt * BLOCK_OUT * BLOCK_IN);
+            printf("    weights: raw int8 (%d bytes)\n", mt * nt * BLOCK_OUT * BLOCK_IN);
+        }
         TVM_CHECK(TVMArrayCopyFromTo(B_cpu, layers[i].B_dl, NULL));
         TVMArrayFree(B_cpu);
+
+        /* Allocate and load int32 bias to VTA (vta_native hidden layers) */
+        if (is_vta_native && layers[i].has_vta_bias) {
+            DLDataType dtype_int32 = {kDLInt, 32, 1};
+            int64_t d_shape[] = {ot, mt, 1, BLOCK_OUT};
+            layers[i].D_dl = alloc_vta_tensor(d_shape, 4, dtype_int32);
+            DLTensor *D_cpu = alloc_cpu_tensor(d_shape, 4, dtype_int32);
+            /* Broadcast bias (mt * BLOCK_OUT int32s) across o_tile rows */
+            int32_t *d_data = (int32_t *)D_cpu->data;
+            for (int r = 0; r < ot; r++) {
+                memcpy(d_data + r * mt * BLOCK_OUT,
+                       layers[i].bias_int,
+                       mt * BLOCK_OUT * sizeof(int32_t));
+            }
+            TVM_CHECK(TVMArrayCopyFromTo(D_cpu, layers[i].D_dl, NULL));
+            TVMArrayFree(D_cpu);
+        }
     }
 
     free(json);
@@ -581,6 +690,36 @@ int main(int argc, char **argv) {
         memcpy((c_data), C_cpu->data, (c_bytes)); \
     } while(0)
 
+    /* ---- 4-arg VTA call (GEMM + bias + SHR + CLIP) for vta_native ---- */
+    #define VTA_CALL_BIAS(layer_ptr, a_data, a_bytes, c_data, c_bytes) do { \
+        Layer *_vl = (layer_ptr); \
+        memcpy(A_cpu->data, (a_data), (a_bytes)); \
+        A_cpu->shape[0] = _vl->o_tile; \
+        A_cpu->shape[1] = _vl->n_tiles; \
+        A_cpu->shape[2] = 1; \
+        A_cpu->shape[3] = BLOCK_IN; \
+        A_cpu->strides = NULL; \
+        TVM_CHECK(TVMArrayCopyFromTo(A_cpu, _vl->A_dl, NULL)); \
+        memset(C_cpu->data, 0, (c_bytes)); \
+        C_cpu->shape[0] = _vl->o_tile; \
+        C_cpu->shape[1] = _vl->m_tiles; \
+        C_cpu->shape[2] = 1; \
+        C_cpu->shape[3] = BLOCK_OUT; \
+        C_cpu->strides = NULL; \
+        TVM_CHECK(TVMArrayCopyFromTo(C_cpu, _vl->C_dl, NULL)); \
+        TVMValue args[4]; \
+        int type_codes[4] = {kTVMDLTensorHandle, kTVMDLTensorHandle, \
+                             kTVMDLTensorHandle, kTVMDLTensorHandle}; \
+        args[0].v_handle = _vl->A_dl; \
+        args[1].v_handle = _vl->B_dl; \
+        args[2].v_handle = _vl->D_dl; \
+        args[3].v_handle = _vl->C_dl; \
+        TVMValue rv; int rt; \
+        TVM_CHECK(TVMFuncCall(_vl->func, args, type_codes, 4, &rv, &rt)); \
+        TVM_CHECK(TVMArrayCopyFromTo(_vl->C_dl, C_cpu, NULL)); \
+        memcpy((c_data), C_cpu->data, (c_bytes)); \
+    } while(0)
+
     /* ---- Inference functions ---- */
 
     /* MLP inference: returns predicted class */
@@ -605,7 +744,7 @@ int main(int argc, char **argv) {
             VTA_CALL(_l, h_int8, _a_bytes, _c_out, _c_bytes); \
             float combined = current_scale * _l->w_scale * (float)(1 << _l->shift); \
             for (int _j = 0; _j < _l->out_f; _j++) { \
-                h_float_mlp[_j] = (float)_c_out[_j] * combined + _l->bias[_j]; \
+                h_float_mlp[_j] = (float)_c_out[_j] * combined + _l->bias_float[_j]; \
             } \
             if (_li < num_layers - 1) { \
                 float y_max = 0; \
@@ -624,6 +763,47 @@ int main(int argc, char **argv) {
                 float best = h_float_mlp[0]; int best_idx = 0; \
                 for (int _j = 1; _j < _l->real_out; _j++) { \
                     if (h_float_mlp[_j] > best) { best = h_float_mlp[_j]; best_idx = _j; } \
+                } \
+                (prediction) = best_idx; \
+            } \
+        } \
+    } while(0)
+
+    /* MLP inference: vta_native INT4 path */
+    int8_t _packed_buf[MAX_FLAT];  /* reusable pack buffer */
+    int8_t _unpacked_buf[MAX_FLAT];
+
+    #define MLP_INFER_VTA_NATIVE(img_ptr, prediction) do { \
+        float *_img = (img_ptr); \
+        /* Input quantize: fixed scale, clip [0, input_clip_max] */ \
+        for (int _k = 0; _k < 784; _k++) { \
+            float v = roundf(_img[_k] / input_scale); \
+            h_int8[_k] = (int8_t)(v < 0 ? 0 : (v > input_clip_max ? input_clip_max : (int)v)); \
+        } \
+        for (int _li = 0; _li < num_layers; _li++) { \
+            Layer *_ln = &layers[_li]; \
+            int _a_elems = _ln->n_tiles * BLOCK_IN; \
+            int _c_elems = _ln->m_tiles * BLOCK_OUT; \
+            /* Pack int4 input into nibble format */ \
+            pack_int4(h_int8, _packed_buf, _a_elems); \
+            int8_t _c_packed[MAX_FLAT]; \
+            if (_ln->has_vta_bias) { \
+                /* Hidden layer: 4-arg call. VTA does GEMM+bias+SHR+CLIP. */ \
+                /* Output is packed int4 — unpack for next layer. */ \
+                VTA_CALL_BIAS(_ln, _packed_buf, _a_elems, _c_packed, _c_elems); \
+                unpack_int4(_c_packed, _unpacked_buf, _c_elems); \
+                memcpy(h_int8, _unpacked_buf, _ln->real_out); \
+            } else { \
+                /* Last layer: 3-arg call. CPU dequant + float bias + argmax. */ \
+                VTA_CALL(_ln, _packed_buf, _a_elems, _c_packed, _c_elems); \
+                unpack_int4(_c_packed, _unpacked_buf, _c_elems); \
+                float combined = _ln->in_scale * _ln->w_scale \
+                                 * (float)(1 << _ln->shift); \
+                float best = -1e30f; int best_idx = 0; \
+                for (int _j = 0; _j < _ln->real_out; _j++) { \
+                    float val = (float)_unpacked_buf[_j] * combined \
+                                + _ln->bias_float[_j]; \
+                    if (val > best) { best = val; best_idx = _j; } \
                 } \
                 (prediction) = best_idx; \
             } \
@@ -697,7 +877,7 @@ int main(int argc, char **argv) {
                 float combined = current_scale * l->w_scale * (float)(1 << l->shift);
                 for (int r = 0; r < n_pixels; r++) {
                     for (int c = 0; c < l->out_f; c++) {
-                        float val = (float)vta_out_i8[r * l->out_f + c] * combined + l->bias[c];
+                        float val = (float)vta_out_i8[r * l->out_f + c] * combined + l->bias_float[c];
                         if (val < 0) val = 0;  /* ReLU */
                         y_float[r * l->out_f + c] = val;
                     }
@@ -759,7 +939,7 @@ int main(int argc, char **argv) {
                 float combined = feat_s * l->w_scale * (float)(1 << l->shift);
                 float logits[MAX_OUT_F];
                 for (int k = 0; k < l->out_f; k++) {
-                    logits[k] = (float)dense_out[k] * combined + l->bias[k];
+                    logits[k] = (float)dense_out[k] * combined + l->bias_float[k];
                 }
 
                 float best = logits[0];
@@ -784,6 +964,29 @@ int main(int argc, char **argv) {
         }
     }
 
+    /* ---- Dispatch macro: selects INT8 or INT4 vta_native MLP path ---- */
+    #define MLP_DISPATCH(img_ptr, prediction) do { \
+        if (is_vta_native) { \
+            MLP_INFER_VTA_NATIVE(img_ptr, prediction); \
+        } else { \
+            MLP_INFER(img_ptr, prediction); \
+        } \
+    } while(0)
+
+    /* ---- Pre-inference sanity checks ---- */
+    printf("Sanity checks:\n");
+    printf("  is_vta_native=%d, is_cnn=%d\n", is_vta_native, is_cnn);
+    for (int i = 0; i < num_layers; i++) {
+        printf("  layer %d: has_vta_bias=%d bias_float=%p bias_int=%p D_dl=%p\n",
+               i, layers[i].has_vta_bias,
+               (void*)layers[i].bias_float, (void*)layers[i].bias_int,
+               (void*)layers[i].D_dl);
+        if (!is_vta_native && !layers[i].bias_float) {
+            fprintf(stderr, "FATAL: INT8 layer %d has NULL bias_float!\n", i);
+            return 1;
+        }
+    }
+
     /* ---- Warmup ---- */
     printf("Warmup (10 images)...\n");
     for (int i = 0; i < 10 && i < n_images; i++) {
@@ -791,7 +994,7 @@ int main(int argc, char **argv) {
         if (is_cnn) {
             pred = cnn_infer(images + i * 784);
         } else {
-            MLP_INFER(images + i * 784, pred);
+            MLP_DISPATCH(images + i * 784, pred);
         }
         (void)pred;
     }
@@ -804,7 +1007,7 @@ int main(int argc, char **argv) {
         if (is_cnn) {
             pred = cnn_infer(images + i * 784);
         } else {
-            MLP_INFER(images + i * 784, pred);
+            MLP_DISPATCH(images + i * 784, pred);
         }
         if (pred == labels[i]) verify_correct++;
     }
@@ -846,7 +1049,7 @@ int main(int argc, char **argv) {
             if (is_cnn) {
                 pred = cnn_infer(images + i * 784);
             } else {
-                MLP_INFER(images + i * 784, pred);
+                MLP_DISPATCH(images + i * 784, pred);
             }
             if (pred == labels[i]) correct++;
         }
@@ -961,7 +1164,8 @@ int main(int argc, char **argv) {
         TVMArrayFree(layers[i].B_dl);
         TVMArrayFree(layers[i].C_dl);
         free(layers[i].W_tiled);
-        free(layers[i].bias);
+        if (layers[i].bias_float) free(layers[i].bias_float);
+        if (layers[i].bias_int) free(layers[i].bias_int);
     }
     TVMArrayFree(A_cpu);
     TVMArrayFree(C_cpu);

@@ -38,8 +38,12 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 
 ### vta/
 - MLP tiny [64,32] MNIST — INT8, 250 MHz, Python and C runners
-- MLP tiny [64,32] MNIST — INT4, 200 MHz, Python runner (Brevitas QAT w4a4, 93.08%)
+- MLP tiny [64,32] MNIST — INT4, 200 MHz, Python runner (Brevitas QAT w4a4, 93.08%, 245.6 FPS, 18.13 mJ)
+- MLP tiny [64,32] MNIST — INT4, 200 MHz, C runner (93.08%, 1266 FPS, 3.15 mJ)
 - CNN tiny [8,16] MNIST — INT8, 250 MHz, Python runner
+- CNN tiny [8,16] MNIST — INT4, 166 MHz, Python runner, INT4-o8 bitstream (per-channel BN-fold, zero-point activation offset, 81.57%, 29.2 FPS, 142.0 mJ)
+
+Note on CNN INT4: requires a mixed-precision bitstream (int4 input/weights, int8 DMA output) because VTA's per-tensor shift-right with 4-bit output width cannot preserve inter-layer signal through BN-amplified channels. Zero-point offset maps Brevitas unsigned [0,15] activations to VTA signed [-8,7] with bias correction, recovering the full activation range. Timing closed at 166 MHz (down from 200 MHz for pure INT4, 250 MHz for INT8).
 
 ### vitis_ai/
 - MLP tiny [64,32] MNIST — INT8, B512 DPU, 300/600 MHz

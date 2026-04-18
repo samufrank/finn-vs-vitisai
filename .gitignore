@@ -38,6 +38,7 @@ vitis_ai/kv260_archive/
 
 # Other archives
 **/archive/
+context/
 
 # Docker
 .docker/
@@ -59,6 +60,7 @@ Thumbs.db
 *.bit
 *.hwh
 !**/bitstreams/**
+bitstreams/int4_o8_166mhz_build_artifacts/
 
 # Big build tarballs (regenerable from source)
 *_full_build.tar.gz
