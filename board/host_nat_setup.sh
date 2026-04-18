@@ -15,6 +15,10 @@ fi
 
 echo "Found USB interface: $USB_IF"
 
+# Prevent NetworkManager from grabbing the interface
+sudo nmcli connection delete "Wired connection 1" 2>/dev/null || true
+sudo nmcli device set "$USB_IF" managed no
+
 # Find the internet-facing interface (lowest metric default route)
 INET_IF=$(ip route | grep default | sort -t' ' -k11 -n | head -1 | awk '{print $5}')
 
@@ -27,6 +31,7 @@ echo "Internet interface: $INET_IF"
 
 # Assign host IP on USB interface
 sudo ip addr add 192.168.3.100/24 dev "$USB_IF" 2>/dev/null || echo "(IP already assigned)"
+sudo ip link set "$USB_IF" mtu 900
 
 # Enable forwarding
 sudo sysctl -w net.ipv4.ip_forward=1
