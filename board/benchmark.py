@@ -656,9 +656,44 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
     )
     print(f"  Accel input: {ishape_normal}  output: {oshape_normal}")
 
-    # Allocate DMA buffers using the correct (unclobbered) packed shapes
-    ibuf_device = allocate(shape=ishape_packed, dtype=np.uint8)
-    obuf_device = allocate(shape=oshape_packed, dtype=np.uint8)
+    # ---- Buffer allocation (C runner v2 selectable via FINN_T_OPT env var) ----
+    #   baseline    -> v1 path: cached, single-buffered
+    #   uncached    -> v2 with cacheable=False buffers, single-buffered (opt 1 only)
+    #   doublebuf   -> v2 with cached buffers, two pairs (opt 2 only)
+    #   both / auto -> v2 with cacheable=False buffers, two pairs (default)
+    # Anything else logs a warning and uses 'both'.
+    _finn_t_opt = os.environ.get('FINN_T_OPT', 'both').strip().lower()
+    if _finn_t_opt in ('baseline', 'v1', 'cached'):
+        _v2_requested, _v2_uncached, _v2_double = False, False, False
+    elif _finn_t_opt == 'uncached':
+        _v2_requested, _v2_uncached, _v2_double = True, True, False
+    elif _finn_t_opt in ('doublebuf', 'double', 'db'):
+        _v2_requested, _v2_uncached, _v2_double = True, False, True
+    elif _finn_t_opt in ('both', 'optimized', 'auto'):
+        _v2_requested, _v2_uncached, _v2_double = True, True, True
+    else:
+        print(f"  FINN_T_OPT={_finn_t_opt!r} not recognized; using 'both'")
+        _v2_requested, _v2_uncached, _v2_double = True, True, True
+
+    _alloc_kwargs = {'shape': ishape_packed, 'dtype': np.uint8}
+    _alloc_kwargs_o = {'shape': oshape_packed, 'dtype': np.uint8}
+    if _v2_requested and _v2_uncached:
+        _alloc_kwargs['cacheable']  = False
+        _alloc_kwargs_o['cacheable'] = False
+    try:
+        ibuf_device = allocate(**_alloc_kwargs)
+        obuf_device = allocate(**_alloc_kwargs_o)
+        ibuf_device_b = allocate(**_alloc_kwargs)  if _v2_double else None
+        obuf_device_b = allocate(**_alloc_kwargs_o) if _v2_double else None
+    except TypeError:
+        # Older PYNQ that doesn't accept cacheable= kwarg — fall back to defaults.
+        print("  pynq.allocate(cacheable=...) not supported here; "
+              "falling back to default cached allocation")
+        _v2_uncached = False
+        ibuf_device = allocate(shape=ishape_packed, dtype=np.uint8)
+        obuf_device = allocate(shape=oshape_packed, dtype=np.uint8)
+        ibuf_device_b = allocate(shape=ishape_packed, dtype=np.uint8) if _v2_double else None
+        obuf_device_b = allocate(shape=oshape_packed, dtype=np.uint8) if _v2_double else None
 
     # Load CPU tail weights (extracted from dataflow_parent.onnx)
     W_cls = np.load(os.path.join(weights_dir, 'finn_t_MatMul_7_param0.npy'))
@@ -713,6 +748,108 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
         logits = cpu_tail(accel_out)
         return int(np.argmax(logits))
 
+    # ---------- Optional C hot-path ----------
+    # Try to load libfinn_t_infer.so from this script's dir. The C library
+    # implements the per-iteration sequence (memcpy signal -> ibuf, DMA
+    # trigger + poll, INT5 sign-extend, GAP, MatMul, argmax) so the Python
+    # loop overhead doesn't cap the FPGA's measured throughput.
+    # Falls back to the Python `infer` defined above if the .so isn't
+    # present (i.e., on a host machine, or before the user has compiled it
+    # on the board).
+    c_runner = None
+    c_runner_state = None
+    use_v2 = False  # set if finn_t_runner_init succeeds for the v2 path
+    _so_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), 'libfinn_t_infer.so')
+    try:
+        import ctypes
+        _lib = ctypes.CDLL(_so_path)
+        # v1 (cached, single-buffered) — always present
+        _lib.finn_t_infer_one.argtypes = [
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_uint64,
+            ctypes.c_void_p, ctypes.c_uint64,
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+        ]
+        _lib.finn_t_infer_one.restype = ctypes.c_int
+        _lib.finn_t_infer_batch.argtypes = [
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p,
+            ctypes.c_void_p, ctypes.c_uint64,
+            ctypes.c_void_p, ctypes.c_uint64,
+            ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+        ]
+        _lib.finn_t_infer_batch.restype = ctypes.c_int
+        # v2 (configurable: uncached / double-buffered) — present in updated .so
+        _has_v2 = True
+        try:
+            _lib.finn_t_runner_init.argtypes = [
+                ctypes.c_int, ctypes.c_int,
+                ctypes.c_void_p, ctypes.c_uint64,
+                ctypes.c_void_p, ctypes.c_uint64,
+                ctypes.c_void_p, ctypes.c_uint64,
+                ctypes.c_void_p, ctypes.c_uint64,
+                ctypes.c_void_p, ctypes.c_void_p,
+            ]
+            _lib.finn_t_runner_init.restype = ctypes.c_int
+            _lib.finn_t_runner_destroy.argtypes = []
+            _lib.finn_t_runner_destroy.restype = ctypes.c_int
+            _lib.finn_t_infer_batch_v2.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
+                ctypes.c_void_p, ctypes.c_void_p,
+            ]
+            _lib.finn_t_infer_batch_v2.restype = ctypes.c_int
+        except AttributeError:
+            _has_v2 = False
+            print("  C runner v2 symbols missing — rebuild libfinn_t_infer.so")
+
+        _idma_mmio = ol.idma[0].mmio.array.ctypes.data
+        _odma_mmio = ol.odma[0].mmio.array.ctypes.data
+
+        _W_cls_int8 = np.ascontiguousarray(W_cls.astype(np.int8))
+        _signals_c = np.ascontiguousarray(signals.astype(np.float32))
+        _labels_c = np.ascontiguousarray(labels.astype(np.int32))
+        _preds_c = np.zeros(len(signals), dtype=np.int32)
+
+        c_runner = _lib
+        c_runner_state = {
+            'ibuf_virt':  ibuf_device.ctypes.data,
+            'ibuf_phys':  int(ibuf_device.device_address),
+            'obuf_virt':  obuf_device.ctypes.data,
+            'obuf_phys':  int(obuf_device.device_address),
+            'idma_mmio':  _idma_mmio,
+            'odma_mmio':  _odma_mmio,
+            'W_cls_int8': _W_cls_int8,
+            'signals_c':  _signals_c,
+            'labels_c':   _labels_c,
+            'preds_c':    _preds_c,
+        }
+        print(f"  C runner loaded: {_so_path}")
+
+        # Try the v2 path if requested and supported.
+        if _v2_requested and _has_v2:
+            _ib_b_virt = ibuf_device_b.ctypes.data if ibuf_device_b is not None else 0
+            _ib_b_phys = int(ibuf_device_b.device_address) if ibuf_device_b is not None else 0
+            _ob_b_virt = obuf_device_b.ctypes.data if obuf_device_b is not None else 0
+            _ob_b_phys = int(obuf_device_b.device_address) if obuf_device_b is not None else 0
+            _rc = _lib.finn_t_runner_init(
+                2 if _v2_double else 1,
+                0 if _v2_uncached else 1,
+                ibuf_device.ctypes.data, int(ibuf_device.device_address),
+                _ib_b_virt, _ib_b_phys,
+                obuf_device.ctypes.data, int(obuf_device.device_address),
+                _ob_b_virt, _ob_b_phys,
+                _idma_mmio, _odma_mmio)
+            if _rc == 0:
+                use_v2 = True
+                print(f"  C runner v2 initialized: "
+                      f"buffers={'double' if _v2_double else 'single'}, "
+                      f"cache_ops={'off' if _v2_uncached else 'on'}")
+            else:
+                print(f"  finn_t_runner_init returned {_rc}; falling back to v1 batch")
+        elif not _v2_requested:
+            print("  FINN_T_OPT=baseline -> using v1 batch")
+    except OSError as e:
+        print(f"  C runner not available ({e}); falling back to Python infer")
+
     config = {
         'toolchain': 'finn-t',
         'deploy_dir': deploy_dir,
@@ -724,9 +861,24 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
         'signal_shape': list(signals[0].shape),
         'accel_input_shape': list(ishape_normal),
         'accel_output_shape': list(oshape_normal),
-        'cpu_tail_ops': ['Transpose', 'Unsqueeze', 'GAP', 'Flatten',
-                         'MatMul[96,24]', 'MultiThreshold[24,255]',
-                         'Unsqueeze', 'Mul(scale)'],
+        # When running via the C path the CPU-tail ops are: sign-extend,
+        # transpose, GAP, MatMul[96,24], argmax (no MultiThreshold or
+        # dequant scale — they only affect logit calibration, not argmax).
+        # Python fallback path retains the full tail.
+        'cpu_tail_ops': (
+            ['SignExtend', 'Transpose', 'GAP', 'MatMul[96,24]', 'argmax']
+            if c_runner is not None else
+            ['Transpose', 'Unsqueeze', 'GAP', 'Flatten',
+             'MatMul[96,24]', 'MultiThreshold[24,255]',
+             'Unsqueeze', 'Mul(scale)']),
+        'runtime': (
+            'c-v2-uncached-double' if (use_v2 and _v2_uncached and _v2_double) else
+            'c-v2-uncached'        if (use_v2 and _v2_uncached) else
+            'c-v2-double'          if (use_v2 and _v2_double) else
+            'c-v2'                 if use_v2 else
+            'c-v1'                 if c_runner is not None else
+            'python'),
+        'finn_t_opt_env': _finn_t_opt,
         'num_classes': 24,
         'timestamp': datetime.now().isoformat(),
         'board': 'AUP-ZU3',
@@ -739,27 +891,62 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
 
     idle = measure_idle(idle_seconds)
 
-    print(f"Warmup ({warmup_batches} samples)...")
-    for b in range(min(warmup_batches, len(signals))):
-        infer(signals[b])
+    def _infer_c(signal):
+        """Single-sample C inference, returns predicted class. Used for
+        warmup (Python loop) so we can reuse the same code path."""
+        s = c_runner_state
+        return c_runner.finn_t_infer_one(
+            np.ascontiguousarray(signal.astype(np.float32)).ctypes.data,
+            s['ibuf_virt'], s['ibuf_phys'],
+            s['obuf_virt'], s['obuf_phys'],
+            s['idma_mmio'], s['odma_mmio'],
+            s['W_cls_int8'].ctypes.data)
 
-    print(f"Running {num_runs} measured runs over {len(signals)} eval samples...")
+    print(f"Warmup ({warmup_batches} samples)...")
+    _warmup_infer = _infer_c if c_runner is not None else infer
+    for b in range(min(warmup_batches, len(signals))):
+        _warmup_infer(signals[b])
+
+    print(f"Running {num_runs} measured runs over {len(signals)} eval samples"
+          f" via {'C runner' if c_runner is not None else 'Python infer'}...")
     all_runs = []
     for run in range(num_runs):
         power_log     = []
         sysmon_log    = []
         sampling_flag = [True]
         thread  = threading.Thread(target=make_sampler(power_log, sysmon_log, sampling_flag))
-        correct = 0
-        total   = 0
         thread.start()
         start_time = time.time()
 
-        for i in range(len(signals)):
-            pred = infer(signals[i])
-            if pred == labels[i]:
-                correct += 1
-            total += 1
+        if use_v2:
+            s = c_runner_state
+            correct = c_runner.finn_t_infer_batch_v2(
+                s['signals_c'].ctypes.data,
+                s['labels_c'].ctypes.data,
+                len(s['signals_c']),
+                s['preds_c'].ctypes.data,
+                s['W_cls_int8'].ctypes.data)
+            total = len(s['signals_c'])
+        elif c_runner is not None:
+            s = c_runner_state
+            correct = c_runner.finn_t_infer_batch(
+                s['signals_c'].ctypes.data,
+                s['labels_c'].ctypes.data,
+                len(s['signals_c']),
+                s['preds_c'].ctypes.data,
+                s['ibuf_virt'], s['ibuf_phys'],
+                s['obuf_virt'], s['obuf_phys'],
+                s['idma_mmio'], s['odma_mmio'],
+                s['W_cls_int8'].ctypes.data)
+            total = len(s['signals_c'])
+        else:
+            correct = 0
+            total   = 0
+            for i in range(len(signals)):
+                pred = infer(signals[i])
+                if pred == labels[i]:
+                    correct += 1
+                total += 1
 
         elapsed = time.time() - start_time
         end_time = time.time()
@@ -767,6 +954,12 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
         thread.join()
         all_runs.append(build_run_result(run + 1, correct, total, elapsed, power_log, sysmon_log,
                                          t_start=start_time, t_end=end_time))
+
+    if use_v2:
+        # Best-effort cleanup; the runner state is process-local static so this
+        # is mostly cosmetic. Buffers are freed when the pynq.allocate refs
+        # go out of scope.
+        c_runner.finn_t_runner_destroy()
 
     return config, idle, all_runs
 

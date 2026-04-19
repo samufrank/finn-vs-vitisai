@@ -1,0 +1,158 @@
+# Experiment tag to help with aggregating and filtering experiment sweeps
+tag: quantized
+# Global seed to make evaluation reproducible
+seed: 12
+# Model hyperparameters: ...
+model:
+  # Number of output classes to predict (default 24 RadioML classes)
+  num_classes: 24
+  # Configuration of the initial patch-embedding layer
+  embedding:
+    # Number of patches to aggregate the feature map into
+    patches: [ 1, 64 ]
+    # Kernel size for sliding windows generating the patches
+    kernel_size: [ 1, 16 ]
+    # Stride of the sliding windows
+    stride: [ 1, 16 ]
+    # Padding to the input width to ensure expected number of output patches
+    padding: [ 0, 0 ]
+    # Activation functions to use after the convolution layer
+    #   Options: tanh, sigmoid, relu, gelu, silu, none
+    activation: relu
+    # Number of quantization bits for weights and activations of the embedding
+    # layer, null means no quantization
+    bits: 8
+  # Configures the positional encoding layer in front of the first attention
+  # block
+  positional:
+    # Type of positional encoding to use at the input (following the embedding)
+    #   Options are: none, sinusoidal, binary, learned
+    encoding: learned
+    # Number of quantization bits for weights and activations of the encoding
+    # layer, null means no quantization
+    bits: 8
+  # List of layers configuring the encoder stack: Either a string referring to a
+  # pre-defined configuration or a list of individual layer configurations
+  configuration: original
+  # Number of layers, i.e., stacked repetitions of the encoder configuration
+  # above
+  num_layers: 1
+  # Number of attention heads
+  num_heads: 3
+  # Embedding dimension shared by all blocks, i.e., embedding, attention, MLP,
+  # convolution, etc.
+  emb_dim: 64
+  # Expanded embedding dimension in MLP or convolution blocks, usually this is
+  # related to the embedding dimension as 4 * emb_dim
+  expansion_dim: 384
+  # Number of quantization bits for weights and activations (for all
+  # intermediate layers), null means no quantization
+  bits: 4
+  # Number of quantization bits for weights and activations of the
+  # output classification layer, null means no quantization
+  cls_bits: 8
+  # Activation functions to use after convolution and linear layers
+  #   Options: tanh, sigmoid, relu, gelu, silu
+  activation: relu
+  # Normalization layer preceding or following each block
+  #   Options: batch-norm, layer-norm, none
+  norm: none
+  # Placement of the normalization layer: pre-norm or post-norm, if norm is not
+  # none
+  norm_placement: pre-norm
+  # Dropout: probability of an element to be zeroed during training
+  dropout: 0.5
+# Training/Validation dataset configuration
+dataset:
+  # Optionally select only a subset of the classes
+  #  classes: null
+  # Optionally select only a subset of the available noise levels
+  signal_to_noise_ratios: [
+    # Noise levels from -6 dB upwards to 30 dB in steps of 2
+    #   !!python/object/apply:builtins.range [-6, 31, 2]
+    -6, -4, -2, 0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
+  ]
+  # Splits the dataset into train/validation/evaluation subsets
+  splits: [ 0.80, 0.10, 0.10 ]  # 80%, 10%, 10% splits
+  # Seed used for reproducible splitting of datasets
+  seed: 12
+  # Reshape the dataset to fit the expected embedding dimension of the model
+  # and to effectively reduce the sequence length
+  reshape: [ 1, 1024, 2 ]
+# Training hyperparameters
+train:
+  # Number of training epochs to run
+  epochs: 100
+  # Batch size for training
+  batch_size: 512
+  # Optimizer configuration
+  optimizer:
+    # Name of the optimization algorithm to use: adam or sgd
+    algorithm: adam
+    # (Initial) Learning rate
+    lr: 0.001
+    # L2 regularization
+    weight_decay: 1.0e-5
+    # Coefficients used for computing running averages of gradient and its
+    # square.
+    betas: [ 0.9, 0.999 ]
+    # Term added to the denominator to improve numerical stability
+    eps: 1.0e-8
+  # Loss function to use: cross-entropy or nll
+  criterion: cross-entropy
+  # Learning rate scheduler (ReduceLROnPlateau) configuration
+  scheduler:
+    # Reduce learning rate by  this factor if the loss stops improving
+    factor: 0.5
+    # Number of epochs without improvement to wait before reducing the
+    # learning rate
+    patience: 5
+  # DataLoader keyword arguments
+  loader:
+    # Reshuffle data every epoch
+    shuffle: true
+    # Number of workers to use for loading the data in parallel
+    num_workers: 32
+    # Number of batches loaded in advance by each worker
+    prefetch_factor: 4
+    # Keep worker processes alive after consuming the dataset once
+    persistent_workers: false
+    # Load tensors into device pinned memory
+    pin_memory: true
+    # Drop the last batch if it is incomplete, i.e., smaller than the batch size
+    drop_last: true
+# Evaluation hyperparameters
+eval:
+  # Evaluation batch size - does not influence the result, just speeds up the
+  # evaluation by doing more in parallel
+  batch_size: 512
+  # DataLoader keyword arguments
+  loader:
+    # Number of workers to use for loading the data in parallel
+    num_workers: 32
+    # Number of batches loaded in advance by each worker
+    prefetch_factor: 4
+    # Keep worker processes alive after consuming the dataset once
+    persistent_workers: false
+    # Load tensors into device pinned memory
+    pin_memory: true
+    # Do not drop the last batch if it is incomplete
+    drop_last: false
+# Model to ONNX export hyperparameters
+export:
+  # Format to export: qcdq (~ standard ONNX) or qonnx
+  format: qonnx
+  # Explicitly splits all attention heads in the model graph to be parallel
+  split_heads: true
+  # Version of the default ONNX opset
+  opset_version: 14
+  # Apply the constant-folding optimization
+  do_constant_folding: true
+  # Export batch size - allows to provide more verification samples
+  batch_size: 1
+  # Need to use dynamo export to allow exporting torch.compiled graphs
+  #dynamo: false
+  # Keep parameters as part of the model ONNX file
+  #external_data: false
+  # Enables dynamo export model optimization
+  #optimize: false

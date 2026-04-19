@@ -50,4 +50,5 @@ Note on CNN INT4: requires a mixed-precision bitstream (int4 input/weights, int8
 - CNN tiny [8,16] MNIST — INT8, B512 DPU, 300/600 MHz
 
 ### finn-t/
-- Config A (2h, D=32, T=16, 2-bit) resource estimation: cycles, performance, HLS-synthesized resources
+- Trained RadioML 2018 transformer — INT4, 3 heads, emb_dim=96, 1 layer, 122k params, Brevitas QAT. 72.12% accuracy (eval, SNR ≥ -6 dB), 1460.8 FPS (C runner, double-buffered), 2.758 mJ/inference, 0.411 W dynamic power. First known trained-transformer deployment on ZU3EG outside Paderborn group.
+- DummyTransformer Config A (2h, D=32, T=16, 2-bit) — resource estimation and bitstream archive (random weights, no accuracy metric)

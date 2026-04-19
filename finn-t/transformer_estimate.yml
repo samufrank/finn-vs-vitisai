@@ -33,6 +33,7 @@ steps:
   - custom_steps.step_convert_elementwise_binary_to_hw
   - custom_steps.step_replicate_streams
   - step_convert_to_hw
+  - custom_steps_fix4.step_detach_classifier_tail
   - step_create_dataflow_partition
   - step_specialize_layers
   - finn.builder.custom_step_library.transformer_adhoc.step_set_folding

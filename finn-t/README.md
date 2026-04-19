@@ -1,155 +1,145 @@
 # FINN-T Transformer on Zynq UltraScale+
 
-End-to-end build of a quantized transformer accelerator on Zynq UltraScale+
-using [FINN-T](https://github.com/eki-project/FINN-T) (Berganski et al.,
-FPT 2024) via the [finn-plus](https://github.com/eki-project/finn-plus) 1.4.0
-compiler. Targets the AUP-ZU3 board (xczu3eg-sfvc784-2-e, -2 silicon).
+End-to-end build and deployment of a quantized transformer accelerator on
+Zynq UltraScale+ using [finn-plus](https://github.com/eki-project/finn-plus)
+1.4.0 (which subsumes [FINN-T](https://github.com/eki-project/FINN-T),
+Berganski et al., FPT 2024). Targets the AUP-ZU3 board (xczu3eg-sfvc784-1-e).
 
 ## Status
 
-- **Resource estimation**: complete (Config A: 2 heads, D=32, T=16, 2-bit, 1 layer)
-- **HLS IP generation**: complete
-- **Bitstream synthesis**: complete
-- **Board deployment**: v2 runs end-to-end on hardware (see `bitstreams/int2_v2/`).
-  v1 (`bitstreams/int2_v1/`) is retained as the pre-fix reference; it synthesizes
-  and programs but hangs on `execute()` due to a fork-join deadlock at the
-  ReplicateStream nodes feeding attention
+- **Trained model**: 70.97% validation accuracy on RadioML 2018 (24-class
+  modulation classification), INT4 Brevitas QAT, matches Paderborn's published
+  results
+- **Board deployment**: trained INT4 transformer runs on ZU3EG hardware.
+  72.12% accuracy on eval set (SNR ≥ -6 dB, matching PyTorch reference),
+  1460.8 FPS (C runner with double-buffering), 2.76 mJ/inference
+- **DummyTransformer baseline**: INT2 random-weight build also archived
+  (`bitstreams/int2_v2/`), used for initial toolchain validation
+
+## What's here vs. What's upstream
+
+Files in this directory come from three sources:
+
+### From [eki-project/FINN-T](https://github.com/eki-project/FINN-T) — not included
+Clone the repo and copy `model.py` and `build_estimate.py` into this directory.
+
+### From eki-project/FINN-T — included here with modifications
+| File | Change |
+|------|--------|
+| `build_steps.py` | Added defensive `RangeInfo` import guard for qonnx version mismatch |
+| `params.yaml` | Updated for trained model (seq_len=64, emb_dim=96, board=Ultra96) |
+| `folding_dsp.yaml` | Reduced SIMD for ZU3EG DSP budget (272 DSP) |
+| `transformer_estimate.yml` | 23-step pipeline integrating custom passes |
+
+### Custom transformation passes
+These resolve bugs in finn-plus 1.4.0's trained-transformer-on-Zynq path.
+Each is a standalone Python file imported by `custom_steps.py`.
+
+| File | Fix # | What it does |
+|------|-------|-------------|
+| `cancel_qkv_transposes.py` | Fix 2B | Deletes Transpose quartet around Q/K/V attention projections. Transposes were stranded after streamlining because no `AbsorbTransposeIntoMVAU` pass exists in FINN. |
+| `cancel_mlp_transposes.py` | Fix 3b | Deletes Transpose pair around MLP BN-scale Add. Reshapes channelwise bias `[96,1]→[1,96]`. |
+| `remove_stale_slices.py` | Fix 3a | Deletes einops-unpack Slice nodes whose axis indices were broken by Squeeze (axis 1 pointed at emb instead of seq after batch dim removal). |
+| `detach_classifier_tail.py` | Fix 4 | Moves classifier tail (GAP, Flatten, MatMul, Mul) to CPU partition by clearing finn-domain attributes. |
+| `absorb_dequant_sdpa.py` | Fix 6 | Deletes 9 pre-SDPA dequant Muls, sets QType/KType/VType=INT4, rescales QK thresholds by 1/(s_Q×s_K), rescales post-AV thresholds by 1/s_V. Fixes FLOAT32→INT type mismatch that crashed HLS codegen. |
+| `fix_streaming_split_vectors.py` | Fix 7 | Corrects stale `numInputVectors` on StreamingSplit nodes (read from stale [96,96] annotation instead of correct [64,96]). |
+
+### Build infrastructure
+| File | Description |
+|------|-------------|
+| `custom_steps.py` | Master build step file. Integrates all 6 custom passes above plus 7 inline fixes (identity AvgPool removal, channelwise broadcast restore, GAP rank restore, elementwise output shape annotation, layout harmonization, slice shape annotation, SDPA OType annotation). ~800 lines. |
+| `patch_finn_plus.sh` | 11 patches for finn-plus 1.4.0 venv (7 original + 4 added this session: scalar-skip guard, rank-deficient guard, iteration cap, numpy.int64 coercion). |
+| `export_standalone.py` | ONNX export without DVC dependency |
+| `extract_resources.py` | Resource report extraction and display |
+| `requirements-working.txt` | Frozen pip list from working venv |
+| `deploy_weights/` | CPU tail classifier weights extracted from `dataflow_parent.onnx` |
+
+### Patches to finn-transformers (training repo)
+Copies of modified files from `~/dev/CEN571-final/finn-transformers/`.
+
+| File | Change | Reason |
+|------|--------|--------|
+| `finn-transformers-patches/blocks.py` | `softmax_output_quant`: removed `_signed=False` | Required for FINN (signed quantization on softmax output) |
+| `finn-transformers-patches/params.yaml` | `norm: none`, `emb_dim: 64`*, `opset_version: 14`, commented out `dynamo`/`external_data`/`optimize` | Training and export configuration. *Note: trained model used emb_dim=96 (upstream default); params.yaml currently says 64 from a later edit. |
 
 ## Dependencies
 
-This flow requires files from external repos that are not included here:
-
-- model.py -- transformer model definition from
-  [eki-project/FINN-T](https://github.com/eki-project/FINN-T)
-- finn-plus 1.4.0 -- `pip install finn-plus==1.4.0` (requires Python 3.10–3.11)
-- Vivado/Vitis HLS 2022.2 -- for HLS IP generation and bitstream synthesis
+- finn-plus 1.4.0 (`pip install finn-plus==1.4.0`, Python 3.10)
+- `onnx<1.17` (must be pinned before installing finn-plus)
+- Vivado/Vitis HLS 2022.2
+- Brevitas (for training and export)
+- PyTorch 2.3.x
 
 ## Setup
 
 ```bash
-# 1. Create venv and install finn-plus. Pin onnx<1.17 before installing
-#    finn-plus to prevent pip from pulling onnx-ir 0.2.0, which breaks
-#    onnx-passes at the export step.
 python3.10 -m venv ~/.venvs/finn-t-env
 source ~/.venvs/finn-t-env/bin/activate
 pip install "onnx<1.17"
 pip install finn-plus==1.4.0
-source /tools/Xilinx/Vivado/2022.2/settings64.sh  # needed for finn deps update
+source /tools/Xilinx/Vivado/2022.2/settings64.sh
 finn deps update
-
-# 2. Apply patches (finn-plus 1.4.0 has bugs in the transformer-on-Zynq path).
-#    The patch script is NOT idempotent — Patches 1-2 wrap existing InferShapes
-#    calls in try/except and will double-wrap if run twice. Always run on a
-#    fresh venv. If you need to re-patch, recreate the venv from scratch.
 bash patch_finn_plus.sh
-
-# 3. Clone FINN-T repo for model.py
-git clone https://github.com/eki-project/FINN-T.git /tmp/finn-t-repo
-cp /tmp/finn-t-repo/model.py .
 ```
 
-## Usage
+Patches are NOT idempotent. Apply to a fresh venv. If you need to
+re-patch, recreate the venv from scratch.
+
+## Build
 
 ```bash
-# Export model (requires torch, brevitas)
-python3 export_standalone.py
+source ~/.venvs/finn-t-env/bin/activate
+source /tools/Xilinx/Vivado/2022.2/settings64.sh
+export RADIOML_PATH=~/dev/CEN571-final/finn-vs-vitisai/data/RML2018.hdf5
 
-# Estimate-only (fast, ~30s, attention ops report 0 resources)
-PYTHONPATH=. finn build transformer_estimate.yml outputs/model.onnx \
-  -o outputs/estimate_run --stop step_generate_estimate_reports
-
-# Full build through bitstream and deployment package (~60 min cold, ~10 min with HLS cache)
-PYTHONPATH=. finn build transformer_estimate.yml outputs/model.onnx \
-  -o outputs/bitstream_zu3_vN
-
-# View results
-python3 extract_resources.py outputs/bitstream_zu3_vN
+cd ~/dev/CEN571-final/finn-t
+PYTHONUNBUFFERED=1 finn build transformer_estimate.yml \
+    ~/dev/CEN571-final/finn-transformers/outputs/radioml/model.onnx \
+    -o outputs/trained_build_int4 2>&1 | tee outputs/trained_build_int4.log
 ```
 
-## Files
+Build takes ~56 minutes or so (4 min compile + 16 min stitched IP + 37 min Vivado synthesis).
 
-| File | Description |
-|------|-------------|
-| `custom_steps.py` | Build steps replicating FINN-T's `build_steps.py` ordering, plus `step_set_fifo_depths` adapted for ZU3EG (no URAM) with FIFO-depth rules for attention inputs, residual joins, and ReplicateStream fork outputs |
-| `transformer_estimate.yml` | finn-plus YAML build configuration, full 20-step pipeline through deployment |
-| `folding_dsp.yaml` | Folding config forcing DSP-based MACs |
-| `params.yaml` | Model configuration (Config A: 2h, D=32, T=16, 2-bit) |
-| `export_standalone.py` | Model export to ONNX (no DVC dependency) |
-| `extract_resources.py` | Resource extraction and display tool |
-| `patch_finn_plus.sh` | Patches for finn-plus 1.4.0 transformer-on-Zynq bugs (7 patches) |
+## Trained Model Results
 
-## Build Results
+**Model**: 1 encoder layer, 3 heads, emb_dim=96, expansion_dim=384, INT4,
+norm=none, RadioML 2018 24-class modulation classification, 122k parameters.
 
-Config A (2h, D=32, T=16, 2-bit, target_fps=10000), AUP-ZU3
-(xczu3eg-sfvc784-2-e), 100 MHz clock.
+**Board deployment (AUP-ZU3, fix9 build):**
 
-**HLS-synthesized estimates** (per-operator, before FIFO insertion):
-LUT=20,886 (29.6%), DSP=63 (17.5%), BRAM_18K=25 (5.8%).
+| Metric | Value |
+|--------|-------|
+| Accuracy | 72.12% (eval, SNR ≥ -6 dB) |
+| Throughput | 1460.8 ± 0.1 FPS |
+| Latency | 0.685 ms |
+| Idle power | 3.618 W |
+| Active power | 4.029 W |
+| Dynamic power | 0.411 W |
+| Energy/inference | 2.758 mJ |
 
-**Post-synthesis (real, full design including FIFOs, DMA, and shell):**
+**Post-synthesis resources:**
 
-| Build | LUT | FF | DSP | BRAM_18K | WNS |
-|-------|-----|----|-----|----------|-----|
-| v1 (deadlocks) | 23,687 (33.6%) | 29,309 (20.8%) | 65 (18.1%) | 44 (10.2%) | 5.257 ns |
-| v2 (working)   | 23,980 (33.9%) | 29,301 (20.8%) | 65 (18.1%) | 51 (11.8%) | 4.623 ns |
+| Resource | Used | Available | Utilization |
+|----------|------|-----------|-------------|
+| LUT | ~26k | 70,560 | ~37% |
+| DSP | ~378 | 360 | ~105%* |
+| BRAM_18K | ~131 | 432 | ~30% |
+| URAM | 0 | 0 | N/A |
 
-v2 adds approximately 300 LUT and 7 BRAM_18K over v1, consumed by the deeper
-`ReplicateStream_hls` output FIFOs that resolve the fork-join deadlock. WNS
-tightened by ~0.6 ns from additional routing pressure but retains substantial
-margin at 100 MHz.
+*DSP slightly overallocated; Vivado closed timing via LUT-based MAC substitution.
 
-The full design has 32 hardware operators plus ~60 FIFOs. Fits comfortably on
-ZU3EG with substantial headroom on every resource type.
+## DummyTransformer baseline
 
-## Bitstream Archive
+Config A (2 heads, D=32, T=16, 2-bit, 1 layer). Random weights, no trained accuracy.
+Archived at `bitstreams/int2_v2/`. Used for initial toolchain validation.
 
-Two builds are archived under `bitstreams/`. Each directory contains a README
-describing the build state.
+Post-synthesis: LUT=23,980 (33.9%), DSP=65 (18.1%), BRAM_18K=51 (11.8%), WNS=4.623 ns.
 
-### `bitstreams/int2_v2/` — working
+## Bitstream archives
 
-Runs end-to-end on AUP-ZU3 hardware. This is the bitstream to deploy. See
-`bitstreams/int2_v2/README.md` for specifics.
+| Directory | Model | Status |
+|-----------|-------|--------|
+| `bitstreams/int2_v2/` | DummyTransformer INT2 | Working, random weights |
+| `bitstreams/int2_v1/` | DummyTransformer INT2 | Deadlocked (pre-FIFO-fix) |
 
-### `bitstreams/int2_v1/` — superseded
-
-Programs cleanly but hangs on `execute()`. Retained as the pre-fix reference
-for the ReplicateStream FIFO depth diagnosis. See `bitstreams/int2_v1/README.md`.
-
-## Deadlock Fix (v1 --> v2)
-
-v1 build had ReplicateStream output FIFOs at their default depth of 2. These
-failed to absorb priming skew across the three branches feeding attention
-(Q/K/V projection), producing a permanent structural stall at the
-IDMA-to-fabric interface.
-
-Diagnosis: `ReplicateStream_hls` is a blocking fork whose input `tready` drops
-whenever any output's downstream consumer is not ready. The downstream MVAUs
-in `internal_decoupled` mem_mode will not accept data until their weight
-streamers prime (coupled data/weight handshake). The three weight streamers
-are autonomous but do not necessarily prime in lockstep; any skew longer than
-two beats stalls the fastest branch, which backs up through the replicator,
-which starves the other two branches.
-
-Fix: one rule added to `step_set_fifo_depths` in `custom_steps.py`:
-
-```python
-if node.op_type == "ReplicateStream_hls":
-    out_depths = [seq_len ** 2] * num_outputs
-```
-
-Depth `seq_len**2` (256 for T=16) was chosen conservatively; the structural
-minimum is approximately one SeqFold tile (~64).
-
-## Patches applied
-
-`patch_finn_plus.sh` patches seven bugs in finn-plus 1.4.0 that affect the
-transformer-on-Zynq code path. CNN workflows are unaffected. Bug categories:
-
-1. ONNX shape inference crashes on FINN custom op domains (3 sites)
-2. `numpy.int64` rejected by `set_nodeattr`, requiring explicit `int()` casts (2 sites)
-3. `PosixPath` objects concatenated with strings (2 sites)
-4. Alveo-only deployment package code unconditionally invoked for Zynq builds (1 site)
-
-Patches 1 and 2 (InferShapes try/except wrapping) are not idempotent. Re-running the script on already-patched files produces nested-try
-indentation errors. Rebuild the venv from scratch before re-patching
+Trained model bitstream is at `~/dev/CEN571-final/finn-t/outputs/trained_build_int4_fix9/deploy/`.

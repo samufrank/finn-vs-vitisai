@@ -1,0 +1,141 @@
+{
+  "config": {
+    "toolchain": "finn-t",
+    "deploy_dir": "/home/xilinx/finn-t-fix9",
+    "weights_dir": "/home/xilinx/finn-t-fix9/weights",
+    "dataset": "radioml2018",
+    "batch_size": 1,
+    "num_runs": 3,
+    "num_images": 186639,
+    "signal_shape": [
+      1,
+      1024,
+      2
+    ],
+    "accel_input_shape": [
+      1,
+      1,
+      1024,
+      2
+    ],
+    "accel_output_shape": [
+      64,
+      96
+    ],
+    "cpu_tail_ops": [
+      "SignExtend",
+      "Transpose",
+      "GAP",
+      "MatMul[96,24]",
+      "argmax"
+    ],
+    "runtime": "c-v2-double",
+    "finn_t_opt_env": "doublebuf",
+    "num_classes": 24,
+    "timestamp": "2026-04-19T01:03:51.724831",
+    "board": "AUP-ZU3",
+    "fpga_part": "xczu3eg-sbva484-1-e",
+    "power_method": "none"
+  },
+  "idle": {
+    "t_start": 1776560641.7350404,
+    "t_end": 1776560652.7345476,
+    "power": {
+      "mean": null,
+      "std": null,
+      "n_samples": 0
+    },
+    "sysmon": {
+      "temp_ps_c": 43.072781965301665,
+      "temp_pl_c": 42.36619583132102,
+      "vccint_v": 0.842471828824626,
+      "n_samples": 500
+    }
+  },
+  "runs": [
+    {
+      "run": 1,
+      "t_start": 1776560652.752397,
+      "t_end": 1776560780.5119202,
+      "accuracy": 72.11943913115694,
+      "time_s": 127.75952005386353,
+      "throughput_fps": 1460.8617809562281,
+      "latency_ms": 0.6845274570366511,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 43.99165940779358,
+        "temp_pl_c_mean": 43.33283846724691,
+        "temp_pl_c_max": 46.629089352,
+        "vccint_v_mean": 0.8413684515967471,
+        "vccbram_v_mean": 0.8412781286242502,
+        "n_samples": 10646
+      }
+    },
+    {
+      "run": 2,
+      "t_start": 1776560780.6324472,
+      "t_end": 1776560908.391257,
+      "accuracy": 72.11943913115694,
+      "time_s": 127.75880694389343,
+      "throughput_fps": 1460.8699350328498,
+      "latency_ms": 0.6845236362383715,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 44.36368181518638,
+        "temp_pl_c_mean": 43.693018322999485,
+        "temp_pl_c_max": 46.846691768976,
+        "vccint_v_mean": 0.8412412066321259,
+        "vccbram_v_mean": 0.8411422695038999,
+        "n_samples": 10650
+      }
+    },
+    {
+      "run": 3,
+      "t_start": 1776560908.510971,
+      "t_end": 1776561036.2815633,
+      "accuracy": 72.11943913115694,
+      "time_s": 127.77058959007263,
+      "throughput_fps": 1460.735217695992,
+      "latency_ms": 0.6845867669140567,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 44.58242806677483,
+        "temp_pl_c_mean": 43.9017425357176,
+        "temp_pl_c_max": 46.55137420308,
+        "vccint_v_mean": 0.8412670228124526,
+        "vccbram_v_mean": 0.8411832890231263,
+        "n_samples": 10626
+      }
+    }
+  ],
+  "summary": {
+    "accuracy": 72.11943913115694,
+    "throughput_fps_mean": 1460.8223112283567,
+    "throughput_fps_std": 0.06167433164718272,
+    "latency_ms_mean": 0.6845459533963597,
+    "latency_ms_std": 2.8901638303883077e-05,
+    "idle_power_w": null,
+    "idle_power_std": null,
+    "idle_temp_pl_c": 42.36619583132102,
+    "avg_power_w_mean": null,
+    "avg_power_w_std": null,
+    "dynamic_power_w": null,
+    "energy_per_image_mj_mean": null,
+    "energy_per_image_mj_std": null,
+    "sysmon": {
+      "temp_ps_c_mean": 44.312589763251594,
+      "temp_pl_c_mean": 43.64253310865467,
+      "temp_pl_c_max": 46.846691768976,
+      "vccint_v_mean": 0.8412922270137752
+    }
+  }
+}
