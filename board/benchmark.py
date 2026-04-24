@@ -420,7 +420,8 @@ def run_vitisai_benchmark(model_path, dataset, batch_size, num_runs,
 # ============================================================
 def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                        warmup_batches, idle_seconds, stabilize_seconds,
-                       results_dir, run_name):
+                       results_dir, run_name,
+                       finn_runtime='python'):
 
     driver_dir = os.path.join(deploy_dir, 'driver')
     bitfile    = os.path.join(deploy_dir, 'bitfile', 'finn-accel.bit')
@@ -513,7 +514,13 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
 
     def multithreshold(x, thresholds):
         """x: (..., C), thresholds: (C, 255) -> (..., C) uint8"""
-        return np.sum(x[..., np.newaxis] > thresholds, axis=-1).astype(np.uint8)
+        # Use >= to match qonnx.custom_op.general.multithreshold (line 78), the
+        # reference the FINN compiler/training pipeline uses. The previous
+        # strict-> form differed only at exact ties (~1 in 64k channel-evals on
+        # MNIST) but is wrong against the trained-model reference.
+        # Was:
+        #   return np.sum(x[..., np.newaxis] > thresholds, axis=-1).astype(np.uint8)
+        return np.sum(x[..., np.newaxis] >= thresholds, axis=-1).astype(np.uint8)
 
     def infer(img_flat):
         if has_mlp_pre:
@@ -545,9 +552,226 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             out = out.astype(np.float32) * mul_out + add_out
             return int(np.argmax(out))
 
-    print(f"Warmup ({warmup_batches} images)...")
-    for b in range(min(warmup_batches, len(images_flat))):
-        infer(images_flat[b])
+    # ---------- Optional C hot-path ----------
+    # Mirrors the libfinn_t_infer.so pattern: Python owns bitstream / buffer
+    # allocation / MMIO mapping, and hands pointers into a shared library
+    # that runs the per-image hot loop. Two variants are supported, selected
+    # by the deploy type:
+    #   has_mlp_pre -> libfinn_mlp_infer.so  (6-stage profile)
+    #   has_cnn_pre -> libfinn_cnn_infer.so  (10-stage profile, MNIST only)
+    # The warmup / profiled / measured-loop code downstream is identical for
+    # both — c_state stashes the runner's batch/profile/destroy callables and
+    # stage-name list so the shared code dispatches without caring which.
+    c_runner = None
+    c_state  = None
+    if finn_runtime == 'c' and has_mlp_pre:
+        _so_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                'libfinn_mlp_infer.so')
+        try:
+            import ctypes
+            _lib = ctypes.CDLL(_so_path)
+            _lib.finn_mlp_runner_init.argtypes = [
+                ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                ctypes.c_int,
+                ctypes.c_void_p, ctypes.c_uint64,
+                ctypes.c_void_p, ctypes.c_uint64,
+                ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_float, ctypes.c_void_p,
+            ]
+            _lib.finn_mlp_runner_init.restype = ctypes.c_int
+            _lib.finn_mlp_runner_destroy.argtypes = []
+            _lib.finn_mlp_runner_destroy.restype  = ctypes.c_int
+            _lib.finn_mlp_infer_batch.argtypes = [
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p,
+            ]
+            _lib.finn_mlp_infer_batch.restype  = ctypes.c_int
+            _lib.finn_mlp_infer_one_profiled.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+            _lib.finn_mlp_infer_one_profiled.restype  = ctypes.c_int
+
+            precision = int(idt.bitwidth())
+            assert not idt.signed(), (
+                "C runner expects unsigned activation (UINTn); got signed idt")
+            nthres = (1 << precision) - 1  # full threshold count for the dtype
+
+            # Reuse ol's auto-allocated buffers: they're already cacheable=True,
+            # matching use_cache_ops=1 below. Avoids a duplicate allocation.
+            ibuf_dev = ol.ibuf_packed_device[0]
+            obuf_dev = ol.obuf_packed_device[0]
+            idma_mmio = ol.idma[0].mmio.array.ctypes.data
+            odma_mmio = ol.odma[0].mmio.array.ctypes.data
+
+            W0_c    = np.ascontiguousarray(W0.astype(np.float32))
+            thres_c = np.ascontiguousarray(thres.astype(np.float32))
+            add_c   = np.ascontiguousarray(add_out.astype(np.float32))
+            mul_v   = float(np.asarray(mul_out).flatten()[0])
+
+            rc = _lib.finn_mlp_runner_init(
+                precision, n_inputs, W0.shape[1], add_out.shape[0], nthres,
+                1,  # use_cache_ops=1 (ol buffers are cacheable)
+                ibuf_dev.ctypes.data, int(ibuf_dev.device_address),
+                obuf_dev.ctypes.data, int(obuf_dev.device_address),
+                idma_mmio, odma_mmio,
+                W0_c.ctypes.data, thres_c.ctypes.data, mul_v, add_c.ctypes.data)
+            if rc != 0:
+                print(f"  finn_mlp_runner_init returned {rc}; falling back to Python")
+            else:
+                images_c = np.ascontiguousarray(images_flat.astype(np.uint8))
+                labels_c = np.ascontiguousarray(labels.astype(np.int32))
+                preds_c  = np.zeros(len(images_c), dtype=np.int32)
+                c_runner = _lib
+                c_state  = {
+                    'precision': precision,
+                    'W0_c':    W0_c,      'thres_c': thres_c,
+                    'add_c':   add_c,     'mul_v':   mul_v,
+                    'images':  images_c,  'labels':  labels_c,
+                    'preds':   preds_c,
+                    'batch_fn':    _lib.finn_mlp_infer_batch,
+                    'profile_fn':  _lib.finn_mlp_infer_one_profiled,
+                    'destroy_fn':  _lib.finn_mlp_runner_destroy,
+                    'stage_names': ['MatMul', 'MultiThreshold', 'Pack',
+                                    'DMA trig+wait', 'Unpack',
+                                    'Post dequant+argmax'],
+                }
+                print(f"  MLP C runner loaded: {_so_path} "
+                      f"(INT{precision}, nthres={nthres})")
+        except OSError as e:
+            print(f"  C runner not available ({e}); falling back to Python infer")
+    elif finn_runtime == 'c' and has_cnn_pre:
+        if n_inputs != 784:
+            # CIFAR-10 (n_inputs = 3072) falls here. Shapes would differ and
+            # no CNN CIFAR-10 deploy has been validated against C yet.
+            print("  CNN C runner is MNIST-only (28x28x1); CIFAR-10 uses Python")
+        else:
+            _so_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                    'libfinn_cnn_infer.so')
+            try:
+                import ctypes
+                _lib = ctypes.CDLL(_so_path)
+                _lib.finn_cnn_runner_init.argtypes = [
+                    ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int,
+                    ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int, ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int,
+                    ctypes.c_int,
+                    ctypes.c_void_p, ctypes.c_uint64,
+                    ctypes.c_void_p, ctypes.c_uint64,
+                    ctypes.c_void_p, ctypes.c_void_p,
+                    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
+                    ctypes.c_float, ctypes.c_void_p,
+                ]
+                _lib.finn_cnn_runner_init.restype = ctypes.c_int
+                _lib.finn_cnn_runner_destroy.argtypes = []
+                _lib.finn_cnn_runner_destroy.restype  = ctypes.c_int
+                _lib.finn_cnn_infer_batch.argtypes = [
+                    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p,
+                ]
+                _lib.finn_cnn_infer_batch.restype  = ctypes.c_int
+                _lib.finn_cnn_infer_one_profiled.argtypes = [
+                    ctypes.c_void_p, ctypes.c_void_p]
+                _lib.finn_cnn_infer_one_profiled.restype  = ctypes.c_int
+
+                precision = int(idt.bitwidth())
+                assert not idt.signed(), (
+                    "C runner expects unsigned activation (UINTn); got signed idt")
+                nthres = (1 << precision) - 1
+
+                # Geometry derived from weight + io_shape_dict.  W_conv shape
+                # is (kernel*kernel*img_c, fpga_in_c); for MNIST that's (9, 8).
+                img_h, img_w, img_c = 28, 28, 1
+                patch_dim = W_conv.shape[0]
+                kernel_size = int(round((patch_dim // img_c) ** 0.5))
+                pad = 1  # FINN MNIST-tiny convention; same=1 for 3x3
+                fpga_in_c = int(W_conv.shape[1])
+                fpga_out_h = int(oshape_normal[1])
+                fpga_out_w = int(oshape_normal[2])
+                fpga_out_c = int(oshape_normal[3])
+                num_classes = int(add_out.shape[0])
+
+                ibuf_dev = ol.ibuf_packed_device[0]
+                obuf_dev = ol.obuf_packed_device[0]
+                idma_mmio = ol.idma[0].mmio.array.ctypes.data
+                odma_mmio = ol.odma[0].mmio.array.ctypes.data
+
+                W_conv_c = np.ascontiguousarray(W_conv.astype(np.float32))
+                thres_c  = np.ascontiguousarray(thres.astype(np.float32))
+                W_cls_c  = np.ascontiguousarray(W_cls.astype(np.float32))
+                add_c    = np.ascontiguousarray(add_out.astype(np.float32))
+                mul_v    = float(np.asarray(mul_out).flatten()[0])
+
+                rc = _lib.finn_cnn_runner_init(
+                    precision,
+                    img_h, img_w, img_c,
+                    kernel_size, pad,
+                    fpga_in_c,
+                    fpga_out_h, fpga_out_w, fpga_out_c,
+                    num_classes, nthres,
+                    1,  # use_cache_ops=1
+                    ibuf_dev.ctypes.data, int(ibuf_dev.device_address),
+                    obuf_dev.ctypes.data, int(obuf_dev.device_address),
+                    idma_mmio, odma_mmio,
+                    W_conv_c.ctypes.data, thres_c.ctypes.data, W_cls_c.ctypes.data,
+                    mul_v, add_c.ctypes.data)
+                if rc != 0:
+                    print(f"  finn_cnn_runner_init returned {rc}; "
+                          f"falling back to Python")
+                else:
+                    # Flatten MNIST to uint8 [N, 784] for the C batch call.
+                    images_c = np.ascontiguousarray(images_flat.astype(np.uint8))
+                    labels_c = np.ascontiguousarray(labels.astype(np.int32))
+                    preds_c  = np.zeros(len(images_c), dtype=np.int32)
+                    c_runner = _lib
+                    c_state  = {
+                        'precision': precision,
+                        'W_conv_c': W_conv_c, 'thres_c': thres_c,
+                        'W_cls_c':  W_cls_c,  'add_c':   add_c,  'mul_v': mul_v,
+                        'images':   images_c, 'labels':  labels_c,
+                        'preds':    preds_c,
+                        'batch_fn':    _lib.finn_cnn_infer_batch,
+                        'profile_fn':  _lib.finn_cnn_infer_one_profiled,
+                        'destroy_fn':  _lib.finn_cnn_runner_destroy,
+                        'stage_names': ['CastNorm', 'im2col', 'MatMul1',
+                                        'MultiThreshold', 'Pack',
+                                        'DMA trig+wait', 'CacheInv', 'GAP',
+                                        'MatMul2', 'Post dequant+argmax'],
+                    }
+                    print(f"  CNN C runner loaded: {_so_path} "
+                          f"(INT{precision}, geometry "
+                          f"{img_h}x{img_w}x{img_c} k={kernel_size} pad={pad} "
+                          f"-> {fpga_out_h}x{fpga_out_w}x{fpga_out_c})")
+            except OSError as e:
+                print(f"  C runner not available ({e}); falling back to Python")
+    elif finn_runtime == 'c':
+        print("  --finn-runtime=c requires an MLP or CNN deploy "
+              "(has_mlp_pre or has_cnn_pre); falling back to Python")
+
+    config['finn_runtime'] = ('c' if c_runner is not None else 'python')
+
+    if c_runner is not None:
+        print(f"Warmup ({warmup_batches} images via C batch)...")
+        _warm_n = min(warmup_batches, len(c_state['images']))
+        c_state['batch_fn'](
+            c_state['images'].ctypes.data, None, _warm_n,
+            c_state['preds'].ctypes.data)
+
+        # One-shot per-stage timing breakdown on image[0]. Stage count is
+        # runner-specific: 6 for MLP, 10 for CNN.
+        stage_names = c_state['stage_names']
+        ns_arr = np.zeros(len(stage_names), dtype=np.uint64)
+        c_state['profile_fn'](
+            c_state['images'][0].ctypes.data, ns_arr.ctypes.data)
+        total_ns = int(ns_arr.sum())
+        print('[C runner timing breakdown — one inference on images_flat[0]]:')
+        for name, ns in zip(stage_names, ns_arr.tolist()):
+            pct = 100.0 * ns / max(1, total_ns)
+            print(f'  {name:22s}: {ns/1000.0:9.2f} µs   ({pct:5.1f} %)')
+        print(f'  {"total":22s}: {total_ns/1000.0:9.2f} µs   '
+              f'(steady-state upper bound ~ {1e9 / max(1, total_ns):.0f} FPS)')
+    else:
+        print(f"Warmup ({warmup_batches} images)...")
+        for b in range(min(warmup_batches, len(images_flat))):
+            infer(images_flat[b])
 
     print(f"Running {num_runs} measured runs...")
     all_runs = []
@@ -556,16 +780,24 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
         sysmon_log    = []
         sampling_flag = [True]
         thread  = threading.Thread(target=make_sampler(power_log, sysmon_log, sampling_flag))
-        correct = 0
-        total   = 0
         thread.start()
         start_time = time.time()
 
-        for i in range(len(images_flat)):
-            pred = infer(images_flat[i])
-            if pred == labels[i]:
-                correct += 1
-            total += 1
+        if c_runner is not None:
+            correct = c_state['batch_fn'](
+                c_state['images'].ctypes.data,
+                c_state['labels'].ctypes.data,
+                len(c_state['images']),
+                c_state['preds'].ctypes.data)
+            total = len(c_state['images'])
+        else:
+            correct = 0
+            total   = 0
+            for i in range(len(images_flat)):
+                pred = infer(images_flat[i])
+                if pred == labels[i]:
+                    correct += 1
+                total += 1
 
         elapsed = time.time() - start_time
         end_time = time.time()
@@ -573,6 +805,9 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
         thread.join()
         all_runs.append(build_run_result(run + 1, correct, total, elapsed, power_log, sysmon_log,
                                          t_start=start_time, t_end=end_time))
+
+    if c_runner is not None:
+        c_state['destroy_fn']()
 
     return config, idle, all_runs
 
@@ -1672,6 +1907,10 @@ if __name__ == '__main__':
     parser.add_argument('--stabilize',   type=int, default=10)
     parser.add_argument('--idle',        type=int, default=10)
     parser.add_argument('--results_dir', default=None)
+    parser.add_argument('--finn-runtime', choices=['python', 'c'], default='python',
+                        help='FINN MLP inference runtime: "c" uses libfinn_mlp_infer.so, '
+                             '"python" uses the numpy infer loop (default). Only applies '
+                             'to --toolchain finn with MLP (has_mlp_pre) deploys.')
     args = parser.parse_args()
 
     if args.results_dir is None:
@@ -1702,7 +1941,7 @@ if __name__ == '__main__':
             deploy_dir=args.model, dataset=args.dataset, batch_size=args.batch,
             num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
             stabilize_seconds=args.stabilize, results_dir=args.results_dir,
-            run_name=run_name)
+            run_name=run_name, finn_runtime=args.finn_runtime)
     elif args.toolchain == 'finn-t':
         if args.dataset != 'radioml2018':
             print("ERROR: finn-t requires --dataset radioml2018")

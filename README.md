@@ -8,51 +8,56 @@ This project compares three FPGA deployment strategies for deep neural networks 
 - Open-source overlay (VTA/TVM): A fixed accelerator with an open ISA. Models are deployed by loading new weights and microcode. Bitstream is reusable across models.
 - Commercial overlay (Vitis AI DPU): AMD's production DNN processor with a closed ISA. Models are compiled to a proprietary instruction set and loaded at runtime.
 
-All three frameworks are benchmarked at INT8 precision on the same physical board with external power measurement, isolating the architectural differences rather than quantization effects or platform variation. This addresses a gap in prior work (e.g., Hamanaka et al. 2023) where mismatched precision and estimation-based power made comparisons uninterpretable.
+All three frameworks are benchmarked at matched precision on the same physical board with external power measurement, isolating architectural differences from quantization effects or platform variation. Prior comparisons (e.g., Hamanaka et al. 2023) have used mismatched precision or estimation-based power, and this project is designed to complement that work by controlling both.
+
+Runtime parity is a separate methodological consideration. Different toolchains ship with different drivers, ranging from Python wrappers to native C and C++. Reported throughput numbers can therefore include a substantial driver-overhead component that is not architectural. To make host-side overhead comparable across frameworks, we run native C inference for all three. FINN uses a ctypes-loaded C runner built on top of PYNQ's bitstream loader; VTA uses its C inference binary; DPU uses VART (which is natively C++).
 
 ## Results
 
-Board: AUP-ZU3 (Zynq UltraScale+ ZU3EG, 360 DSPs, 432 BRAM18, ~70K LUTs).
+Board: AUP-ZU3 (Zynq UltraScale+ ZU3EG, 360 DSPs, 432 BRAM18, 70K LUTs).
 Power measurement: FNIRSI FNB58 USB inline meter (total board power, 100 Hz sampling).
+All results use C/C++ runtimes on host side to isolate architectural comparison from host driver overhead.
 
-### MLP, MNIST (784→64→32→10, INT8)
+### MLP, MNIST (784→64→32→10)
 
-| Metric | FINN | VTA (C runner) | Vitis AI DPU |
-|--------|------|----------------|--------------|
-| Quantization | Brevitas QAT | Brevitas QAT | vai_q_pytorch PTQ |
-| Accuracy | 96.58% | 96.45% | 97.14% |
-| Throughput (FPS) | 241 | 1270 | 2905 |
-| Latency (ms) | 4.15 | 0.79 | 0.34 |
-| Dynamic power (W) | 0.28 | 0.12 | 0.23 |
-| Energy/inference (mJ) | 14.84 | 3.49 | 1.57 |
+| Metric | FINN INT8 | FINN INT4 | VTA INT8 | VTA INT4 | Vitis AI DPU INT8 |
+|--------|-----------|-----------|----------|----------|-------------------|
+| Quantization | Brevitas QAT | Brevitas QAT | Brevitas QAT | Brevitas QAT | vai_q_pytorch PTQ |
+| Accuracy | 96.58% | 97.29% | 96.45% | 93.08% | 97.14% |
+| Throughput (FPS) | 1575 | 1811 | 1270 | 1266 | 2905 |
+| Latency (ms) | 0.635 | 0.552 | 0.79 | 0.79 | 0.34 |
+| Dynamic power (W) | 0.16 | 0.15 | 0.12 | 0.09 | 0.23 |
+| Energy/inference (mJ) | 2.21 | 1.90 | 3.49 | 3.15 | 1.57 |
 
-FINN and VTA use the same Brevitas-trained weights. Vitis AI uses its own quantizer (each toolchain's native flow). VTA runs at 250 MHz, DPU at 300/600 MHz. FINN's first MatMul falls back to CPU on the ZU3, a resource constraint that limits its throughput on this device.
+FINN and VTA use the same Brevitas-trained weights. Vitis AI uses its own quantizer (each toolchain's native flow). VTA runs at 250 MHz (INT8) and 200 MHz (INT4), DPU at 300/600 MHz, FINN at 100 MHz with auto-selected folding.
 
-### CNN, MNIST (Conv [8,16] + FC, INT8)
+### CNN, MNIST (Conv [8,16] + FC)
 
-| Metric | FINN | VTA (Python) | Vitis AI DPU |
-|--------|------|--------------|--------------|
-| Accuracy | 92.0% | 90.4% | 86.7% |
-| Throughput (FPS) | 24.4 | 27.0 | 2910 |
-| Latency (ms) | 41.0 | 37.0 | 0.34 |
-| Dynamic power (W) | 0.28 | 0.24 | 0.23 |
-| Energy/inference (mJ) | 148.2 | 170.8 | 1.58 |
+| Metric | FINN INT8 | VTA INT8 (Python) | VTA INT4-o8 (Python) | Vitis AI DPU INT8 |
+|--------|-----------|-------------------|----------------------|-------------------|
+| Accuracy | 91.99% | 90.4% | 81.6% | 86.7% |
+| Throughput (FPS) | 454 | 27.0 | 29.2 | 2910 |
+| Latency (ms) | 2.205 | 37.0 | 34.3 | 0.34 |
+| Dynamic power (W) | 0.18 | 0.24 | 0.28 | 0.23 |
+| Energy/inference (mJ) | 7.59 | 170.8 | 142.0 | 1.58 |
 
-CNN tiny is intentionally undersized (float baseline 91.2%), selected to fit FINN's on-chip BRAM constraints at INT8 on the ZU3. DPU accuracy loss (~5% vs float) is from vai_q_pytorch post-training quantization on an already-small model.
+CNN tiny is intentionally undersized (float baseline 91.2%), selected to fit FINN's on-chip BRAM constraints at INT8 on the ZU3. VTA CNN C runner has an open accuracy regression bug (approximately 86% in C vs 91% in Python) and is therefore reported in Python for accuracy until resolved. DPU accuracy loss (roughly 5% vs float) is from vai_q_pytorch post-training quantization on an already-small model.
 
-### Key Findings
+### Key findings
 
-- DPU dominance on small FPGAs is consistent with prior work. Hamanaka et al. predicted overlays would outperform dataflow on resource-constrained devices. Our results confirm this: FINN's CPU fallback on the ZU3 is the bottleneck, not a flaw in FINN's architecture.
-- Dynamic power is nearly identical (~0.23-0.29 W) across all three frameworks. Energy per inference is throughput-dominated.
-- Runtime overhead matters. VTA's C runner (1270 FPS) vs Python runner (257 FPS) shows that software stack overhead can dominate hardware execution time for tiny models.
+DPU leads on throughput and energy for both MLP and CNN, achieving 1.57 and 1.58 mJ per inference respectively, but trades accuracy for it: post-training quantization on the small CNN drops accuracy about 5 points below FINN's 91.99%. Both numbers are legitimate depending on application constraints.
 
-### Transformer Feasibility
+At matched INT8 precision and matched C runtime, FINN outperforms VTA on both MLP and CNN. MLP energy is 2.21 vs 3.49 mJ and CNN energy is 7.59 vs 170.8 mJ. The pattern extends to INT4 on MLP (1.90 vs 3.15 mJ). CNN matched-C comparison is currently incomplete pending resolution of a VTA CNN C runner accuracy regression.
 
-Initial testing for extending the comparison to transformers:
+FINN is currently CPU-bound rather than fabric-bound on these models, with the CPU first MatMul accounting for 82 to 94 percent of per-inference time depending on precision. The FINN compiler, at the throughput target we specified, leaves the first matrix multiply on the CPU and sets minimum folding on the fabric layers. Substantial headroom remains accessible by recompiling with more aggressive throughput targets. Experiments on this and other variables remain open, and headline rankings may shift as those experiments close.
 
+### Transformer Deployment
+
+The comparison has been extended to transformer workloads:
+
+- FINN-T (Paderborn finn-plus 1.4.0) compiled a trained INT4 transformer for RadioML 2018 modulation classification (3 heads, D=96, T=128, 1 layer, 122k parameters, Brevitas QAT). End-to-end performance on ZU3EG: 72.12% accuracy, 1460.8 FPS, 2.76 mJ per inference.
 - The Vitis AI DPU compiles linear projections but partitions all attention operations (Q@K^T, softmax, transpose, layer normalization) to CPU. The DPU only supports weight-by-activation matmuls, not the activation-by-activation pattern required by attention.
-- VTA can execute all six transformer GEMM operations including the activation-by-activation matmuls the DPU rejects. CPU fallback is needed only for softmax and layer normalization.
-- FINN-T resource estimation (HLS-synthesized, via finn-plus 1.4.0) shows a minimal configuration (2 heads, D=32, T=16, 2-bit) fits ZU3EG at ~30% LUT for operators alone. FIFOs, DMA, and shell overhead are not yet included.
+- VTA can execute all six transformer GEMM operations including the activation-by-activation matmuls the DPU rejects. VTA transformer deployment is in progress: compiled INT4 RadioML transformer modules have been validated bit-exactly against the Mode E host-side reference pipeline (70.53% accuracy), and the remaining work is the board-side inference driver.
 
 ## Hardware
 
@@ -73,7 +78,10 @@ python finn/train_and_export.py --model mlp --dataset mnist --size tiny --epochs
 # Compile to bitstream (uses Ultra96 board def, same ZU3EG die)
 python finn/compile.py --model mlp_mnist_tiny.onnx --fps 1000
 # Deploy: scp package to board, run benchmark.py
+# For matched-runtime benchmarks, use --finn-runtime c
 ```
+
+A native C inference runner (`board/finn_mlp_infer.c`, `board/finn_cnn_infer.c`) replaces FINN's Python driver for hot-path inference. The runner loads FINN's bitstream through PYNQ but executes the DMA trigger, polling, cache operations, and CPU-partitioned layers in C via ctypes. The MLP runner supports INT8 and INT4; the CNN runner supports INT8.
 
 ### VTA (Open-Source Overlay)
 
@@ -89,7 +97,7 @@ python board/export_vta_cnn.py     # CNN
 # On board: link .o to .so, then run benchmark.py or vta_infer (C runner)
 ```
 
-Pre-built VTA bitstreams (100 MHz, 250 MHz) are archived in `bitstreams/`.
+Pre-built VTA bitstreams (100 MHz INT8, 250 MHz INT8, 200 MHz INT4, 166 MHz INT4-o8) are archived in `bitstreams/`.
 
 ### Vitis AI (Commercial Overlay)
 
@@ -117,15 +125,16 @@ All benchmarks use the same infrastructure:
 Board clocks must be synced with the host before each run (no RTC on either SD image).
 
 ```bash
-# Example: VTA MLP benchmark with power measurement
+# Example: FINN MLP C runner with power measurement
 # Host: start power logger
-python3 board/fnb58_logger.py -o results/vta/vta_mlp_power.csv
+python3 board/fnb58_logger.py -o results/finn/finn_mlp_int8_c_power.csv
 # Board: run benchmark
-python3 benchmark.py --toolchain vta --model /home/xilinx/models/vta/mlp_mnist_tiny \
-  --dataset mnist --runs 3 --stabilize 10 --idle 10
+python3 benchmark.py --toolchain finn --model /home/xilinx/models/finn/mlp_mnist_tiny/deploy \
+  --dataset mnist --runs 3 --stabilize 10 --idle 10 --finn-runtime c
 # Host: merge
 python3 board/merge_power.py --benchmark /tmp/bench.json \
-  --power results/vta/vta_mlp_power.csv --output results/vta/vta_mlp.json --plot
+  --power results/finn/finn_mlp_int8_c_power.csv \
+  --output results/finn/finn_mlp_int8_c.json --plot
 ```
 
 ## Repo Structure
@@ -133,8 +142,13 @@ python3 board/merge_power.py --benchmark /tmp/bench.json \
 ```
 finn-vs-vitisai/
 ├── board/                  # Board deployment, benchmarking, and infrastructure
-│   ├── benchmark.py            # Unified benchmark runner (FINN, VTA, DPU)
+│   ├── benchmark.py            # Unified benchmark runner (FINN, VTA, DPU, FINN-T)
 │   ├── vta_infer.c             # C inference runner (VTA MLP + CNN)
+│   ├── finn_mlp_infer.c        # C inference runner (FINN MLP, INT8 + INT4)
+│   ├── finn_cnn_infer.c        # C inference runner (FINN CNN, INT8)
+│   ├── finn_t_infer.c          # C inference runner (FINN-T transformer)
+│   ├── test_finn_mlp_infer.py  # CPU-only harness for FINN MLP runner
+│   ├── test_finn_cnn_infer.py  # CPU-only harness for FINN CNN runner
 │   ├── export_vta_model.py     # Cross-compile VTA MLP for board
 │   ├── export_vta_cnn.py       # Cross-compile VTA CNN for board
 │   ├── pynq_driver_xrt.cc      # VTA XRT driver source (builds on board)
@@ -145,15 +159,15 @@ finn-vs-vitisai/
 │   ├── host_nat_setup.sh       # Host-side USB networking + NAT
 │   ├── board_net_setup.sh      # Board-side internet access
 │   └── setup.md                # Board setup and credentials
-├── bitstreams/             # Archived VTA bitstreams (100 MHz, 250 MHz)
+├── bitstreams/             # Archived VTA bitstreams (100/250 MHz INT8, 200 MHz INT4, 166 MHz INT4-o8)
 ├── models/                 # Shared model definitions (mlp.py, cnn.py)
 ├── finn/                   # FINN pipeline: train (Brevitas QAT), export, compile
-├── finn-t/                 # FINN-T transformer resource estimation (finn-plus 1.4.0)
+├── finn-t/                 # FINN-T transformer (trained RadioML 2018 INT4, finn-plus 1.4.0)
 ├── vitis_ai/               # Vitis AI pipeline: quantize, compile + DPU arch files
 ├── vta/                    # VTA host-side RPC test scripts (development/debugging)
-├── results/                # Benchmark JSONs, power CSVs, timeline plots (gitignored)
+├── results/                # Benchmark JSONs, power CSVs, timeline plots (CSVs gitignored)
 │   ├── finn/
-│   ├── finn-t/             # FINN-T resource estimation outputs
+│   ├── finn-t/
 │   ├── vta/
 │   └── vitis_ai/
 └── docs/                   # Build guides (DPU, VTA)
@@ -171,24 +185,23 @@ Tool repos (`finn-repo/`, `Vitis-AI/`) and datasets (`data/`) are cloned/downloa
 ## Status
 
 ### Complete
-- Three-way MLP comparison (FINN, VTA, DPU) with matched INT8 precision and physical power measurement
-- Three-way CNN comparison (FINN, VTA, DPU) with power measurement
-- Board-side inference for all toolchains (no RPC overhead for VTA)
+- Three-way MLP comparison (FINN, VTA, DPU) at matched INT8 and INT4 precision, matched C runtime, with physical power measurement
+- Three-way CNN comparison at INT8 with FINN and DPU in C, VTA in Python (C runner accuracy regression under investigation)
+- Trained-transformer FPGA deployment: FINN-T RadioML 2018 (72.12%, 1460 FPS, 2.76 mJ) on ZU3EG
+- Board-side inference for all toolchains (no RPC overhead)
 - FNB58 power measurement infrastructure (logger, merge, timeline plots)
-- VTA C inference runner eliminating Python overhead
+- C inference runners for all four accelerator paths (VTA, FINN MLP, FINN CNN, FINN-T)
 - DPU transformer compilation test (linear projections on DPU, attention ops partition to CPU)
 - VTA transformer GEMM verification (all 6 dimensions tile correctly)
-- FINN-T resource estimation for minimal transformer configuration
 
 ### In Progress
 - VTA CNN C runner accuracy regression (86% vs 91% in Python, under investigation)
-- FINN-T full bitstream (add FIFOs, DMA, shell to estimate; determines if ZU3EG is sufficient)
+- FINN CNN at INT4 (pending Brevitas CNN-INT4 training and FINN compile)
+- VTA transformer deployment: INT4 RadioML transformer, compiled modules bit-exactly validated against host-side reference at 70.53%, board-side inference driver remaining
 
 ### Planned
-- FINN at INT4 (validates comparison methodology against prior work)
-- VTA at INT4/INT2 bitstream (demonstrates overlay precision flexibility vs DPU's fixed INT8)
-- Matched low-precision comparison (FINN vs VTA at INT4/INT2 for CNN and transformer)
-- Transformer CPU fallback baseline (full transformer on VTA with softmax/layernorm on CPU)
+- FINN recompile with higher target_fps to move first MatMul onto fabric (tests remaining FINN throughput headroom on this device)
+- Matched-precision transformer comparison (FINN-T vs VTA, once VTA transformer lands on board)
 
 ## References
 

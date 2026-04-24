@@ -1,0 +1,138 @@
+{
+  "config": {
+    "toolchain": "finn",
+    "deploy_dir": "/home/xilinx/models/finn/mlp_mnist_tiny_int4/deploy",
+    "dataset": "mnist",
+    "batch_size": 1,
+    "num_runs": 3,
+    "num_images": 10000,
+    "image_shape": [
+      1,
+      28,
+      28
+    ],
+    "finn_input_shape": [
+      1,
+      64
+    ],
+    "finn_output_shape": [
+      1,
+      10
+    ],
+    "timestamp": "2026-04-23T01:37:07.839489",
+    "board": "AUP-ZU3",
+    "fpga_part": "xczu3eg-sbva484-1-e",
+    "power_method": "none",
+    "cpu_pre_layer": true,
+    "cpu_split_type": "mlp",
+    "finn_runtime": "c"
+  },
+  "idle": {
+    "t_start": 1776908237.8497295,
+    "t_end": 1776908248.8431604,
+    "power": {
+      "mean": null,
+      "std": null,
+      "n_samples": 0
+    },
+    "sysmon": {
+      "temp_ps_c": 43.72136151212842,
+      "temp_pl_c": 42.813959433338496,
+      "vccint_v": 0.84278365743663,
+      "n_samples": 500
+    }
+  },
+  "runs": [
+    {
+      "run": 1,
+      "t_start": 1776908248.8606982,
+      "t_end": 1776908254.3839214,
+      "accuracy": 97.29,
+      "time_s": 5.523220539093018,
+      "throughput_fps": 1810.5378789821284,
+      "latency_ms": 0.5523220539093018,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 43.85737266548575,
+        "temp_pl_c_mean": 42.994818802223115,
+        "temp_pl_c_max": 45.168044552303996,
+        "vccint_v_mean": 0.8423775992157851,
+        "vccbram_v_mean": 0.8419475396811279,
+        "n_samples": 461
+      }
+    },
+    {
+      "run": 2,
+      "t_start": 1776908254.4009526,
+      "t_end": 1776908259.9236822,
+      "accuracy": 97.29,
+      "time_s": 5.5227272510528564,
+      "throughput_fps": 1810.6995955836119,
+      "latency_ms": 0.5522727251052857,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 44.07018742469748,
+        "temp_pl_c_mean": 43.075838109318454,
+        "temp_pl_c_max": 44.592952450295996,
+        "vccint_v_mean": 0.8425521650578374,
+        "vccbram_v_mean": 0.8421376953054338,
+        "n_samples": 461
+      }
+    },
+    {
+      "run": 3,
+      "t_start": 1776908259.9368749,
+      "t_end": 1776908265.4595847,
+      "accuracy": 97.29,
+      "time_s": 5.522707223892212,
+      "throughput_fps": 1810.7061617784525,
+      "latency_ms": 0.5522707223892211,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 44.0115891909348,
+        "temp_pl_c_mean": 43.039829528387195,
+        "temp_pl_c_max": 45.121415462952,
+        "vccint_v_mean": 0.8422874366534512,
+        "vccbram_v_mean": 0.842060540777974,
+        "n_samples": 461
+      }
+    }
+  ],
+  "summary": {
+    "accuracy": 97.29,
+    "throughput_fps_mean": 1810.6478787813976,
+    "throughput_fps_std": 0.07782778256345974,
+    "latency_ms_mean": 0.5522885004679362,
+    "latency_ms_std": 2.373994929106615e-05,
+    "idle_power_w": null,
+    "idle_power_std": null,
+    "idle_temp_pl_c": 42.813959433338496,
+    "avg_power_w_mean": null,
+    "avg_power_w_std": null,
+    "dynamic_power_w": null,
+    "energy_per_image_mj_mean": null,
+    "energy_per_image_mj_std": null,
+    "sysmon": {
+      "temp_ps_c_mean": 43.97971642703934,
+      "temp_pl_c_mean": 43.03682881330959,
+      "temp_pl_c_max": 45.168044552303996,
+      "vccint_v_mean": 0.8424057336423578
+    }
+  },
+  "power_measurement": {
+    "method": "fnb58_external",
+    "power_log": "finn_mlp-64x32_mnist_int8_c_power.csv",
+    "clock_offset_applied": 0.0,
+    "total_power_samples": 5620,
+    "idle": null
+  }
+}
