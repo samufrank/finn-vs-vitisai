@@ -79,13 +79,35 @@ static inline uint32_t mmio_read(volatile uint32_t *base, unsigned idx)
 
 /* ============================================================
  * Pack / unpack utilities (extern, so the harness can call them
- * directly via ctypes).
+ * directly via ctypes). One pair per FINN dtype — runner_init wires
+ * them via select_dispatch.
  *
- * Both are memcpy for the INT8 deploy: finnpy_to_packed_bytearray on a
- * (1, 28, 28, 1, 8) UINT8 tensor with reverse_endian+reverse_inner
- * hits the fast path (view-as-uint8) so the bytes on the DMA side are
- * the same NHWC-channel-fastest bytes that C produces with memcpy.
- * Same argument for the UINT8 obuf.
+ * Pack signature: pack(act_u8[n], ibuf[ibuf_bytes], n_elements).
+ *   n is element count; INT8 writes n bytes, INT4 writes n/2 bytes.
+ * Unpack signature: unpack(obuf_packed[obuf_bytes], out_u8[n], n_elements).
+ *   n is element count; obuf_packed has n bytes (INT8) or n/2 bytes (INT4).
+ *   out_u8 always receives n bytes (1 channel per byte, value 0..255 INT8
+ *   or 0..15 INT4) so the GAP loop is precision-agnostic.
+ *
+ * INT8: pack/unpack are memcpy. finnpy_to_packed_bytearray on a UINT8
+ * tensor with reverse_endian+reverse_inner hits the fast path
+ * (view-as-uint8); same on the unpack side.
+ *
+ * INT4 packing convention (verified against finnpy_to_packed_bytearray
+ * with DataType['UINT4'], reverse_endian=True, reverse_inner=True):
+ *   even-index element → LOW nibble of byte i/2
+ *   odd-index element  → HIGH nibble of byte i/2
+ * Equivalent: ibuf[i/2] = (act[i] & 0xF) | ((act[i+1] & 0xF) << 4).
+ *
+ * NOTE — INT4 CNN is 2-per-byte, *unlike* INT4 MLP which is 1-per-byte
+ * (ibuf[i] = act[i] & 0x0F). The MLP uses PE=SIMD=1 so each cycle
+ * carries one INT4 in its own byte; the CNN uses FMPadding SIMD=8 so
+ * 8 INT4 channels per pixel pack into 4 bytes that stream together.
+ * Confirmed by inspecting both deploys' driver/driver.py:
+ *   MLP INT4: ishape_packed=(1,64,1)  → 1 byte per element
+ *   CNN INT4: ishape_packed=(1,28,28,1,4) → 8 ch/pixel in 4 bytes (2-per-byte)
+ *   CNN INT4: oshape_packed=(1, 7, 7,1,8) → 16 ch/pixel in 8 bytes (2-per-byte)
+ * Don't reuse finn_mlp_pack_uint4 here. (And vice versa.)
  * ============================================================ */
 
 void finn_cnn_pack_uint8(const uint8_t *act, uint8_t *ibuf, int n)
@@ -96,6 +118,30 @@ void finn_cnn_pack_uint8(const uint8_t *act, uint8_t *ibuf, int n)
 void finn_cnn_unpack_uint8(const uint8_t *obuf, uint8_t *out, int n)
 {
     memcpy(out, obuf, (size_t)n);
+}
+
+void finn_cnn_pack_uint4(const uint8_t *act, uint8_t *ibuf, int n)
+{
+    /* n is element count; ibuf receives n/2 bytes. Caller guarantees n even
+     * (runner_init asserts fpga_in_c is even when precision==4). */
+    int half = n >> 1;
+    for (int i = 0; i < half; i++) {
+        uint8_t lo = act[2*i]     & 0x0Fu;
+        uint8_t hi = act[2*i + 1] & 0x0Fu;
+        ibuf[i] = (uint8_t)(lo | (hi << 4));
+    }
+}
+
+void finn_cnn_unpack_uint4(const uint8_t *obuf, uint8_t *out, int n)
+{
+    /* n is element count; obuf has n/2 bytes; out receives n bytes
+     * (1 channel per byte, value 0..15). Caller guarantees n even. */
+    int half = n >> 1;
+    for (int i = 0; i < half; i++) {
+        uint8_t b = obuf[i];
+        out[2*i]     = (uint8_t)(b & 0x0Fu);
+        out[2*i + 1] = (uint8_t)((b >> 4) & 0x0Fu);
+    }
 }
 
 /* Binary search equivalent of the MultiThreshold linear scan.
@@ -126,7 +172,8 @@ static inline int mt_upper_bound(const float *row, int n, float x)
  * Runner state
  * ============================================================ */
 
-typedef void (*pack_fn_t)(const uint8_t *act, uint8_t *ibuf, int n);
+typedef void (*pack_fn_t)  (const uint8_t *act, uint8_t *ibuf, int n);
+typedef void (*unpack_fn_t)(const uint8_t *obuf, uint8_t *out,  int n);
 
 typedef struct {
     /* caller-owned buffers + MMIO */
@@ -142,12 +189,18 @@ typedef struct {
     int num_classes;
     int num_thresholds;
     int patch_dim;        /* kernel_size * kernel_size * img_c */
-    int ibuf_bytes;       /* img_h * img_w * fpga_in_c  (INT8 = 1 B/elem) */
-    int obuf_bytes;       /* fpga_out_h * fpga_out_w * fpga_out_c (INT8) */
 
-    /* precision dispatch (unpack isn't used in the hot path — GAP reads
-     * obuf_virt directly — so only pack is stored here) */
-    pack_fn_t pack;
+    /* INT4 packs 2 channels per byte; INT8 is 1-per-byte. ibuf_bytes /
+     * obuf_bytes are derived once via per-pixel byte counts so the hot
+     * path stays integer (no fractional-byte arithmetic). */
+    int precision;             /* 4 or 8 */
+    int ibuf_bpp;              /* bytes per pixel into FPGA: INT8 = fpga_in_c, INT4 = fpga_in_c/2 */
+    int obuf_bpp;              /* bytes per pixel out of FPGA: INT8 = fpga_out_c, INT4 = fpga_out_c/2 */
+    int ibuf_bytes;            /* img_h * img_w * ibuf_bpp */
+    int obuf_bytes;            /* fpga_out_h * fpga_out_w * obuf_bpp */
+
+    pack_fn_t   pack;
+    unpack_fn_t unpack;
 
     /* weights & biases — caller-owned, referenced */
     const float *W_conv;
@@ -161,6 +214,7 @@ typedef struct {
     float   *patches_f32;
     float   *acc_f32;
     uint8_t *act_u8;
+    uint8_t *obuf_unpacked;    /* OH*OW*fpga_out_c bytes (1 ch/byte, 0..15 or 0..255) */
 
     int use_cache_ops;
     int initialized;
@@ -168,13 +222,29 @@ typedef struct {
 
 static cnn_runner_state_t g_cnn = {0};
 
-/* Map precision -> pack fn + input-byte-per-element. Only INT8 wired. */
-static int select_dispatch(int precision, pack_fn_t *pack_out, int *in_bytes_per_elem)
+/* Map precision -> pack/unpack fns + per-pixel byte counts.
+ * INT4 case requires fpga_in_c and fpga_out_c to be even (caller-validated). */
+static int select_dispatch(int precision,
+                           pack_fn_t   *pack_out,
+                           unpack_fn_t *unpack_out,
+                           int fpga_in_c,
+                           int fpga_out_c,
+                           int *ibuf_bpp_out,
+                           int *obuf_bpp_out)
 {
     switch (precision) {
         case 8:
-            *pack_out          = finn_cnn_pack_uint8;
-            *in_bytes_per_elem = 1;
+            *pack_out      = finn_cnn_pack_uint8;
+            *unpack_out    = finn_cnn_unpack_uint8;
+            *ibuf_bpp_out  = fpga_in_c;
+            *obuf_bpp_out  = fpga_out_c;
+            return 0;
+        case 4:
+            if ((fpga_in_c & 1) || (fpga_out_c & 1)) return -1;  /* must be even */
+            *pack_out      = finn_cnn_pack_uint4;
+            *unpack_out    = finn_cnn_unpack_uint4;
+            *ibuf_bpp_out  = fpga_in_c  >> 1;
+            *obuf_bpp_out  = fpga_out_c >> 1;
             return 0;
         default:
             return -1;
@@ -199,7 +269,7 @@ int finn_cnn_runner_init(
     float        mul,
     const float *add)
 {
-    /* Scope validation: this runner is MNIST-only and INT8-only. */
+    /* Scope validation: this runner is MNIST CNN, INT8 or INT4. */
     if (img_c != 1)                            return -2;
     if (kernel_size != 3 || pad != 1)          return -3;
     if (img_h <= 0 || img_w <= 0)              return -4;
@@ -210,9 +280,12 @@ int finn_cnn_runner_init(
     if (W_conv == NULL || thres == NULL ||
         W_cls  == NULL || add   == NULL)       return -8;
 
-    pack_fn_t pack;
-    int       in_be;
-    if (select_dispatch(precision, &pack, &in_be) != 0) return -9;
+    pack_fn_t   pack;
+    unpack_fn_t unpack;
+    int         ibuf_bpp, obuf_bpp;
+    if (select_dispatch(precision, &pack, &unpack,
+                        fpga_in_c, fpga_out_c,
+                        &ibuf_bpp, &obuf_bpp) != 0) return -9;
 
     /* First-row spot-check of thresholds (FINN emits ascending). */
     for (int j = 1; j < num_thresholds; j++) {
@@ -220,17 +293,20 @@ int finn_cnn_runner_init(
     }
 
     const int patch_dim = kernel_size * kernel_size * img_c;
-    const size_t img_n     = (size_t)img_h * img_w * img_c;
-    const size_t patches_n = (size_t)img_h * img_w * patch_dim;
-    const size_t acc_n     = (size_t)img_h * img_w * fpga_in_c;
-    const size_t act_n     = (size_t)img_h * img_w * fpga_in_c;
+    const size_t img_n      = (size_t)img_h * img_w * img_c;
+    const size_t patches_n  = (size_t)img_h * img_w * patch_dim;
+    const size_t acc_n      = (size_t)img_h * img_w * fpga_in_c;
+    const size_t act_n      = (size_t)img_h * img_w * fpga_in_c;
+    const size_t obuf_un_n  = (size_t)fpga_out_h * fpga_out_w * fpga_out_c;
 
-    float   *img_f32     = (float   *)malloc(img_n     * sizeof(float));
-    float   *patches_f32 = (float   *)malloc(patches_n * sizeof(float));
-    float   *acc_f32     = (float   *)malloc(acc_n     * sizeof(float));
-    uint8_t *act_u8      = (uint8_t *)malloc(act_n);
-    if (!img_f32 || !patches_f32 || !acc_f32 || !act_u8) {
-        free(img_f32); free(patches_f32); free(acc_f32); free(act_u8);
+    float   *img_f32       = (float   *)malloc(img_n      * sizeof(float));
+    float   *patches_f32   = (float   *)malloc(patches_n  * sizeof(float));
+    float   *acc_f32       = (float   *)malloc(acc_n      * sizeof(float));
+    uint8_t *act_u8        = (uint8_t *)malloc(act_n);
+    uint8_t *obuf_unpacked = (uint8_t *)malloc(obuf_un_n);
+    if (!img_f32 || !patches_f32 || !acc_f32 || !act_u8 || !obuf_unpacked) {
+        free(img_f32); free(patches_f32); free(acc_f32);
+        free(act_u8); free(obuf_unpacked);
         return -11;
     }
 
@@ -253,9 +329,13 @@ int finn_cnn_runner_init(
     g_cnn.num_classes    = num_classes;
     g_cnn.num_thresholds = num_thresholds;
     g_cnn.patch_dim      = patch_dim;
-    g_cnn.ibuf_bytes     = img_h * img_w * fpga_in_c * in_be;
-    g_cnn.obuf_bytes     = fpga_out_h * fpga_out_w * fpga_out_c;
+    g_cnn.precision      = precision;
+    g_cnn.ibuf_bpp       = ibuf_bpp;
+    g_cnn.obuf_bpp       = obuf_bpp;
+    g_cnn.ibuf_bytes     = img_h * img_w * ibuf_bpp;
+    g_cnn.obuf_bytes     = fpga_out_h * fpga_out_w * obuf_bpp;
     g_cnn.pack           = pack;
+    g_cnn.unpack         = unpack;
     g_cnn.W_conv         = W_conv;
     g_cnn.thres          = thres;
     g_cnn.W_cls          = W_cls;
@@ -265,6 +345,7 @@ int finn_cnn_runner_init(
     g_cnn.patches_f32    = patches_f32;
     g_cnn.acc_f32        = acc_f32;
     g_cnn.act_u8         = act_u8;
+    g_cnn.obuf_unpacked  = obuf_unpacked;
     g_cnn.use_cache_ops  = use_cache_ops;
     g_cnn.initialized    = 1;
     return 0;
@@ -276,6 +357,7 @@ int finn_cnn_runner_destroy(void)
     free(g_cnn.patches_f32);
     free(g_cnn.acc_f32);
     free(g_cnn.act_u8);
+    free(g_cnn.obuf_unpacked);
     memset(&g_cnn, 0, sizeof(g_cnn));
     return 0;
 }
@@ -359,10 +441,13 @@ static inline void cpu_pre(const uint8_t *img)
 
 /* ============================================================
  * CPU post-stage: GAP + second MatMul + dequant + bias + argmax.
- * Reads obuf_bytes directly (no separate unpack buffer).
+ * Consumes a 1-byte-per-channel buffer (g_cnn.obuf_unpacked in the real
+ * path; the mock unpacks mock_obuf into obuf_unpacked first). At INT4 the
+ * unpack expanded packed nibbles into the same layout, so this loop is
+ * precision-agnostic — values are 0..255 (INT8) or 0..15 (INT4).
  * ============================================================ */
 
-static inline int cpu_post_argmax(const uint8_t *obuf_bytes)
+static inline int cpu_post_argmax(const uint8_t *obuf_u8)
 {
     const int OH = g_cnn.fpga_out_h;
     const int OW = g_cnn.fpga_out_w;
@@ -372,11 +457,12 @@ static inline int cpu_post_argmax(const uint8_t *obuf_bytes)
     const float *add  = g_cnn.add;
     const float mul   = g_cnn.mul;
 
-    /* GAP with uint32 accumulator. 49 * 255 = 12,495 << 2^32. */
+    /* GAP with uint32 accumulator. INT8: 49*255=12,495; INT4: 49*15=735.
+     * Both << 2^32, so the accumulator can't overflow. */
     uint32_t acc[OC];
     for (int c = 0; c < OC; c++) acc[c] = 0;
     for (int i = 0; i < OH * OW; i++) {
-        const uint8_t *row = obuf_bytes + (size_t)i * OC;
+        const uint8_t *row = obuf_u8 + (size_t)i * OC;
         for (int c = 0; c < OC; c++) acc[c] += row[c];
     }
     /* Cast to float for the single divide. OH*OW=49; 12495/49.0f = 255.0f
@@ -440,15 +526,20 @@ int finn_cnn_infer_one(const uint8_t *img)
 {
     if (!g_cnn.initialized) return -1;
 
+    /* Element counts (independent of precision). */
+    const int n_in  = g_cnn.img_h     * g_cnn.img_w     * g_cnn.fpga_in_c;
+    const int n_out = g_cnn.fpga_out_h * g_cnn.fpga_out_w * g_cnn.fpga_out_c;
+
     cpu_pre(img);
-    g_cnn.pack(g_cnn.act_u8, (uint8_t *)g_cnn.ibuf_virt, g_cnn.ibuf_bytes);
+    g_cnn.pack(g_cnn.act_u8, (uint8_t *)g_cnn.ibuf_virt, n_in);
     if (g_cnn.use_cache_ops) dcache_clean(g_cnn.ibuf_virt, g_cnn.ibuf_bytes);
 
     trigger_dma();
     wait_dma();
 
     if (g_cnn.use_cache_ops) dcache_invalidate(g_cnn.obuf_virt, g_cnn.obuf_bytes);
-    return cpu_post_argmax((const uint8_t *)g_cnn.obuf_virt);
+    g_cnn.unpack((const uint8_t *)g_cnn.obuf_virt, g_cnn.obuf_unpacked, n_out);
+    return cpu_post_argmax(g_cnn.obuf_unpacked);
 }
 
 int finn_cnn_infer_batch(
@@ -472,8 +563,13 @@ int finn_cnn_infer_batch(
 
 /* ============================================================
  * Mock entry for host-side harness. Skips DMA; runs cpu_pre + pack
- * (into caller-provided scratch, may be NULL) + cpu_post using
- * caller-provided mock_obuf bytes.
+ * (into caller-provided scratch, may be NULL) + unpack(mock_obuf) +
+ * cpu_post.
+ *
+ * mock_obuf is the *packed* FPGA output bytes the caller would have
+ * read off DMA — INT8: ohw*OC bytes, INT4: ohw*OC/2 bytes. The mock
+ * runs the same unpack the real path runs so test_end_to_end and the
+ * INT4 GAP tests exercise the same code path.
  * ============================================================ */
 
 int finn_cnn_infer_one_mock(
@@ -482,26 +578,31 @@ int finn_cnn_infer_one_mock(
     uint8_t       *pack_scratch_out)
 {
     if (!g_cnn.initialized) return -1;
+
+    const int n_in  = g_cnn.img_h     * g_cnn.img_w     * g_cnn.fpga_in_c;
+    const int n_out = g_cnn.fpga_out_h * g_cnn.fpga_out_w * g_cnn.fpga_out_c;
+
     cpu_pre(img);
     if (pack_scratch_out) {
-        g_cnn.pack(g_cnn.act_u8, pack_scratch_out, g_cnn.ibuf_bytes);
+        g_cnn.pack(g_cnn.act_u8, pack_scratch_out, n_in);
     }
-    return cpu_post_argmax(mock_obuf);
+    g_cnn.unpack(mock_obuf, g_cnn.obuf_unpacked, n_out);
+    return cpu_post_argmax(g_cnn.obuf_unpacked);
 }
 
 /* ============================================================
  * Profiled entry: 10-stage nanosecond breakdown.
  *
- * Stages (must match Sam's table and the harness):
+ * Stages (must match the harness):
  *   0 = cast + normalize
  *   1 = im2col
  *   2 = first MatMul
  *   3 = MultiThreshold
  *   4 = pack (+ dc cvac when use_cache_ops)
  *   5 = DMA trigger + wait
- *   6 = dc civac (when use_cache_ops) — the "unpack" slot; GAP reads obuf
- *       directly so there's no unpack-to-buffer step
- *   7 = GAP
+ *   6 = dc civac (when use_cache_ops) + unpack (memcpy at INT8,
+ *       nibble-extract at INT4; result lives in g_cnn.obuf_unpacked)
+ *   7 = GAP (reads obuf_unpacked, precision-agnostic)
  *   8 = second MatMul
  *   9 = dequant + bias + argmax
  * ============================================================ */
@@ -596,7 +697,9 @@ int finn_cnn_infer_one_profiled(const uint8_t *img, uint64_t *ns_out)
     t[4] = mono_ns();
 
     /* Stage 4: pack (+ cache clean) */
-    g_cnn.pack(act, (uint8_t *)g_cnn.ibuf_virt, g_cnn.ibuf_bytes);
+    const int n_in  = H * W * Fc;
+    const int n_out = OH * OW * OC;
+    g_cnn.pack(act, (uint8_t *)g_cnn.ibuf_virt, n_in);
     if (g_cnn.use_cache_ops) dcache_clean(g_cnn.ibuf_virt, g_cnn.ibuf_bytes);
     t[5] = mono_ns();
 
@@ -605,12 +708,13 @@ int finn_cnn_infer_one_profiled(const uint8_t *img, uint64_t *ns_out)
     wait_dma();
     t[6] = mono_ns();
 
-    /* Stage 6: cache invalidate ("unpack" slot; GAP consumes obuf directly) */
+    /* Stage 6: cache invalidate + unpack (INT8: memcpy; INT4: nibble extract) */
     if (g_cnn.use_cache_ops) dcache_invalidate(g_cnn.obuf_virt, g_cnn.obuf_bytes);
+    g_cnn.unpack((const uint8_t *)g_cnn.obuf_virt, g_cnn.obuf_unpacked, n_out);
     t[7] = mono_ns();
 
-    /* Stage 7: GAP */
-    const uint8_t *ob = (const uint8_t *)g_cnn.obuf_virt;
+    /* Stage 7: GAP (reads obuf_unpacked, 1 byte/channel, value 0..255 or 0..15) */
+    const uint8_t *ob = g_cnn.obuf_unpacked;
     uint32_t gap_acc[OC];
     for (int c = 0; c < OC; c++) gap_acc[c] = 0;
     for (int i = 0; i < OH * OW; i++) {

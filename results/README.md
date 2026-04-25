@@ -37,9 +37,12 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 - MLP tiny [64,32] MNIST — INT4, Brevitas QAT, C runner (97.29%, 1811 FPS, 1.90 mJ)
 - CNN tiny [8,16] MNIST — INT8, Brevitas QAT, Python runner (91.99%, 24.4 FPS, 148.2 mJ, historical baseline)
 - CNN tiny [8,16] MNIST — INT8, Brevitas QAT, C runner with binary-search MultiThreshold (91.99%, 454 FPS, 7.59 mJ)
+- CNN tiny [8,16] MNIST — INT4, Brevitas QAT (warm-start from INT8, batch=256, gradient clipping), C runner with 2-INT4-per-byte packing (88.27%, 525 FPS, 6.57 mJ)
 - CNN tiny [8,16] CIFAR-10 — INT8, Brevitas QAT, Python runner (model too small for task, ~10% accuracy)
 
 The C runner replaces FINN's Python driver with a ctypes-loaded native library for the hot inference path. Bitstream loading and DMA buffer allocation remain in Python via PYNQ; DMA triggering, polling, cache operations, CPU-partitioned layers, and CPU-side post-processing execute in C. The CNN C runner uses binary search on FINN's sorted-ascending threshold rows as an equivalent reformulation of the linear-scan MultiThreshold, reducing that stage's cost by a factor of 11.8 at T=255.
+
+Historical Python runner results have been moved to `python_reference/` for clarity. C runner results remain at the top level since C is now the standard runtime for all benchmarks.
 
 ### vta/
 - MLP tiny [64,32] MNIST — INT8, 250 MHz, Python and C runners

@@ -64,6 +64,15 @@ bitstreams/int4_o8_166mhz_build_artifacts/
 
 # Big build tarballs (regenerable from source)
 *_full_build.tar.gz
+*.tar.gz
 
 # dummy transformer random weight checkpoint
 finn-t/bitstreams/int2_v2/model_trained.pt
+
+# misc artifacts
+*.bak.*
+*.constlr.*
+*.cosine.*
+compile_*.log
+train_*.log
+*.c.int4

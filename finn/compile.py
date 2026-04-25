@@ -7,6 +7,7 @@ Usage:
   python compile.py --model cnn_cifar10_tiny.onnx --fps 100
 """
 import argparse
+import sys
 import finn.builder.build_dataflow as build
 import finn.builder.build_dataflow_config as build_cfg
 
@@ -36,5 +37,9 @@ cfg = build_cfg.DataflowBuildConfig(
     ],
 )
 
-build.build_dataflow_cfg(args.model, cfg)
-print(f"--- Build complete: {output_dir} ---")
+rc = build.build_dataflow_cfg(args.model, cfg)
+if rc == 0:
+    print(f"--- Build complete: {output_dir} ---")
+else:
+    print(f"--- Build FAILED (rc={rc}): {output_dir} ---")
+sys.exit(rc if rc == 0 else 1)

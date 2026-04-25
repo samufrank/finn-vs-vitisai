@@ -48,6 +48,16 @@ parser.add_argument('--wide', action='store_true',
                     help='With --int4 --no-bn --model cnn: use wider channels [16,32] '
                          '(CNN_Brevitas_INT4_NoBN_Wide).')
 parser.add_argument('--force', action='store_true', help='Overwrite existing output files')
+parser.add_argument('--init-from', default=None,
+                    help='Warm-start from a Brevitas checkpoint of matching architecture. '
+                         'Activation quantizer scales are dropped before load (they are '
+                         'calibrated for the source bit_width); init_tensor_quant is then '
+                         'called on weight + act quantizers to reset for the target.')
+parser.add_argument('--batch-size', type=int, default=64, help='Train + eval batch size.')
+parser.add_argument('--cosine-lr', action='store_true',
+                    help='Use CosineAnnealingLR(T_max=epochs). Default: constant lr.')
+parser.add_argument('--grad-clip', type=float, default=None,
+                    help='If set, clip gradient norm to this value before optimizer.step().')
 args = parser.parse_args()
 
 # Conditional defaults for INT4 CNN (user-provided --lr / --epochs always win).
@@ -67,8 +77,8 @@ elif args.dataset == 'cifar10':
     test_data = datasets.CIFAR10('./data', train=False, download=True, transform=transform)
     input_size, in_channels, img_size = 3072, 3, 32
 
-train_loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
-test_loader = torch.utils.data.DataLoader(test_data, batch_size=64, shuffle=False)
+train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True)
+test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.batch_size, shuffle=False)
 
 # Model
 if args.model == 'mlp':
@@ -93,11 +103,38 @@ elif args.model == 'cnn':
     dummy = torch.randn(1, in_channels, img_size, img_size)
 
 print(f"Model: {args.model} ({args.size}), Dataset: {args.dataset}, "
-      f"INT4: {args.int4}, lr={args.lr}, epochs={args.epochs}")
+      f"INT4: {args.int4}, lr={args.lr}, epochs={args.epochs}, batch={args.batch_size}, "
+      f"cosine={args.cosine_lr}, grad_clip={args.grad_clip}")
 print(f"Parameters: {sum(p.numel() for p in model.parameters())}")
+
+# Optional warm-start from a sibling checkpoint of the same architecture.
+# Activation quantizer scales are bit_width-dependent (e.g., INT8 ReLU scale =
+# max_act/255 vs INT4 = max_act/15) so they're filtered out before load;
+# init_tensor_quant() is then called to reset all quantizer state for the
+# current bit_width. Float weights and BN params transfer cleanly.
+if args.init_from:
+    print(f"Warm-start: loading weights from {args.init_from}")
+    src_state = torch.load(args.init_from, map_location='cpu', weights_only=False)
+    drop_keys = [k for k in list(src_state.keys()) if 'scaling_impl' in k or 'zero_point' in k]
+    for k in drop_keys:
+        del src_state[k]
+    missing, unexpected = model.load_state_dict(src_state, strict=False)
+    print(f"  Loaded {len(src_state)} keys, dropped {len(drop_keys)} quantizer scales "
+          f"(missing={len(missing)}, unexpected={len(unexpected)})")
+    if unexpected:
+        print(f"  Unexpected keys: {unexpected}")
+    n_reinit = 0
+    for name, mod in model.named_modules():
+        for attr in ('weight_quant', 'act_quant'):
+            q = getattr(mod, attr, None)
+            if q is not None and hasattr(q, 'init_tensor_quant'):
+                q.init_tensor_quant()
+                n_reinit += 1
+    print(f"  Re-initialized {n_reinit} quantizer proxies")
 
 # Train
 optimizer = optim.Adam(model.parameters(), lr=args.lr)
+scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs) if args.cosine_lr else None
 loss_fn = nn.CrossEntropyLoss()
 
 # Best-val tracking (val = test set in this recipe — matches prior MLP INT4
@@ -113,6 +150,8 @@ for epoch in range(args.epochs):
         optimizer.zero_grad()
         loss = loss_fn(model(images), labels)
         loss.backward()
+        if args.grad_clip is not None:
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=args.grad_clip)
         optimizer.step()
 
     model.eval()
@@ -130,7 +169,10 @@ for epoch in range(args.epochs):
         best_val_epoch = epoch + 1
         best_state = copy.deepcopy(model.state_dict())
         marker = "  <-- best"
-    print(f"  Epoch {epoch+1}/{args.epochs}: {100*val_acc:.2f}%{marker}")
+    cur_lr = scheduler.get_last_lr()[0] if scheduler else args.lr
+    print(f"  Epoch {epoch+1}/{args.epochs}: {100*val_acc:.2f}%  lr={cur_lr:.2e}{marker}")
+    if scheduler:
+        scheduler.step()
 
 print()
 print(f"Best val accuracy: {100*best_val_acc:.2f}% @ epoch {best_val_epoch}")
