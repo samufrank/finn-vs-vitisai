@@ -45,6 +45,7 @@
 #define MAX_FEATURES 128  /* >= max padded in_f */
 #define MAX_OUT_F 16      /* max padded out_f per layer */
 #define MAX_FLAT 1024     /* max flattened input for MLP */
+#define MAX_LAYERS_P1 (MAX_LAYERS + 1)  /* act_scales has num_layers+1 entries sometimes */
 
 /* ---- Simple .npy loader (handles int8 and float32) ---- */
 
@@ -269,6 +270,63 @@ static void global_avg_pool(const float *x, int H, int W, int C, float *out) {
     for (int c = 0; c < C; c++) out[c] *= scale;
 }
 
+/* ---- CNN INT4-o8: CHW helpers -----------------------------------------
+ * The INT4-o8 CNN pipeline uses CHW activation layout (matches Brevitas
+ * and test_vta_cnn_int4_o8.py). im2col_chw produces patches in the same
+ * (ki, kj, c) row order as the existing HWC im2col so the weight layout
+ * is unchanged; only the SOURCE indexing differs.
+ */
+static void im2col_chw(const int8_t *x_chw, int C, int H, int W,
+                       int kH, int kW, int pad, int pad_value,
+                       int8_t *patches_out, int *Ho_out, int *Wo_out)
+{
+    int Ho = H + 2 * pad - kH + 1;
+    int Wo = W + 2 * pad - kW + 1;
+    int patch_len = kH * kW * C;
+    *Ho_out = Ho;
+    *Wo_out = Wo;
+    int idx = 0;
+    for (int i = 0; i < Ho; i++) {
+        for (int j = 0; j < Wo; j++) {
+            int pidx = 0;
+            for (int ki = 0; ki < kH; ki++) {
+                for (int kj = 0; kj < kW; kj++) {
+                    int si = i + ki - pad;
+                    int sj = j + kj - pad;
+                    for (int c = 0; c < C; c++) {
+                        if (si >= 0 && si < H && sj >= 0 && sj < W)
+                            patches_out[idx * patch_len + pidx] =
+                                x_chw[c * H * W + si * W + sj];
+                        else
+                            patches_out[idx * patch_len + pidx] = (int8_t)pad_value;
+                        pidx++;
+                    }
+                }
+            }
+            idx++;
+        }
+    }
+}
+
+static void maxpool2d_chw(const double *x, int C, int H, int W, int ps, double *out) {
+    int Ho = H / ps, Wo = W / ps;
+    for (int c = 0; c < C; c++) {
+        for (int i = 0; i < Ho; i++) {
+            for (int j = 0; j < Wo; j++) {
+                double mx = -1e300;
+                for (int pi = 0; pi < ps; pi++) {
+                    for (int pj = 0; pj < ps; pj++) {
+                        int si = i * ps + pi, sj = j * ps + pj;
+                        double v = x[c * H * W + si * W + sj];
+                        if (v > mx) mx = v;
+                    }
+                }
+                out[c * Ho * Wo + i * Wo + j] = mx;
+            }
+        }
+    }
+}
+
 /* ---- Layer config ---- */
 
 typedef struct {
@@ -276,7 +334,11 @@ typedef struct {
     int n_tiles, m_tiles;
     int o_total, o_tile, n_chunks;
     int shift;
-    float w_scale;
+    float w_scale;        /* scalar w_scale (INT8 CNN / MLP paths) */
+    /* Per-channel w_scale (INT4-o8 CNN). NULL unless this layer has an
+     * array-valued "w_scale" in config. Length = w_scale_n (= real_out). */
+    float *w_scale_arr;
+    int w_scale_n;
     char type[16];  /* "conv", "dense", or "mlp" */
     int kernel_size, padding, in_channels, out_channels, pool_size;
 
@@ -371,6 +433,32 @@ static float json_find_float(const char *json, const char *key) {
     return strtof(p, NULL);
 }
 
+/* Parse a JSON float array: "key": [v1, v2, ...]. Returns count written
+ * to out[], or -1 if key not found / not an array. Stops at max_len. */
+static int json_find_float_array(const char *json, const char *key,
+                                 float *out, int max_len)
+{
+    char pattern[128];
+    snprintf(pattern, sizeof(pattern), "\"%s\":", key);
+    char *p = strstr(json, pattern);
+    if (!p) return -1;
+    p += strlen(pattern);
+    while (*p == ' ' || *p == '\t' || *p == '\n') p++;
+    if (*p != '[') return -1;
+    p++;
+    int n = 0;
+    while (*p && *p != ']' && n < max_len) {
+        while (*p == ' ' || *p == '\t' || *p == ',' || *p == '\n') p++;
+        if (*p == ']' || *p == '\0') break;
+        char *end = NULL;
+        float v = strtof(p, &end);
+        if (end == p) break;
+        out[n++] = v;
+        p = end;
+    }
+    return n;
+}
+
 /* Find the start of the Nth layer object in the "layers" array */
 static const char *json_find_layer(const char *json, int layer_idx) {
     const char *p = strstr(json, "\"layers\"");
@@ -433,13 +521,38 @@ int main(int argc, char **argv) {
     /* Detect model type and requant mode */
     char model_type[32] = "mlp";
     json_find_str(json, "model_type", model_type, sizeof(model_type));
-    int is_cnn = (strcmp(model_type, "cnn") == 0);
+    int is_cnn = (strcmp(model_type, "cnn") == 0)
+                 || (strcmp(model_type, "cnn_perchan_o8") == 0);
+    int is_int4_o8 = (strcmp(model_type, "cnn_perchan_o8") == 0);
 
     char requant_mode[32] = "cpu_per_image";
     json_find_str(json, "requant_mode", requant_mode, sizeof(requant_mode));
     int is_vta_native = (strcmp(requant_mode, "vta_native") == 0);
-    printf("Config: model_type='%s' requant_mode='%s' is_vta_native=%d is_cnn=%d\n",
-           model_type, requant_mode, is_vta_native, is_cnn);
+    /* INT4-o8 CNN reuses the int4 weight pack + int32 VTA bias pipeline
+     * originally added for MLP INT4. Flag covers both for the three
+     * per-layer conditionals below (weight pack, bias load, D_dl alloc). */
+    int use_int4_weights = is_vta_native || is_int4_o8;
+    printf("Config: model_type='%s' requant_mode='%s' is_vta_native=%d "
+           "is_int4_o8=%d is_cnn=%d\n",
+           model_type, requant_mode, is_vta_native, is_int4_o8, is_cnn);
+
+    /* INT4-o8 CNN: parse zero_point and the global activation-scale array. */
+    int zero_point = 8;
+    float act_scales[MAX_LAYERS_P1] = {0};
+    int act_scales_n = 0;
+    if (is_int4_o8) {
+        int zp_parsed = json_find_int(json, "zero_point");
+        if (zp_parsed > 0) zero_point = zp_parsed;
+        act_scales_n = json_find_float_array(json, "act_scales_brevitas",
+                                             act_scales, MAX_LAYERS_P1);
+        if (act_scales_n <= 0) {
+            fprintf(stderr, "FATAL: INT4-o8 CNN config missing act_scales_brevitas\n");
+            return 1;
+        }
+        printf("INT4-o8: zero_point=%d act_scales_n=%d [", zero_point, act_scales_n);
+        for (int k = 0; k < act_scales_n; k++) printf(" %.6f", act_scales[k]);
+        printf(" ]\n");
+    }
 
     float input_scale = 0;
     int input_clip_max = 127;
@@ -492,11 +605,27 @@ int main(int argc, char **argv) {
         layers[i].m_tiles = json_find_int(layer_json, "m_tiles");
         layers[i].shift = json_find_int(layer_json, "shift");
         layers[i].w_scale = json_find_float(layer_json, "w_scale");
+        layers[i].w_scale_arr = NULL;
+        layers[i].w_scale_n = 0;
         layers[i].has_vta_bias = json_find_bool(layer_json, "has_vta_bias");
         layers[i].in_scale = json_find_float(layer_json, "in_scale");
         layers[i].D_dl = NULL;
         layers[i].bias_int = NULL;
         layers[i].bias_float = NULL;
+
+        /* INT4-o8 CNN: parse per-channel w_scale array. */
+        if (is_int4_o8) {
+            float tmp_w[MAX_OUT_F];
+            int n = json_find_float_array(layer_json, "w_scale", tmp_w, MAX_OUT_F);
+            if (n > 0) {
+                layers[i].w_scale_arr = (float *)malloc(n * sizeof(float));
+                memcpy(layers[i].w_scale_arr, tmp_w, n * sizeof(float));
+                layers[i].w_scale_n = n;
+            } else {
+                fprintf(stderr, "FATAL: INT4-o8 layer %d missing array w_scale\n", i);
+                return 1;
+            }
+        }
 
         /* CNN-specific fields */
         if (is_cnn) {
@@ -557,7 +686,7 @@ int main(int argc, char **argv) {
 
         snprintf(path, sizeof(path), "%s/%s", model_dir, bfile);
         if (npy_load(path, &barr) != 0) return 1;
-        if (is_vta_native && layers[i].has_vta_bias) {
+        if (use_int4_weights && layers[i].has_vta_bias) {
             layers[i].bias_int = (int32_t *)barr.data;
             printf("    bias: int32 (%zu elems), first3=[%d, %d, %d]\n",
                    barr.total_elems,
@@ -582,9 +711,9 @@ int main(int argc, char **argv) {
         layers[i].B_dl = alloc_vta_tensor(b_shape, 4, dtype_int8);
         layers[i].C_dl = alloc_vta_tensor(c_shape, 4, dtype_int8);
 
-        /* Copy weights to VTA (pack int4 for vta_native path) */
+        /* Copy weights to VTA (pack int4 for any INT4 path: MLP vta_native or CNN INT4-o8) */
         DLTensor *B_cpu = alloc_cpu_tensor(b_shape, 4, dtype_int8);
-        if (is_vta_native) {
+        if (use_int4_weights) {
             int w_elems = mt * nt * BLOCK_OUT * BLOCK_IN;
             int8_t *w_packed = (int8_t *)malloc(w_elems);
             pack_int4(layers[i].W_tiled, w_packed, w_elems);
@@ -598,8 +727,8 @@ int main(int argc, char **argv) {
         TVM_CHECK(TVMArrayCopyFromTo(B_cpu, layers[i].B_dl, NULL));
         TVMArrayFree(B_cpu);
 
-        /* Allocate and load int32 bias to VTA (vta_native hidden layers) */
-        if (is_vta_native && layers[i].has_vta_bias) {
+        /* Allocate and load int32 bias to VTA (INT4 hidden layers + all INT4-o8 CNN layers) */
+        if (use_int4_weights && layers[i].has_vta_bias) {
             DLDataType dtype_int32 = {kDLInt, 32, 1};
             int64_t d_shape[] = {ot, mt, 1, BLOCK_OUT};
             layers[i].D_dl = alloc_vta_tensor(d_shape, 4, dtype_int32);
@@ -657,6 +786,24 @@ int main(int argc, char **argv) {
     float *y_float = (float *)malloc(MAX_SPATIAL * MAX_OUT_F * sizeof(float));
     float *spatial_a = (float *)malloc(28 * 28 * MAX_OUT_F * sizeof(float));  /* activation buffer A */
     float *spatial_b = (float *)malloc(28 * 28 * MAX_OUT_F * sizeof(float));  /* activation buffer B */
+
+    /* INT4-o8 CNN CHW buffers (offset-encoded int8 activations and float64
+     * per-channel dequant/pool workspace). Only allocated for the INT4-o8
+     * path to avoid wasting memory on INT8 CNN / MLP runs. */
+    int8_t *chw_buf_a = NULL;
+    int8_t *chw_buf_b = NULL;
+    double *chw_float_a = NULL;
+    double *chw_float_b = NULL;
+    if (is_int4_o8) {
+        chw_buf_a   = (int8_t *)malloc(28 * 28 * MAX_OUT_F);
+        chw_buf_b   = (int8_t *)malloc(28 * 28 * MAX_OUT_F);
+        chw_float_a = (double *)malloc(28 * 28 * MAX_OUT_F * sizeof(double));
+        chw_float_b = (double *)malloc(28 * 28 * MAX_OUT_F * sizeof(double));
+        if (!chw_buf_a || !chw_buf_b || !chw_float_a || !chw_float_b) {
+            fprintf(stderr, "FATAL: failed to allocate CHW buffers\n");
+            return 1;
+        }
+    }
 
     /* For MLP */
     int8_t h_int8[MAX_FLAT];
@@ -852,9 +999,13 @@ int main(int argc, char **argv) {
                     }
                 }
 
-                /* Quantize patches */
+                /* Quantize patches. rintf (honors FE_TONEAREST = half-to-even
+                 * banker's) instead of roundf (half-away-from-zero) to match
+                 * Python's np.round, which the export-time shift calibration
+                 * assumed. Differences of ±1 LSB at this site cascade through
+                 * two conv layers and can flip argmax on VTA hardware. */
                 for (int k = 0; k < n_pixels * l->in_f; k++) {
-                    float v = roundf(patches_f[k] / current_scale);
+                    float v = rintf(patches_f[k] / current_scale);
                     patches_i8[k] = (int8_t)(v < -128 ? -128 : (v > 127 ? 127 : v));
                 }
 
@@ -917,18 +1068,20 @@ int main(int argc, char **argv) {
                 float feat[MAX_OUT_F];
                 global_avg_pool(spatial_a, cur_H, cur_W, cur_C, feat);
 
-                /* Pad to in_f */
+                /* Quantize post-GAP features using current_scale (carried from
+                 * end of conv2). Earlier versions recomputed feat_s from the
+                 * post-GAP vector itself, which gave tighter ±1 LSB granularity
+                 * but differed from Python — and on real VTA hardware this
+                 * produced a 5-point accuracy drop when combined with hardware
+                 * jitter. The shifts baked into the VTA modules were calibrated
+                 * against Python's current_scale behavior (export_vta_cnn.py
+                 * calibrate_cnn); this restores that contract.
+                 * Also: rintf (banker's half-to-even) instead of roundf, to
+                 * match np.round at the Python quant site. */
                 int8_t feat_i8[MAX_OUT_F];
-                float feat_max = 0;
-                for (int k = 0; k < cur_C; k++) {
-                    float av = fabsf(feat[k]);
-                    if (av > feat_max) feat_max = av;
-                }
-                float feat_s = (feat_max > 0) ? feat_max / 127.0f : 1e-10f;
-
                 memset(feat_i8, 0, l->in_f);
                 for (int k = 0; k < cur_C; k++) {
-                    float v = roundf(feat[k] / feat_s);
+                    float v = rintf(feat[k] / current_scale);
                     feat_i8[k] = (int8_t)(v < -128 ? -128 : (v > 127 ? 127 : v));
                 }
 
@@ -936,7 +1089,7 @@ int main(int argc, char **argv) {
                 VTA_CALL(l, feat_i8, l->n_tiles * BLOCK_IN,
                          dense_out, l->m_tiles * BLOCK_OUT);
 
-                float combined = feat_s * l->w_scale * (float)(1 << l->shift);
+                float combined = current_scale * l->w_scale * (float)(1 << l->shift);
                 float logits[MAX_OUT_F];
                 for (int k = 0; k < l->out_f; k++) {
                     logits[k] = (float)dense_out[k] * combined + l->bias_float[k];
@@ -951,6 +1104,175 @@ int main(int argc, char **argv) {
             }
         }
         return -1;  /* should not reach */
+    }
+
+    /* ==============================================================
+     * CNN INT4-o8 inference (Mode G pipeline, per-channel dequant)
+     * Byte-for-byte functional port of test_vta_cnn_int4_o8.py:infer_one.
+     *
+     * Per conv layer (2 layers):
+     *   CPU: im2col CHW with pad_value = -ZP
+     *   CPU: zero-pad each patch row to n_tiles*BLOCK_IN (tail zeros,
+     *        matching Python np.pad default — weights pad to zeros too)
+     *   CPU: pack two int4 values per byte (pack_int4)
+     *   VTA: 4-arg GEMM + corrected_int32_bias + SHR + CLIP[-128,127] -> int8
+     *   CPU: per-channel dequant (w_scale[c] * act_scale_in * 2^shift) -> float64 CHW
+     *   CPU: ReLU (clip at 0)
+     *   CPU: MaxPool 2x2 stride 2
+     *   CPU: requant round(pooled / act_scales[ci+1]) clip [0,15], subtract ZP
+     *
+     * Dense:
+     *   CPU: AdaptiveAvgPool via dequant + mean + requant (last_scale cancels,
+     *        but we compute literally to match the Python trace)
+     *   CPU: pad to BLOCK_IN, pack int4
+     *   VTA: 4-arg GEMM + corrected_bias + SHR + CLIP -> int8
+     *   CPU: per-channel dequant + argmax (no CPU bias — it's in VTA)
+     */
+    int cnn_infer_int4_o8(const float *img_28x28) {
+        const int ZP = zero_point;
+
+        /* Count conv layers */
+        int num_convs = 0;
+        for (int i = 0; i < num_layers; i++) {
+            if (strcmp(layers[i].type, "conv") == 0) num_convs++;
+        }
+
+        /* ---- Input quantize: img [0,1] -> Brevitas [0,15] -> VTA [-8,7] ---- */
+        double in_s = (double)act_scales[0];
+        int cur_C = 1, cur_H = 28, cur_W = 28;
+        for (int k = 0; k < 784; k++) {
+            double v = rint((double)img_28x28[k] / in_s);
+            if (v < 0) v = 0;
+            if (v > 15) v = 15;
+            chw_buf_a[k] = (int8_t)((int)v - ZP);
+        }
+        int8_t *cur_in = chw_buf_a;
+        int8_t *cur_out = chw_buf_b;
+
+        /* ---- Conv layers ---- */
+        for (int ci = 0; ci < num_convs; ci++) {
+            Layer *l = &layers[ci];
+            int kk = l->kernel_size;
+            int pad = l->padding;
+            int Ho, Wo;
+
+            /* im2col CHW with pad_value = -ZP */
+            im2col_chw(cur_in, cur_C, cur_H, cur_W, kk, kk, pad, -ZP,
+                       patches_i8, &Ho, &Wo);
+            int n_pixels = Ho * Wo;
+            int patch_dim = kk * kk * cur_C;
+
+            /* Zero-pad each row from patch_dim to in_f (tail zeros) */
+            if (patch_dim < l->in_f) {
+                for (int r = n_pixels - 1; r >= 0; r--) {
+                    if (r > 0)
+                        memmove(patches_i8 + r * l->in_f, patches_i8 + r * patch_dim,
+                                patch_dim);
+                    memset(patches_i8 + r * l->in_f + patch_dim, 0,
+                           l->in_f - patch_dim);
+                }
+            }
+
+            /* VTA chunks: pack int4, call 4-arg module, int8 output */
+            int ot = l->o_tile;
+            int chunk_a_bytes = ot * l->n_tiles * BLOCK_IN;  /* bytes after pack (int4 -> half) */
+            int chunk_c_bytes = ot * l->m_tiles * BLOCK_OUT;
+            int chunk_a_bytes_unpacked = ot * l->in_f;       /* pre-pack byte count */
+
+            for (int chunk = 0; chunk < l->n_chunks; chunk++) {
+                int start = chunk * ot;
+                /* In-place pack: pack_int4 writes output[k] from vals[2k] and
+                 * vals[2k+1], so source and dest can overlap safely. After
+                 * packing, the tail of the buffer (bytes [chunk_a_bytes/2..])
+                 * is zeroed by pack_int4, which the VTA load skips anyway. */
+                int8_t *src = patches_i8 + start * l->in_f;
+                pack_int4(src, src, chunk_a_bytes_unpacked);
+                VTA_CALL_BIAS(l, src, chunk_a_bytes,
+                              vta_out_i8 + start * l->out_f, chunk_c_bytes);
+            }
+
+            /* Per-channel dequant (float64) + ReLU into chw_float_a[C, Ho, Wo] */
+            int C_out_valid = l->real_out;
+            double shift_scale = (double)(1u << l->shift);
+            double act_scale_in = (double)act_scales[ci];
+            double cs[MAX_OUT_F];
+            for (int c = 0; c < C_out_valid; c++) {
+                cs[c] = (double)l->w_scale_arr[c] * act_scale_in * shift_scale;
+            }
+            for (int c = 0; c < C_out_valid; c++) {
+                double cs_c = cs[c];
+                for (int i = 0; i < Ho; i++) {
+                    for (int j = 0; j < Wo; j++) {
+                        double v = (double)vta_out_i8[(i * Wo + j) * l->out_f + c] * cs_c;
+                        if (v < 0.0) v = 0.0;  /* ReLU */
+                        chw_float_a[c * Ho * Wo + i * Wo + j] = v;
+                    }
+                }
+            }
+
+            /* MaxPool 2x2 stride 2 -> chw_float_b[C, Ho/2, Wo/2] */
+            int pool_H = Ho / 2, pool_W = Wo / 2;
+            maxpool2d_chw(chw_float_a, C_out_valid, Ho, Wo, 2, chw_float_b);
+
+            /* Requant: round(pooled / act_scales[ci+1]) clip [0,15], subtract ZP */
+            double out_s = (double)act_scales[ci + 1];
+            for (int c = 0; c < C_out_valid; c++) {
+                for (int i = 0; i < pool_H; i++) {
+                    for (int j = 0; j < pool_W; j++) {
+                        double v = rint(chw_float_b[c * pool_H * pool_W + i * pool_W + j] / out_s);
+                        if (v < 0) v = 0;
+                        if (v > 15) v = 15;
+                        cur_out[c * pool_H * pool_W + i * pool_W + j] = (int8_t)((int)v - ZP);
+                    }
+                }
+            }
+
+            /* Swap cur_in <- cur_out for next layer */
+            int8_t *tmp = cur_in; cur_in = cur_out; cur_out = tmp;
+            cur_H = pool_H; cur_W = pool_W; cur_C = C_out_valid;
+        }
+
+        /* ---- Dense layer (AdaptiveAvgPool + 4-arg VTA + argmax) ---- */
+        Layer *dl = &layers[num_convs];
+        double last_s = (double)act_scales[num_convs];
+
+        /* AdaptiveAvgPool: mean over (H, W) of (cur_in + ZP). The last_scale
+         * multiplication in Python cancels against the divide in the requant,
+         * so we compute the integer-domain mean directly and then clip/offset. */
+        int8_t x_d_vta[MAX_OUT_F];
+        memset(x_d_vta, 0, dl->in_f);
+        for (int c = 0; c < cur_C; c++) {
+            long sum = 0;
+            for (int i = 0; i < cur_H; i++) {
+                for (int j = 0; j < cur_W; j++) {
+                    sum += (int)(cur_in[c * cur_H * cur_W + i * cur_W + j]) + ZP;
+                }
+            }
+            double mean = (double)sum / (double)(cur_H * cur_W);
+            double v = rint(mean);
+            if (v < 0) v = 0;
+            if (v > 15) v = 15;
+            x_d_vta[c] = (int8_t)((int)v - ZP);
+        }
+
+        /* Pack int4 + 4-arg VTA call */
+        int8_t a_dense_packed[MAX_OUT_F];
+        pack_int4(x_d_vta, a_dense_packed, dl->in_f);
+        int8_t dense_out[MAX_OUT_F];
+        VTA_CALL_BIAS(dl, a_dense_packed, dl->n_tiles * BLOCK_IN,
+                      dense_out, dl->m_tiles * BLOCK_OUT);
+
+        /* Per-channel dequant + argmax. No CPU bias — corrected bias is in VTA. */
+        int C_d_valid = dl->real_out;
+        double shift_scale_d = (double)(1u << dl->shift);
+        double best = 0.0;
+        int best_idx = 0;
+        for (int c = 0; c < C_d_valid; c++) {
+            double logit = (double)dense_out[c] *
+                           (double)dl->w_scale_arr[c] * last_s * shift_scale_d;
+            if (c == 0 || logit > best) { best = logit; best_idx = c; }
+        }
+        return best_idx;
     }
 
     /* ---- Clock sanity check ---- */
@@ -973,6 +1295,17 @@ int main(int argc, char **argv) {
         } \
     } while(0)
 
+    /* ---- Top-level dispatch: CNN INT4-o8 / CNN INT8 / MLP ---- */
+    #define INFER_DISPATCH(img_ptr, prediction) do { \
+        if (is_cnn && is_int4_o8) { \
+            (prediction) = cnn_infer_int4_o8((img_ptr)); \
+        } else if (is_cnn) { \
+            (prediction) = cnn_infer((img_ptr)); \
+        } else { \
+            MLP_DISPATCH((img_ptr), prediction); \
+        } \
+    } while(0)
+
     /* ---- Pre-inference sanity checks ---- */
     printf("Sanity checks:\n");
     printf("  is_vta_native=%d, is_cnn=%d\n", is_vta_native, is_cnn);
@@ -981,7 +1314,7 @@ int main(int argc, char **argv) {
                i, layers[i].has_vta_bias,
                (void*)layers[i].bias_float, (void*)layers[i].bias_int,
                (void*)layers[i].D_dl);
-        if (!is_vta_native && !layers[i].bias_float) {
+        if (!use_int4_weights && !layers[i].bias_float) {
             fprintf(stderr, "FATAL: INT8 layer %d has NULL bias_float!\n", i);
             return 1;
         }
@@ -991,11 +1324,7 @@ int main(int argc, char **argv) {
     printf("Warmup (10 images)...\n");
     for (int i = 0; i < 10 && i < n_images; i++) {
         int pred;
-        if (is_cnn) {
-            pred = cnn_infer(images + i * 784);
-        } else {
-            MLP_DISPATCH(images + i * 784, pred);
-        }
+        INFER_DISPATCH(images + i * 784, pred);
         (void)pred;
     }
 
@@ -1004,11 +1333,7 @@ int main(int argc, char **argv) {
     int verify_correct = 0;
     for (int i = 0; i < 100 && i < n_images; i++) {
         int pred;
-        if (is_cnn) {
-            pred = cnn_infer(images + i * 784);
-        } else {
-            MLP_DISPATCH(images + i * 784, pred);
-        }
+        INFER_DISPATCH(images + i * 784, pred);
         if (pred == labels[i]) verify_correct++;
     }
     printf("  Accuracy: %d/100\n", verify_correct);
@@ -1046,11 +1371,7 @@ int main(int argc, char **argv) {
 
         for (int i = 0; i < n_images; i++) {
             int pred;
-            if (is_cnn) {
-                pred = cnn_infer(images + i * 784);
-            } else {
-                MLP_DISPATCH(images + i * 784, pred);
-            }
+            INFER_DISPATCH(images + i * 784, pred);
             if (pred == labels[i]) correct++;
         }
 
@@ -1166,6 +1487,7 @@ int main(int argc, char **argv) {
         free(layers[i].W_tiled);
         if (layers[i].bias_float) free(layers[i].bias_float);
         if (layers[i].bias_int) free(layers[i].bias_int);
+        if (layers[i].w_scale_arr) free(layers[i].w_scale_arr);
     }
     TVMArrayFree(A_cpu);
     TVMArrayFree(C_cpu);
@@ -1175,6 +1497,10 @@ int main(int argc, char **argv) {
     free(y_float);
     free(spatial_a);
     free(spatial_b);
+    if (chw_buf_a)   free(chw_buf_a);
+    if (chw_buf_b)   free(chw_buf_b);
+    if (chw_float_a) free(chw_float_a);
+    if (chw_float_b) free(chw_float_b);
     free(images);
     free(labels);
 

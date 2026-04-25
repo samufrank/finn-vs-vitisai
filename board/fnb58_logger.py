@@ -37,7 +37,7 @@ def find_and_setup():
                 pass
 
     # Reset and re-find
-    dev.reset()
+    #dev.reset()
     time.sleep(0.5)
     dev = usb.core.find(idVendor=0x2e3c, idProduct=0x5558)
     for cfg in dev:

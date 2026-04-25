@@ -33,21 +33,21 @@ FINN and VTA use the same Brevitas-trained weights. Vitis AI uses its own quanti
 
 ### CNN, MNIST (Conv [8,16] + FC)
 
-| Metric | FINN INT8 | VTA INT8 (Python) | VTA INT4-o8 (Python) | Vitis AI DPU INT8 |
-|--------|-----------|-------------------|----------------------|-------------------|
-| Accuracy | 91.99% | 90.4% | 81.6% | 86.7% |
-| Throughput (FPS) | 454 | 27.0 | 29.2 | 2910 |
-| Latency (ms) | 2.205 | 37.0 | 34.3 | 0.34 |
-| Dynamic power (W) | 0.18 | 0.24 | 0.28 | 0.23 |
-| Energy/inference (mJ) | 7.59 | 170.8 | 142.0 | 1.58 |
+| Metric | FINN INT8 | VTA INT8 | VTA INT4-o8 | Vitis AI DPU INT8 |
+|--------|-----------|----------|-------------|-------------------|
+| Accuracy | 91.99% | 90.32% | 81.57% | 86.7% |
+| Throughput (FPS) | 454 | 356 | 481 | 2910 |
+| Latency (ms) | 2.205 | 2.81 | 2.08 | 0.34 |
+| Dynamic power (W) | 0.18 | 0.16 | 0.16 | 0.23 |
+| Energy/inference (mJ) | 7.59 | 12.54 | 8.28 | 1.58 |
 
-CNN tiny is intentionally undersized (float baseline 91.2%), selected to fit FINN's on-chip BRAM constraints at INT8 on the ZU3. VTA CNN C runner has an open accuracy regression bug (approximately 86% in C vs 91% in Python) and is therefore reported in Python for accuracy until resolved. DPU accuracy loss (roughly 5% vs float) is from vai_q_pytorch post-training quantization on an already-small model.
+CNN tiny is intentionally undersized (float baseline 91.2%), selected to fit FINN's on-chip BRAM constraints at INT8 on the ZU3. DPU accuracy loss (roughly 5% vs float) is from vai_q_pytorch post-training quantization on an already-small model. VTA INT4-o8 requires a mixed-precision bitstream (int4 input/weights, int8 DMA output) and runs at 166 MHz; INT8 at 250 MHz.
 
 ### Key findings
 
 DPU leads on throughput and energy for both MLP and CNN, achieving 1.57 and 1.58 mJ per inference respectively, but trades accuracy for it: post-training quantization on the small CNN drops accuracy about 5 points below FINN's 91.99%. Both numbers are legitimate depending on application constraints.
 
-At matched INT8 precision and matched C runtime, FINN outperforms VTA on both MLP and CNN. MLP energy is 2.21 vs 3.49 mJ and CNN energy is 7.59 vs 170.8 mJ. The pattern extends to INT4 on MLP (1.90 vs 3.15 mJ). CNN matched-C comparison is currently incomplete pending resolution of a VTA CNN C runner accuracy regression.
+At matched INT8 precision and matched C runtime, FINN outperforms VTA on both MLP and CNN. MLP energy is 2.21 vs 3.49 mJ and CNN energy is 7.59 vs 12.54 mJ. The pattern extends to INT4 on MLP (1.90 vs 3.15 mJ). At INT4-o8 on CNN, VTA narrows the gap: 8.28 vs 7.59 mJ energy with higher throughput (481 vs 454 FPS), though at lower accuracy (81.57% vs 91.99%).
 
 FINN is currently CPU-bound rather than fabric-bound on these models, with the CPU first MatMul accounting for 82 to 94 percent of per-inference time depending on precision. The FINN compiler, at the throughput target we specified, leaves the first matrix multiply on the CPU and sets minimum folding on the fabric layers. Substantial headroom remains accessible by recompiling with more aggressive throughput targets. Experiments on this and other variables remain open, and headline rankings may shift as those experiments close.
 
@@ -143,7 +143,7 @@ python3 board/merge_power.py --benchmark /tmp/bench.json \
 finn-vs-vitisai/
 ├── board/                  # Board deployment, benchmarking, and infrastructure
 │   ├── benchmark.py            # Unified benchmark runner (FINN, VTA, DPU, FINN-T)
-│   ├── vta_infer.c             # C inference runner (VTA MLP + CNN)
+│   ├── vta_infer.c             # C inference runner (VTA MLP + CNN, INT8 + INT4)
 │   ├── finn_mlp_infer.c        # C inference runner (FINN MLP, INT8 + INT4)
 │   ├── finn_cnn_infer.c        # C inference runner (FINN CNN, INT8)
 │   ├── finn_t_infer.c          # C inference runner (FINN-T transformer)
@@ -186,16 +186,15 @@ Tool repos (`finn-repo/`, `Vitis-AI/`) and datasets (`data/`) are cloned/downloa
 
 ### Complete
 - Three-way MLP comparison (FINN, VTA, DPU) at matched INT8 and INT4 precision, matched C runtime, with physical power measurement
-- Three-way CNN comparison at INT8 with FINN and DPU in C, VTA in Python (C runner accuracy regression under investigation)
+- Three-way CNN comparison at INT8 and INT4 with all frameworks in C, with physical power measurement
 - Trained-transformer FPGA deployment: FINN-T RadioML 2018 (72.12%, 1460 FPS, 2.76 mJ) on ZU3EG
 - Board-side inference for all toolchains (no RPC overhead)
 - FNB58 power measurement infrastructure (logger, merge, timeline plots)
-- C inference runners for all four accelerator paths (VTA, FINN MLP, FINN CNN, FINN-T)
+- C inference runners for all four accelerator paths (VTA MLP/CNN INT8/INT4, FINN MLP/CNN, FINN-T)
 - DPU transformer compilation test (linear projections on DPU, attention ops partition to CPU)
 - VTA transformer GEMM verification (all 6 dimensions tile correctly)
 
 ### In Progress
-- VTA CNN C runner accuracy regression (86% vs 91% in Python, under investigation)
 - FINN CNN at INT4 (pending Brevitas CNN-INT4 training and FINN compile)
 - VTA transformer deployment: INT4 RadioML transformer, compiled modules bit-exactly validated against host-side reference at 70.53%, board-side inference driver remaining
 

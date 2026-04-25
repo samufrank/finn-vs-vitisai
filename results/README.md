@@ -45,12 +45,14 @@ The C runner replaces FINN's Python driver with a ctypes-loaded native library f
 - MLP tiny [64,32] MNIST — INT8, 250 MHz, Python and C runners
 - MLP tiny [64,32] MNIST — INT4, 200 MHz, Python runner (Brevitas QAT w4a4, 93.08%, 245.6 FPS, 18.13 mJ)
 - MLP tiny [64,32] MNIST — INT4, 200 MHz, C runner (93.08%, 1266 FPS, 3.15 mJ)
-- CNN tiny [8,16] MNIST — INT8, 250 MHz, Python runner
-- CNN tiny [8,16] MNIST — INT4, 166 MHz, Python runner, INT4-o8 bitstream (per-channel BN-fold, zero-point activation offset, 81.57%, 29.2 FPS, 142.0 mJ)
+- CNN tiny [8,16] MNIST — INT8, 250 MHz, Python runner (90.36%, 27.0 FPS, 170.8 mJ, historical baseline)
+- CNN tiny [8,16] MNIST — INT8, 250 MHz, C runner (90.32%, 356 FPS, 12.54 mJ)
+- CNN tiny [8,16] MNIST — INT4-o8, 166 MHz, Python runner (per-channel BN-fold, zero-point activation offset, 81.57%, 29.2 FPS, 142.0 mJ, historical baseline)
+- CNN tiny [8,16] MNIST — INT4-o8, 166 MHz, C runner (81.57%, 481 FPS, 8.28 mJ)
 
 Note on CNN INT4: requires a mixed-precision bitstream (int4 input/weights, int8 DMA output) because VTA's per-tensor shift-right with 4-bit output width cannot preserve inter-layer signal through BN-amplified channels. Zero-point offset maps Brevitas unsigned [0,15] activations to VTA signed [-8,7] with bias correction, recovering the full activation range. Timing closed at 166 MHz (down from 200 MHz for pure INT4, 250 MHz for INT8).
 
-Note on VTA CNN C runner: accuracy regression of approximately 4 points vs Python runner at INT8 (86% vs 91%) is under investigation. CNN Python results are therefore the reported accuracy numbers until the bug is resolved.
+Note on VTA CNN C runner: an accuracy regression of approximately 5 points at INT8 (86% vs 91%) was traced in session 21 to the dense-layer scale recomputation interacting with VTA hardware GEMM output jitter. Fixed by matching Python's scale logic (current_scale instead of feat_s) and rounding mode (rintf instead of roundf). C runner now matches Python accuracy.
 
 ### vitis_ai/
 - MLP tiny [64,32] MNIST — INT8, B512 DPU, 300/600 MHz
