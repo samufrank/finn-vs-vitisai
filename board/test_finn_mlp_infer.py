@@ -51,17 +51,20 @@ def build_so(src_path, so_path):
 def load_lib(so_path):
     lib = ctypes.CDLL(so_path)
 
-    lib.finn_mlp_pack_uint8.argtypes        = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
-    lib.finn_mlp_pack_uint4.argtypes        = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
-    lib.finn_mlp_unpack_int24_le.argtypes   = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
-    lib.finn_mlp_unpack_int16_le.argtypes   = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
+    lib.finn_mlp_pack_uint8.argtypes            = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
+    lib.finn_mlp_pack_uint4.argtypes            = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
+    lib.finn_mlp_pack_uint4_2perbyte.argtypes   = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
+    lib.finn_mlp_unpack_int24_le.argtypes       = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
+    lib.finn_mlp_unpack_int16_le.argtypes       = [ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int]
     for fn in (lib.finn_mlp_pack_uint8, lib.finn_mlp_pack_uint4,
+               lib.finn_mlp_pack_uint4_2perbyte,
                lib.finn_mlp_unpack_int24_le, lib.finn_mlp_unpack_int16_le):
         fn.restype = None
 
     lib.finn_mlp_runner_init.argtypes = [
         ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
-        ctypes.c_int,
+        ctypes.c_int,                            # ibuf_bytes (NEW)
+        ctypes.c_int,                            # use_cache_ops
         ctypes.c_void_p, ctypes.c_uint64,
         ctypes.c_void_p, ctypes.c_uint64,
         ctypes.c_void_p, ctypes.c_void_p,
@@ -102,29 +105,40 @@ def load_mnist_test():
 
 # ----- pack / unpack tests ------------------------------------------------
 
-def test_pack(lib, DataType, py_pack, *, precision, n_trials, mid_dim, rng):
-    if precision == 8:
-        dtype = DataType['UINT8']
-        max_val = 255
+def test_pack(lib, DataType, py_pack, *, precision, mode, fold_shape, ibuf_bytes,
+              n_trials, mid_dim, rng):
+    """Pack-byte-exact test for one (precision, mode) combination.
+
+    mode ∈ {'uint8', 'uint4_1perbyte', 'uint4_2perbyte'}.
+    fold_shape is the FINN-style folded shape passed to finnpy_to_packed_bytearray.
+    ibuf_bytes is the expected packed byte count (= prod(ishape_packed[1:])).
+    """
+    if mode == 'uint8':
+        dtype, max_val = DataType['UINT8'], 255
         c_fn = lib.finn_mlp_pack_uint8
-    else:
-        dtype = DataType['UINT4']
-        max_val = 15
+    elif mode == 'uint4_1perbyte':
+        dtype, max_val = DataType['UINT4'], 15
         c_fn = lib.finn_mlp_pack_uint4
-    in_bytes = mid_dim   # PE=SIMD=1 -> one byte per element
-    print(f'[pack INT{precision}] {n_trials} trials, max_val={max_val}, '
-          f'ibuf={in_bytes} bytes')
+    elif mode == 'uint4_2perbyte':
+        dtype, max_val = DataType['UINT4'], 15
+        c_fn = lib.finn_mlp_pack_uint4_2perbyte
+    else:
+        raise ValueError(f'unknown mode {mode!r}')
+
+    label = f'INT{precision} {mode}'
+    print(f'[pack {label}] {n_trials} trials, fold={fold_shape}, ibuf={ibuf_bytes} B')
     n_fail = 0
     for t in range(n_trials):
         act = rng.integers(0, max_val + 1, size=mid_dim, dtype=np.uint8)
 
-        py = py_pack(act.reshape((1, mid_dim, 1)), dtype,
-                     reverse_endian=True, reverse_inner=True, fast_mode=True)
+        py = py_pack(act.reshape(fold_shape), dtype,
+                     reverse_endian=True, reverse_inner=True, fast_mode=False)
         py_bytes = np.ascontiguousarray(py).flatten().astype(np.uint8)
-        assert py_bytes.shape == (in_bytes,), (
-            f'unexpected python pack shape {py_bytes.shape}')
+        assert py_bytes.shape == (ibuf_bytes,), (
+            f'unexpected python pack shape {py_bytes.shape} '
+            f'(expected ({ibuf_bytes},)) for fold={fold_shape}')
 
-        c_buf = np.zeros(in_bytes, dtype=np.uint8)
+        c_buf = np.zeros(ibuf_bytes, dtype=np.uint8)
         c_fn(act.ctypes.data, c_buf.ctypes.data, mid_dim)
 
         if not np.array_equal(py_bytes, c_buf):
@@ -134,7 +148,7 @@ def test_pack(lib, DataType, py_pack, *, precision, n_trials, mid_dim, rng):
                 print(f'    act head: {act[:8].tolist()}')
                 print(f'    py  head: {py_bytes[:16].tolist()}')
                 print(f'    c   head: {c_buf[:16].tolist()}')
-    print(f'[pack INT{precision}] {n_trials - n_fail}/{n_trials} OK')
+    print(f'[pack {label}] {n_trials - n_fail}/{n_trials} OK')
     return n_fail == 0
 
 
@@ -228,6 +242,7 @@ def test_end_to_end(lib, *, deploy, precision, n_trials, mnist_imgs, rng):
 
     rc = lib.finn_mlp_runner_init(
         precision, in_dim, mid_dim, num_classes, nthres,
+        mid_dim,                                # ibuf_bytes — baseline deploys are 1-per-byte
         0,                                      # use_cache_ops=0
         ibuf.ctypes.data, 0,
         obuf.ctypes.data, 0,
@@ -296,10 +311,23 @@ def main():
 
     rng = np.random.default_rng(args.seed)
     ok = True
-    ok &= test_pack(  lib, DataType, py_pack,   precision=8,
-                      n_trials=args.pack_trials,   mid_dim=64, rng=rng)
-    ok &= test_pack(  lib, DataType, py_pack,   precision=4,
-                      n_trials=args.pack_trials,   mid_dim=64, rng=rng)
+    # mid_dim=64 mirrors the deployed mlp_mnist_tiny ([784, 64, 32, 10] hidden=[64,32]
+    # → first FPGA layer's mid_dim is 64). Three pack modes:
+    #   uint8 1-per-byte:        baseline INT8 deploy + mlp_int8_fps500000 (SIMD=4 still
+    #                            byte-aligned, memcpy works).
+    #   uint4 1-per-byte:        baseline INT4 deploy (SIMD=1).
+    #   uint4 2-per-byte:        mlp_int4_fps500000 (SIMD=16, FINN packs 16 INT4
+    #                            elements per chunk into 8 bytes; same convention as
+    #                            CNN INT4 baseline).
+    ok &= test_pack(lib, DataType, py_pack, precision=8, mode='uint8',
+                    fold_shape=(1, 64, 1), ibuf_bytes=64,
+                    n_trials=args.pack_trials, mid_dim=64, rng=rng)
+    ok &= test_pack(lib, DataType, py_pack, precision=4, mode='uint4_1perbyte',
+                    fold_shape=(1, 64, 1), ibuf_bytes=64,
+                    n_trials=args.pack_trials, mid_dim=64, rng=rng)
+    ok &= test_pack(lib, DataType, py_pack, precision=4, mode='uint4_2perbyte',
+                    fold_shape=(1, 4, 16), ibuf_bytes=32,
+                    n_trials=args.pack_trials, mid_dim=64, rng=rng)
     ok &= test_unpack(lib, DataType, py_unpack, precision=8,
                       n_trials=args.unpack_trials, num_classes=10, rng=rng)
     ok &= test_unpack(lib, DataType, py_unpack, precision=4,

@@ -572,7 +572,8 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             _lib = ctypes.CDLL(_so_path)
             _lib.finn_mlp_runner_init.argtypes = [
                 ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_int,
-                ctypes.c_int,
+                ctypes.c_int,                # ibuf_bytes (caller-supplied)
+                ctypes.c_int,                # use_cache_ops
                 ctypes.c_void_p, ctypes.c_uint64,
                 ctypes.c_void_p, ctypes.c_uint64,
                 ctypes.c_void_p, ctypes.c_void_p,
@@ -605,8 +606,14 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             add_c   = np.ascontiguousarray(add_out.astype(np.float32))
             mul_v   = float(np.asarray(mul_out).flatten()[0])
 
+            # Per-image packed input byte count from FINN's driver. Equals
+            # mid_dim at PE=SIMD=1 (1-per-byte INT4 or INT8); halves to
+            # mid_dim/2 when FINN folds with high SIMD on INT4 (2-per-byte
+            # convention, e.g. mlp_int4_fps500000 with SIMD=16).
+            ibuf_bytes_per_image = int(np.prod(ol.ishape_packed(0)[1:]))
             rc = _lib.finn_mlp_runner_init(
                 precision, n_inputs, W0.shape[1], add_out.shape[0], nthres,
+                ibuf_bytes_per_image,
                 1,  # use_cache_ops=1 (ol buffers are cacheable)
                 ibuf_dev.ctypes.data, int(ibuf_dev.device_address),
                 obuf_dev.ctypes.data, int(obuf_dev.device_address),

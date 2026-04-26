@@ -109,7 +109,33 @@ void finn_mlp_pack_uint8(const uint8_t *act, uint8_t *ibuf, int n)
 
 void finn_mlp_pack_uint4(const uint8_t *act, uint8_t *ibuf, int n)
 {
+    /* 1-per-byte: each act element occupies the low nibble of its own ibuf byte.
+     * Used when FINN folds with PE=SIMD=1 (baseline MLP INT4 deploy). */
     for (int i = 0; i < n; i++) ibuf[i] = (uint8_t)(act[i] & 0x0Fu);
+}
+
+void finn_mlp_pack_uint4_2perbyte(const uint8_t *act, uint8_t *ibuf, int n)
+{
+    /* 2-per-byte: low nibble = even-index element, high nibble = odd-index.
+     * Used when FINN folds with SIMD>1 such that the streamed AXI word packs
+     * multiple INT4 elements (verified with mlp_int4_fps500000 build at
+     * MVAU SIMD=16: ishape_packed=(1,4,8) for mid_dim=64).
+     *
+     * Identical implementation to finn_cnn_pack_uint4 — the CNN baseline
+     * already uses this 2-per-byte convention because FMPadding feeds 8 INT4
+     * channels in parallel. The MLP needed both 1-per-byte (PE=SIMD=1) and
+     * 2-per-byte (high SIMD) paths once the target_fps sweep landed on
+     * SIMD=16 INT4 builds. select_dispatch picks based on caller-supplied
+     * ibuf_bytes vs mid_dim ratio.
+     *
+     * Caller guarantees n even (mid_dim is even for both observed MLP
+     * configs; runner_init enforces it for the 2-per-byte path). */
+    int half = n >> 1;
+    for (int i = 0; i < half; i++) {
+        uint8_t lo = act[2*i]     & 0x0Fu;
+        uint8_t hi = act[2*i + 1] & 0x0Fu;
+        ibuf[i] = (uint8_t)(lo | (hi << 4));
+    }
 }
 
 void finn_mlp_unpack_int24_le(const uint8_t *obuf, int32_t *out, int n)
@@ -167,26 +193,44 @@ typedef struct {
 
 static mlp_runner_state_t g_mlp = {0};
 
-/* Map precision -> {pack, unpack, input byte/elem, output byte/elem}. */
+/* Map (precision, caller-supplied ibuf_bytes) → {pack, unpack, output bytes/elem}.
+ *
+ * ibuf_bytes is the actual packed-input byte count from FINN's driver
+ * (prod(ishape_packed[1:])). It captures the SIMD-driven layout choice that
+ * the precision alone doesn't determine. Pack-function dispatch:
+ *   precision=8: ibuf_bytes must equal mid_dim                 → pack_uint8
+ *   precision=4 + ibuf_bytes == mid_dim:     1-per-byte INT4   → pack_uint4
+ *   precision=4 + ibuf_bytes == mid_dim/2:   2-per-byte INT4   → pack_uint4_2perbyte
+ *   else: -1 (unsupported layout)
+ * Output dtype is precision-determined (INT24 vs INT16); no SIMD effect.
+ */
 static int select_dispatch(int precision,
+                           int ibuf_bytes,
+                           int mid_dim,
                            pack_fn_t   *pack_out,
                            unpack_fn_t *unpack_out,
-                           int *in_bytes_per_elem,
                            int *out_bytes_per_elem)
 {
     switch (precision) {
         case 8:
+            if (ibuf_bytes != mid_dim) return -1;
             *pack_out            = finn_mlp_pack_uint8;
             *unpack_out          = finn_mlp_unpack_int24_le;
-            *in_bytes_per_elem   = 1;   /* UINT8 */
             *out_bytes_per_elem  = 3;   /* INT24 */
             return 0;
         case 4:
-            *pack_out            = finn_mlp_pack_uint4;
             *unpack_out          = finn_mlp_unpack_int16_le;
-            *in_bytes_per_elem   = 1;   /* UINT4 with PE=SIMD=1 folding */
             *out_bytes_per_elem  = 2;   /* INT16 */
-            return 0;
+            if (ibuf_bytes == mid_dim) {
+                *pack_out = finn_mlp_pack_uint4;            /* 1-per-byte */
+                return 0;
+            }
+            if (ibuf_bytes * 2 == mid_dim) {
+                if (mid_dim & 1) return -1;                 /* 2-per-byte needs even */
+                *pack_out = finn_mlp_pack_uint4_2perbyte;
+                return 0;
+            }
+            return -1;
         default:
             return -1;
     }
@@ -198,6 +242,10 @@ int finn_mlp_runner_init(
     int       mid_dim,
     int       num_classes,
     int       num_thresholds,
+    int       ibuf_bytes,         /* caller-supplied; matches FINN's ishape_packed.
+                                   * Mirrors the CNN runner's bytes-per-pixel
+                                   * pattern: caller knows the FINN-chosen layout,
+                                   * runner doesn't reverse-engineer it. */
     int       use_cache_ops,
     void     *ibuf_virt, uint64_t ibuf_phys,
     void     *obuf_virt, uint64_t obuf_phys,
@@ -209,13 +257,15 @@ int finn_mlp_runner_init(
 {
     if (in_dim <= 0 || mid_dim <= 0 || num_classes <= 0 || num_thresholds <= 0)
         return -2;
-    if (ibuf_virt == NULL || obuf_virt == NULL) return -3;
+    if (ibuf_bytes <= 0)                         return -2;
+    if (ibuf_virt == NULL || obuf_virt == NULL)  return -3;
     if (W0 == NULL || thres == NULL || add == NULL) return -4;
 
     pack_fn_t   pack;
     unpack_fn_t unpack;
-    int         in_be, out_be;
-    if (select_dispatch(precision, &pack, &unpack, &in_be, &out_be) != 0)
+    int         out_be;
+    if (select_dispatch(precision, ibuf_bytes, mid_dim,
+                        &pack, &unpack, &out_be) != 0)
         return -5;
 
     /* First-row sort spot check (FINN emits ascending thresholds). Catches
@@ -234,7 +284,7 @@ int finn_mlp_runner_init(
     g_mlp.mid_dim        = mid_dim;
     g_mlp.num_classes    = num_classes;
     g_mlp.num_thresholds = num_thresholds;
-    g_mlp.ibuf_bytes     = mid_dim * in_be;
+    g_mlp.ibuf_bytes     = ibuf_bytes;
     g_mlp.obuf_bytes     = num_classes * out_be;
     g_mlp.pack           = pack;
     g_mlp.unpack         = unpack;

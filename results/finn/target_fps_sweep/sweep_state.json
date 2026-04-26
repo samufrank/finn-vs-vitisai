@@ -1,0 +1,1035 @@
+{
+  "schema_version": 1,
+  "started": "2026-04-25T22:20:51Z",
+  "last_update": "2026-04-26T05:21:20Z",
+  "current_sweep": "cnn_int4",
+  "current_target": 500000,
+  "sweeps": {
+    "mlp_int8": {
+      "status": "completed",
+      "phase": "done",
+      "model_onnx": "mlp_mnist_tiny.onnx",
+      "phase1_targets": [
+        1000,
+        10000,
+        100000,
+        500000
+      ],
+      "ceiling_lo": 500000,
+      "ceiling_hi": null,
+      "phase2_targets": [],
+      "completed_builds": {
+        "1000": {
+          "status": "success",
+          "started": "2026-04-25T22:26:34Z",
+          "completed": "2026-04-25T22:47:32Z",
+          "elapsed_s": 1258.0,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int8_fps1000/build.log",
+          "wns_ns": 3.704,
+          "fmax_mhz": 158.83,
+          "lut": 13150,
+          "lut_pct": 18.64,
+          "ff": 16025,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 2,
+          "dsp_pct": 0.56,
+          "est_fps_fpga": 48828.125,
+          "est_latency_us": 23.68,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 1
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 1
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "10000": {
+          "status": "success",
+          "started": "2026-04-25T23:50:15Z",
+          "completed": "2026-04-26T00:10:46Z",
+          "elapsed_s": 1231.3,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int8_fps10000/build.log",
+          "wns_ns": 3.704,
+          "fmax_mhz": 158.83,
+          "lut": 13150,
+          "lut_pct": 18.64,
+          "ff": 16025,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 2,
+          "dsp_pct": 0.56,
+          "est_fps_fpga": 48828.125,
+          "est_latency_us": 23.68,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 1
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 1
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "100000": {
+          "status": "success",
+          "started": "2026-04-26T00:10:46Z",
+          "completed": "2026-04-26T00:31:33Z",
+          "elapsed_s": 1247.1,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int8_fps100000/build.log",
+          "wns_ns": 3.843,
+          "fmax_mhz": 162.42,
+          "lut": 13232,
+          "lut_pct": 18.75,
+          "ff": 16254,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 5,
+          "dsp_pct": 1.39,
+          "est_fps_fpga": 195312.5,
+          "est_latency_us": 8.32,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 4
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 1
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "500000": {
+          "status": "success",
+          "started": "2026-04-26T00:31:34Z",
+          "completed": "2026-04-26T00:58:20Z",
+          "elapsed_s": 1606.8,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int8_fps500000/build.log",
+          "wns_ns": 2.299,
+          "fmax_mhz": 129.85,
+          "lut": 25256,
+          "lut_pct": 35.79,
+          "ff": 23030,
+          "bram18": 9,
+          "bram18_pct": 2.08,
+          "dsp": 18,
+          "dsp_pct": 5.0,
+          "est_fps_fpga": 625000.0,
+          "est_latency_us": 2.88,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 4,
+              "SIMD": 4
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 2
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        }
+      },
+      "tool_fails": []
+    },
+    "mlp_int4": {
+      "status": "completed",
+      "phase": "done",
+      "model_onnx": "mlp_mnist_tiny_int4.onnx",
+      "phase1_targets": [
+        1000,
+        10000,
+        100000,
+        500000
+      ],
+      "ceiling_lo": 500000,
+      "ceiling_hi": null,
+      "phase2_targets": [],
+      "completed_builds": {
+        "1000": {
+          "status": "success",
+          "started": "2026-04-26T00:58:21Z",
+          "completed": "2026-04-26T01:17:49Z",
+          "elapsed_s": 1168.3,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int4_fps1000/build.log",
+          "wns_ns": 5.448,
+          "fmax_mhz": 219.68,
+          "lut": 8348,
+          "lut_pct": 11.83,
+          "ff": 11927,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 2,
+          "dsp_pct": 0.56,
+          "est_fps_fpga": 48828.125,
+          "est_latency_us": 23.68,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 1
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 1
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "10000": {
+          "status": "success",
+          "started": "2026-04-26T01:17:49Z",
+          "completed": "2026-04-26T01:37:47Z",
+          "elapsed_s": 1198.4,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int4_fps10000/build.log",
+          "wns_ns": 5.448,
+          "fmax_mhz": 219.68,
+          "lut": 8348,
+          "lut_pct": 11.83,
+          "ff": 11927,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 2,
+          "dsp_pct": 0.56,
+          "est_fps_fpga": 48828.125,
+          "est_latency_us": 23.68,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 1
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 1
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "100000": {
+          "status": "success",
+          "started": "2026-04-26T01:37:47Z",
+          "completed": "2026-04-26T01:57:23Z",
+          "elapsed_s": 1175.9,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int4_fps100000/build.log",
+          "wns_ns": 5.716,
+          "fmax_mhz": 233.43,
+          "lut": 8551,
+          "lut_pct": 12.12,
+          "ff": 12351,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 5,
+          "dsp_pct": 1.39,
+          "est_fps_fpga": 195312.5,
+          "est_latency_us": 8.32,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 4
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 1
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "500000": {
+          "status": "success",
+          "started": "2026-04-26T01:57:23Z",
+          "completed": "2026-04-26T02:17:28Z",
+          "elapsed_s": 1204.4,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/mlp_int4_fps500000/build.log",
+          "wns_ns": 3.628,
+          "fmax_mhz": 156.94,
+          "lut": 8758,
+          "lut_pct": 12.41,
+          "ff": 12730,
+          "bram18": 7,
+          "bram18_pct": 1.62,
+          "dsp": 20,
+          "dsp_pct": 5.56,
+          "est_fps_fpga": 625000.0,
+          "est_latency_us": 2.88,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 16
+            },
+            "MVAU_rtl_0": {
+              "PE": 1,
+              "SIMD": 2
+            }
+          },
+          "cpu_layers": [
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        }
+      },
+      "tool_fails": []
+    },
+    "cnn_int8": {
+      "status": "completed",
+      "phase": "done",
+      "model_onnx": "cnn_mnist_tiny.onnx",
+      "phase1_targets": [
+        1000,
+        10000,
+        100000,
+        500000
+      ],
+      "ceiling_lo": 10000,
+      "ceiling_hi": 100000,
+      "phase2_targets": [],
+      "completed_builds": {
+        "1000": {
+          "status": "success",
+          "started": "2026-04-26T02:17:28Z",
+          "completed": "2026-04-26T02:40:54Z",
+          "elapsed_s": 1405.7,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int8_fps1000/build.log",
+          "wns_ns": 4.006,
+          "fmax_mhz": 166.83,
+          "lut": 17930,
+          "lut_pct": 25.41,
+          "ff": 19889,
+          "bram18": 29,
+          "bram18_pct": 6.71,
+          "dsp": 3,
+          "dsp_pct": 0.83,
+          "est_fps_fpga": 1328.656462585034,
+          "est_latency_us": 911.37,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "StreamingMaxPool_hls_0": {
+              "PE": 1,
+              "SIMD": null
+            },
+            "FMPadding_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "ConvolutionInputGenerator_rtl_0": {
+              "PE": null,
+              "SIMD": 1
+            },
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 3
+            },
+            "StreamingMaxPool_hls_1": {
+              "PE": 1,
+              "SIMD": null
+            }
+          },
+          "cpu_layers": [
+            [
+              "Transpose",
+              "Transpose_0"
+            ],
+            [
+              "Im2Col",
+              "Im2Col_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Transpose",
+              "Transpose_1"
+            ],
+            [
+              "GlobalAveragePool",
+              "GlobalAveragePool_0"
+            ],
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_1"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "10000": {
+          "status": "success",
+          "started": "2026-04-26T02:40:54Z",
+          "completed": "2026-04-26T03:12:19Z",
+          "elapsed_s": 1885.6,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int8_fps10000/build.log",
+          "wns_ns": 1.672,
+          "fmax_mhz": 120.08,
+          "lut": 36787,
+          "lut_pct": 52.14,
+          "ff": 17499,
+          "bram18": 9,
+          "bram18_pct": 2.08,
+          "dsp": 32,
+          "dsp_pct": 8.89,
+          "est_fps_fpga": 13896.609227348526,
+          "est_latency_us": 157.33,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "StreamingMaxPool_hls_0": {
+              "PE": 1,
+              "SIMD": null
+            },
+            "FMPadding_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "ConvolutionInputGenerator_rtl_0": {
+              "PE": null,
+              "SIMD": 2
+            },
+            "MVAU_hls_0": {
+              "PE": 8,
+              "SIMD": 4
+            },
+            "StreamingMaxPool_hls_1": {
+              "PE": 1,
+              "SIMD": null
+            }
+          },
+          "cpu_layers": [
+            [
+              "Transpose",
+              "Transpose_0"
+            ],
+            [
+              "Im2Col",
+              "Im2Col_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Transpose",
+              "Transpose_1"
+            ],
+            [
+              "GlobalAveragePool",
+              "GlobalAveragePool_0"
+            ],
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_1"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "100000": {
+          "status": "resource_fail",
+          "started": "2026-04-26T03:12:19Z",
+          "completed": "2026-04-26T03:49:25Z",
+          "elapsed_s": 2225.7,
+          "last_step": "step_synthesize_bitfile",
+          "error_excerpt": "ERROR: [Place 30-487] Vivado place_design exceeded ZU3 CLB capacity: 84243 LUTs needed vs 70560 available (1398 unplaced CLBs). build.log only had FINN-relayed [Common 17-69] \"Unable to open\"; true root cause from /tmp/finn_dev_samu/vivado_zynq_proj_pfo6ni3c/finn_zynq_link.runs/impl_1/runme.log. See sweep_analysis.md.",
+          "returncode": 1,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int8_fps100000/build.log"
+        }
+      },
+      "tool_fails": []
+    },
+    "cnn_int4": {
+      "status": "completed",
+      "phase": "done",
+      "model_onnx": "cnn_mnist_tiny_int4.onnx",
+      "phase1_targets": [
+        1000,
+        10000,
+        100000,
+        500000
+      ],
+      "ceiling_lo": 500000,
+      "ceiling_hi": null,
+      "phase2_targets": [],
+      "completed_builds": {
+        "1000": {
+          "status": "success",
+          "started": "2026-04-26T03:49:25Z",
+          "completed": "2026-04-26T04:11:01Z",
+          "elapsed_s": 1296.1,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int4_fps1000/build.log",
+          "wns_ns": 5.9,
+          "fmax_mhz": 243.9,
+          "lut": 10966,
+          "lut_pct": 15.54,
+          "ff": 13986,
+          "bram18": 22,
+          "bram18_pct": 5.09,
+          "dsp": 3,
+          "dsp_pct": 0.83,
+          "est_fps_fpga": 1328.656462585034,
+          "est_latency_us": 911.37,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "StreamingMaxPool_hls_0": {
+              "PE": 1,
+              "SIMD": null
+            },
+            "FMPadding_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "ConvolutionInputGenerator_rtl_0": {
+              "PE": null,
+              "SIMD": 1
+            },
+            "MVAU_hls_0": {
+              "PE": 1,
+              "SIMD": 3
+            },
+            "StreamingMaxPool_hls_1": {
+              "PE": 1,
+              "SIMD": null
+            }
+          },
+          "cpu_layers": [
+            [
+              "Transpose",
+              "Transpose_0"
+            ],
+            [
+              "Im2Col",
+              "Im2Col_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Transpose",
+              "Transpose_1"
+            ],
+            [
+              "GlobalAveragePool",
+              "GlobalAveragePool_0"
+            ],
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_1"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "10000": {
+          "status": "success",
+          "started": "2026-04-26T04:11:01Z",
+          "completed": "2026-04-26T04:33:51Z",
+          "elapsed_s": 1369.5,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int4_fps10000/build.log",
+          "wns_ns": 4.739,
+          "fmax_mhz": 190.08,
+          "lut": 11532,
+          "lut_pct": 16.34,
+          "ff": 14929,
+          "bram18": 7,
+          "bram18_pct": 1.62,
+          "dsp": 40,
+          "dsp_pct": 11.11,
+          "est_fps_fpga": 13896.609227348526,
+          "est_latency_us": 149.49,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "StreamingMaxPool_hls_0": {
+              "PE": 1,
+              "SIMD": null
+            },
+            "FMPadding_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "ConvolutionInputGenerator_rtl_0": {
+              "PE": null,
+              "SIMD": 2
+            },
+            "MVAU_hls_0": {
+              "PE": 4,
+              "SIMD": 9
+            },
+            "StreamingMaxPool_hls_1": {
+              "PE": 1,
+              "SIMD": null
+            }
+          },
+          "cpu_layers": [
+            [
+              "Transpose",
+              "Transpose_0"
+            ],
+            [
+              "Im2Col",
+              "Im2Col_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Transpose",
+              "Transpose_1"
+            ],
+            [
+              "GlobalAveragePool",
+              "GlobalAveragePool_0"
+            ],
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_1"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "100000": {
+          "status": "success",
+          "started": "2026-04-26T04:33:51Z",
+          "completed": "2026-04-26T04:57:40Z",
+          "elapsed_s": 1428.9,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int4_fps100000/build.log",
+          "wns_ns": 3.912,
+          "fmax_mhz": 164.26,
+          "lut": 13224,
+          "lut_pct": 18.74,
+          "ff": 16897,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 160,
+          "dsp_pct": 44.44,
+          "est_fps_fpga": 63775.510204081635,
+          "est_latency_us": 33.07,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "StreamingMaxPool_hls_0": {
+              "PE": 1,
+              "SIMD": null
+            },
+            "FMPadding_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "ConvolutionInputGenerator_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "MVAU_hls_0": {
+              "PE": 16,
+              "SIMD": 9
+            },
+            "StreamingMaxPool_hls_1": {
+              "PE": 1,
+              "SIMD": null
+            }
+          },
+          "cpu_layers": [
+            [
+              "Transpose",
+              "Transpose_0"
+            ],
+            [
+              "Im2Col",
+              "Im2Col_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Transpose",
+              "Transpose_1"
+            ],
+            [
+              "GlobalAveragePool",
+              "GlobalAveragePool_0"
+            ],
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_1"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        },
+        "500000": {
+          "status": "success",
+          "started": "2026-04-26T04:57:40Z",
+          "completed": "2026-04-26T05:21:20Z",
+          "elapsed_s": 1420.5,
+          "last_step": "step_deployment_package",
+          "error_excerpt": "",
+          "returncode": 0,
+          "log_path": "finn/target_fps_sweep_runs/cnn_int4_fps500000/build.log",
+          "wns_ns": 3.912,
+          "fmax_mhz": 164.26,
+          "lut": 13224,
+          "lut_pct": 18.74,
+          "ff": 16897,
+          "bram18": 6,
+          "bram18_pct": 1.39,
+          "dsp": 160,
+          "dsp_pct": 44.44,
+          "est_fps_fpga": 63775.510204081635,
+          "est_latency_us": 33.07,
+          "bitstream_mb": 5.31,
+          "folding": {
+            "StreamingMaxPool_hls_0": {
+              "PE": 1,
+              "SIMD": null
+            },
+            "FMPadding_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "ConvolutionInputGenerator_rtl_0": {
+              "PE": null,
+              "SIMD": 8
+            },
+            "MVAU_hls_0": {
+              "PE": 16,
+              "SIMD": 9
+            },
+            "StreamingMaxPool_hls_1": {
+              "PE": 1,
+              "SIMD": null
+            }
+          },
+          "cpu_layers": [
+            [
+              "Transpose",
+              "Transpose_0"
+            ],
+            [
+              "Im2Col",
+              "Im2Col_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_0"
+            ],
+            [
+              "MultiThreshold",
+              "MultiThreshold_0"
+            ],
+            [
+              "Transpose",
+              "Transpose_1"
+            ],
+            [
+              "GlobalAveragePool",
+              "GlobalAveragePool_0"
+            ],
+            [
+              "Flatten",
+              "Flatten_0"
+            ],
+            [
+              "MatMul",
+              "MatMul_1"
+            ],
+            [
+              "Mul",
+              "Mul_0"
+            ],
+            [
+              "Add",
+              "Add_0"
+            ]
+          ]
+        }
+      },
+      "tool_fails": []
+    }
+  }
+}
