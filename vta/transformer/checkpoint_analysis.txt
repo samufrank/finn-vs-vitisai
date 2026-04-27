@@ -1,0 +1,297 @@
+================================================================================
+  BREVITAS INT4 TRANSFORMER CHECKPOINT - VTA DEPLOYMENT ANALYSIS
+================================================================================
+  Checkpoint : finn-transformers/outputs/radioml/model_int4_norm_none_70.97pct.pt
+  Accuracy   : 70.97% on RadioML (1024-sample, 24 SNR classes)
+  Param count: 122,728
+  Load status: state_dict load with 0 missing / 0 unexpected keys
+================================================================================
+
+1. ARCHITECTURE SUMMARY
+--------------------------------------------------------------------------------
+
+    Input: (B, 1, 1024, 2)           # RadioML I/Q samples reshaped to [1,1024,2]
+        |
+        Rearrange b h w c -> b c h w           (model.emb[0])
+        |
+        +--- PatchEmbedding (INT8) --------- model.emb[1]
+        |       QuantIdentity(bits=8, signed)              # input quantizer
+        |       LazyQuantConv2d(2 -> 96, kernel=(1,16), stride=(1,16), bias=True)  # INT8 weights
+        |       LazyBatchNorm2d(affine=False)              # 96 chans, running mean/var
+        |       ReLU
+        |       QuantIdentity(bits=8, UNSIGNED)            # post-ReLU act, [0,255]
+        |       AdaptiveAvgPool2d(output=[1, 64])
+        |       -> (B, 96, 1, 64)
+        |
+        Rearrange b c h w -> b h w c           (model.emb[2])
+        |
+        +--- Positional (LEARNED, INT8) ---- model.enc[0]
+        |       QuantLearnedPositionalEncoding
+        |       pos = nn.Parameter((1, 64, 96))            # learned, INT8-quantized
+        |       QuantEltwiseAdd (input/output both INT8 signed)
+        |       -> (B, 64, 96)
+        |
+        +--- Attention block (INT4) -------- model.enc[1]
+        |       input_quant = Identity                     # no input quantizer
+        |       pre_norm:
+        |           Rearrange b c w -> b w c
+        |           LazyBatchNorm1d(affine=False)          # 96 chans (pre-norm BN IS PRESENT)
+        |           QuantIdentity(bits=4)                  # post-BN quantizer
+        |           Rearrange (inverse)
+        |       QuantMultiheadAttention:
+        |           q_projection: QuantLinear 96->96, no bias, INT4 weight, INT4 output-quant (Q)
+        |           k_projection: QuantLinear 96->96, no bias, INT4 weight, INT4 output-quant (K)
+        |           v_projection: QuantLinear 96->96, no bias, INT4 weight, INT4 output-quant (V)
+        |           Per-head split: num_heads=3, d_head=32, split_heads=False
+        |           Q = Q * (1/sqrt(96))  # <-- scale uses emb_dim, NOT d_head
+        |           weights = softmax( Q @ K^T + mask )
+        |               softmax path:
+        |                   QuantIdentity(bits=4)          # pre-softmax (Q@K^T)
+        |                   Softmax(dim=-1)
+        |                   QuantIdentity(bits=4)          # post-softmax attn weights
+        |                   Dropout
+        |           attn_out = weights @ V                 # INT4 inputs, FP accumulator
+        |           o_projection: QuantLinear 96->96
+        |               input_quant = QuantIdentity(bits=4)   # quantizes attn_out -> INT4
+        |               weight  INT4; output_quant = None (shared residual quant used instead)
+        |       residual: shared QuantIdentity(bits=4) on BOTH branches, then add
+        |       post_norm: Identity (post-norm disabled because norm_placement=pre-norm)
+        |
+        +--- MLP block (INT4) -------------- model.enc[2]
+        |       pre-norm:
+        |           Rearrange b c w -> b w c
+        |           LazyBatchNorm1d(affine=False)          # 96 chans
+        |           Rearrange (inverse)
+        |       QuantIdentity(bits=4)                      # post-BN quantizer
+        |       LazyQuantLinear 96 -> 384, bias=True, INT4 weight
+        |       ReLU
+        |       QuantIdentity(bits=4, UNSIGNED)            # post-ReLU, [0,15]
+        |       Dropout
+        |       LazyQuantLinear 384 -> 96, bias=True, INT4 weight
+        |       Dropout
+        |       residual: shared QuantIdentity(bits=4) on BOTH branches, then add
+        |
+        Rearrange b h w c -> b c h w           (model.enc[3])
+        AdaptiveAvgPool2d((1,1))               (model.enc[4])
+        Flatten                                (model.enc[5])
+        |
+        +--- Classifier (INT8) ------------- model.cls
+                LazyQuantLinear 96 -> 24, bias=True, INT8 weight
+                QuantIdentity(bits=8, signed)              # output activation quant
+
+    Output: (B, 24) logits
+
+
+2. QUANTIZER TABLE (ALL quantized modules)
+--------------------------------------------------------------------------------
+    name                                          role     bits signed    scale            zp  int_rng      shape
+    emb.1.patches.0  (QuantIdentity)              ACT         8  True    1.6752e+00        0  [-128,127]
+    emb.1.patches.1  (QuantConv2d)                WEIGHT      8  True    5.6709e-03        0  [-127,127]   (96,2,1,16)
+    emb.1.patches.4  (QuantIdentity, post-ReLU)   ACT         8  FALSE   1.6029e+00        0  [0,255]
+    enc.0.add        (QuantEltwiseAdd)            in_act      8  True    1.6090e+00        0  [-128,127]
+    enc.0.add        (QuantEltwiseAdd)            out_act     8  True    1.5393e+00        0  [-128,127]
+    enc.1.pre_norm.2 (QuantIdentity)              ACT         4  True    2.2810e+00        0  [-8,7]
+    enc.1.mha.q_projection  (QuantLinear)         WEIGHT      4  True    7.2759e-02        0  [-7,7]       (96,96)
+    enc.1.mha.q_projection                        out_act     4  True    3.0003e+00        0  [-8,7]
+    enc.1.mha.k_projection  (QuantLinear)         WEIGHT      4  True    7.3742e-02        0  [-7,7]       (96,96)
+    enc.1.mha.k_projection                        out_act     4  True    2.3303e+00        0  [-8,7]
+    enc.1.mha.v_projection  (QuantLinear)         WEIGHT      4  True    8.7236e-02        0  [-7,7]       (96,96)
+    enc.1.mha.v_projection                        out_act     4  True    1.1152e+00        0  [-8,7]
+    enc.1.mha.o_projection  (QuantLinear)         WEIGHT      4  True    6.7452e-02        0  [-7,7]       (96,96)
+    enc.1.mha.o_projection                        in_act      4  True    1.1214e+00        0  [-8,7]
+    enc.1.mha.softmax.0  (QuantIdentity)          ACT         4  True    4.8392e+00        0  [-8,7]       # pre-softmax (Q@K^T)
+    enc.1.mha.softmax.2  (QuantIdentity)          ACT         4  True    8.3610e-02        0  [-8,7]       # post-softmax attn weights
+    enc.1.quant.0  (QuantIdentity, residual)      ACT         4  True    1.3618e+00        0  [-8,7]
+    enc.2.mlp.3  (QuantIdentity, post-BN)         ACT         4  True    1.9222e+00        0  [-8,7]
+    enc.2.mlp.4  (QuantLinear fc1)                WEIGHT      4  True    3.7845e-02        0  [-7,7]       (384,96)
+    enc.2.mlp.6  (QuantIdentity, post-ReLU)       ACT         4  FALSE   2.6899e+00        0  [0,15]
+    enc.2.mlp.8  (QuantLinear fc2)                WEIGHT      4  True    4.7264e-02        0  [-7,7]       (96,384)
+    enc.2.quant.0  (QuantIdentity, residual)      ACT         4  True    6.4703e+00        0  [-8,7]
+    cls.0  (QuantLinear)                          WEIGHT      8  True    6.7204e-03        0  [-127,127]   (24,96)
+    cls.1  (QuantIdentity)                        ACT         8  True    1.2416e+01        0  [-128,127]
+
+    Observations:
+      * ALL quantizers are per-tensor (single scalar scale).   VTA compatible.
+      * ALL zero_points = 0 (symmetric quantization).          VTA compatible.
+      * Signed-INT4 weights clamp to [-7, 7] (not [-8, 7]).    Brevitas symmetric.
+        VTA supports full [-8, 7]; losing one code is fine, just means one
+        unused code in VTA. No incompatibility.
+      * Two UNSIGNED activation quantizers (post-ReLU):
+            emb.1.patches.4   INT8 unsigned, [0, 255]
+            enc.2.mlp.6       INT4 unsigned, [0, 15]
+        VTA natively uses SIGNED INT8/INT4. These two need to be mapped to
+        signed representation (shift by -128 / -8, or treat as uint with zero_point).
+
+
+3. ATTENTION INTERNALS (Task 4 answers)
+--------------------------------------------------------------------------------
+    Q: Combined QKV or separate?
+       -> SEPARATE.  Three independent QuantLinear(96,96) plus one output QuantLinear(96,96).
+          Would require concatenation in VTA pre-processing to fuse into a single QKV GEMM.
+
+    Q: What quantizer is on softmax output?
+       -> QuantIdentity, bits=4, SIGNED, scale=0.0836, range [-8,7].
+          NOTE: Softmax output is in [0,1] but is stored as SIGNED INT4 - effective
+          usable range is ~[0, 7*0.0836] ~ [0, 0.585]. Half the code space is wasted.
+          A re-training pass with an UNSIGNED softmax-output quantizer would double
+          the effective resolution. Leave as-is for fidelity, but flag in report.
+
+    Q: Is there an attention scale factor?
+       -> YES. scale = 1 / sqrt(emb_dim) = 1/sqrt(96) = 0.102062.
+          Applied to Q tensor before Q @ K^T:  (scale * query) @ key^T.
+          WARNING: This differs from PyTorch/standard MHA, which uses 1/sqrt(d_head)
+          = 1/sqrt(32) = 0.176777.  Any VTA implementation MUST use 1/sqrt(emb_dim),
+          NOT 1/sqrt(d_head), to match this checkpoint.
+
+    Q: What is d_head?
+       -> d_head = 96 / 3 = 32.
+
+    Q: Intermediate quantizers between Q@K^T and softmax?
+       -> YES. QuantIdentity(bits=4, signed, scale=4.839) at softmax[0] quantizes
+          the raw Q@K^T + mask tensor before the actual Softmax op. Output is then
+          quantized by softmax[2] (scale=0.0836, see above).
+
+
+4. WEIGHT SHAPES AND VTA TILING (Task 5)
+--------------------------------------------------------------------------------
+    BLOCK_IN = BLOCK_OUT = 16
+
+    Layer                             W shape              GEMM [rows, cols]   tiles o x n     pad (rows, cols)
+    emb.1.patches.1 (conv im2col)     (96, 2, 1, 16)       [96,  32]           6 x 2           (0, 0)
+    enc.1.mha.q_projection            (96, 96)             [96,  96]           6 x 6           (0, 0)
+    enc.1.mha.k_projection            (96, 96)             [96,  96]           6 x 6           (0, 0)
+    enc.1.mha.v_projection            (96, 96)             [96,  96]           6 x 6           (0, 0)
+    enc.1.mha.o_projection            (96, 96)             [96,  96]           6 x 6           (0, 0)
+    enc.2.mlp.4  (MLP fc1)            (384, 96)            [384, 96]           24 x 6          (0, 0)
+    enc.2.mlp.8  (MLP fc2)            (96, 384)            [96,  384]          6 x 24          (0, 0)
+    cls.0                             (24, 96)             [24,  96]           2 x 6           (8, 0)   <<< PAD
+
+    Attention matmuls (per head, seq=64, d_head=32):
+      Q @ K^T :  [64, 32] x [32, 64] -> [64, 64]    tiles o=4  n=2  m=4   no pad
+      A @ V   :  [64, 64] x [64, 32] -> [64, 32]    tiles o=4  n=4  m=2   no pad
+
+    Only one GEMM needs padding: cls.0 output rows (24 -> 32, pad 8 zeros).
+
+
+5. EXTRACTION CODE (PREPARED, NOT EXECUTED)
+--------------------------------------------------------------------------------
+The following pattern extracts integer weights and scales for every quantized
+layer.
+
+    import sys
+    sys.path.insert(0, 'finn-transformers')
+    import torch, numpy as np
+    from brevitas.nn import QuantConv2d, QuantLinear, QuantIdentity
+    from radioml.model import Model
+
+    model = Model(
+        num_classes=24,
+        embedding={"patches": [1, 64], "kernel_size": [1, 16],
+                   "stride": [1, 16], "padding": [0, 0],
+                   "activation": "relu", "bits": 8},
+        positional={"encoding": "learned", "bits": 8},
+        configuration="original", num_layers=1, num_heads=3,
+        emb_dim=96, expansion_dim=384, bits=4, cls_bits=8,
+        activation="relu", norm="none", norm_placement="pre-norm", dropout=0.0,
+    )
+    with torch.no_grad():
+        model(torch.zeros(1, 1, 1024, 2))        # materialize lazy modules
+    model.load_state_dict(torch.load(
+        'finn-transformers/outputs/radioml/model_int4_norm_none_70.97pct.pt',
+        map_location='cpu', weights_only=False))
+    model.eval()
+
+    def dump_layer(layer, name, outdir):
+        qw = layer.quant_weight()
+        ints  = qw.int().detach().cpu().numpy().astype(np.int8)        # int8 holds int4 just fine
+        scale = float(qw.scale.item())
+        np.save(f'{outdir}/{name}_int.npy',   ints)
+        np.save(f'{outdir}/{name}_scale.npy', np.array([scale]))
+        if getattr(layer, 'bias', None) is not None and layer.bias is not None:
+            np.save(f'{outdir}/{name}_bias.npy', layer.bias.detach().cpu().numpy())
+
+    def dump_act(proxy, name, outdir):
+        scale = proxy.fused_activation_quant_proxy.tensor_quant.scaling_impl.value
+        np.save(f'{outdir}/{name}_act_scale.npy', np.array([float(scale.item())]))
+
+    # Iterate model.named_modules() and call dump_layer/dump_act as appropriate.
+    # Also dump enc.0.pos (learned positional encoding), BatchNorm running_mean/var.
+
+
+6. VTA DEPLOYMENT CONCERNS / RED FLAGS
+--------------------------------------------------------------------------------
+
+    A. MIXED PRECISION -- the VTA build must pick one.
+       Embedding, positional encoding, and classifier are INT8.
+       Attention + MLP are INT4.
+       VTA bitstreams are INT8 OR INT4, not both.
+       Options:
+         (a) Quantize INT8 layers down to INT4 in software   -- accuracy loss
+         (b) Run INT8 parts on CPU, INT4 on VTA              -- more code, bandwidth hit
+         (c) Re-train with uniform INT4 everywhere           -- accuracy risk
+       RECOMMEND (b) for first deployment: CPU runs patch-embed, positional add,
+       and classifier; VTA runs attention + MLP block.
+
+    B. BATCH-NORM PRESENT despite "norm_none" filename.
+       The string "none" is truthy in Python, so blocks.py creates a
+       LazyBatchNorm1d(affine=False) in the pre-norm path. State-dict confirms:
+           enc.1.pre_norm.1.running_mean/var  (96 values each)
+           enc.2.mlp.1.running_mean/var       (96 values each)
+           emb.1.patches.2.running_mean/var   (96 values each)
+       BN must be fused into the adjacent quantizer's scale/bias before VTA codegen.
+
+    C. ATTENTION SCALE = 1/sqrt(emb_dim), NOT 1/sqrt(d_head).
+       Use 0.102062, not 0.176777, in any hand-written VTA attention kernel.
+       This was the training convention; deviating will break accuracy.
+
+    D. SIGNED SOFTMAX-OUTPUT QUANTIZER WASTES HALF RANGE.
+       softmax values are [0,1] but storage is signed INT4 [-8,7] with scale 0.0836.
+       Effective precision ~ 7 levels instead of 15. Retraining with signed=False
+       would double resolution, but we won't retrain for deployment.
+
+    E. SEPARATE Q/K/V PROJECTIONS (not combined).
+       4 distinct (96,96) GEMMs instead of one (288,96). Three extra layer
+       launches on VTA. Consider concatenating weights into one buffer at
+       extraction time if VTA runtime overhead dominates.
+
+    F. cls.0 NEEDS ROW PADDING (24 -> 32).
+       Only GEMM with non-multiple-of-16 dimension. Zero-pad at extraction time.
+
+    G. NON-LINEARITY PLACEMENT.
+       Softmax is still a float op (hidden inside quantized wrappers). VTA has
+       no softmax unit, so attention weights must either:
+         - be computed on CPU between VTA phases, or
+         - use a VTA-friendly approximation (e.g. integer softmax from finn).
+
+    H. PATCH-EMBEDDING IS A CONV (96 filters, kernel (1,16), stride (1,16)).
+       This is effectively a 16-wide non-overlapping window -> INT8 GEMM of
+       shape [96, 32]. Can be handled by VTA but uses INT8 not INT4.
+
+    I. LEARNED POSITIONAL ENCODING (1, 64, 96) is an INT8 elementwise-add.
+       Trivial on CPU; not worth putting on VTA.
+
+
+7. SUMMARY
+--------------------------------------------------------------------------------
+    1. Quantizer table:   see section 2 above.
+    2. Signed/unsigned mismatches with VTA's signed INT4 [-8, 7]:
+         -> TWO unsigned act quantizers (emb.1.patches.4 INT8, enc.2.mlp.6 INT4).
+           Both are post-ReLU. Remap via shift/zero-point for VTA.
+         -> weight int range is [-7, 7] not [-8, 7]; harmless (Brevitas symmetric).
+    3. Per-channel quantizers?
+         -> NO. Every scale is a scalar (per-tensor). VTA compatible.
+    4. PatchEmbedding quantization:
+         -> QUANTIZED, INT8, with:
+              input  act-quant (signed, scale 1.6752),
+              conv weight quant (INT8 per-tensor, scale 5.67e-3),
+              BN (running stats only, affine=False),
+              post-ReLU act-quant (UNSIGNED INT8, scale 1.6029),
+              AdaptiveAvgPool (no quantizer).
+    5. Surprises / red flags:
+         A. Mixed INT4/INT8 precision -- two VTA targets or CPU offload needed.
+         B. BatchNorm present despite "norm_none" filename (string "none" != None).
+         C. Attention scale = 1/sqrt(emb_dim), not 1/sqrt(d_head).
+         D. Signed INT4 on softmax output -- wasted half range.
+         E. Separate (not combined) Q/K/V projections.
+         F. Classifier needs 8-row pad (24 -> 32) for VTA 16-alignment.
+         G. Softmax is float -- VTA handoff / int-softmax approximation needed.

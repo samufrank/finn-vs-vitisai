@@ -23,6 +23,11 @@ estimate_*/
 /tmp/finn_dev_*/
 finn/target_fps_sweep_runs/
 
+# VTA generated
+vta/transformer_export/
+vta/transformer_export_o32/
+vta/tiny_test/
+
 # Results — commit summaries and plots, skip raw power traces
 *.json
 *.csv
@@ -32,6 +37,7 @@ finn/target_fps_sweep_runs/
 !vitis_ai/arch_*.json
 !finn-t/results/**/*.json
 !board/regression/*.json
+!vta/**/*.json
 
 # keep FINN target fps sweep resource summary
 !results/finn/target_fps_sweep/resource_summary.csv

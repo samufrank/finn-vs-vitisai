@@ -1,0 +1,136 @@
+{
+  "config": {
+    "toolchain": "vta",
+    "deploy_dir": "/home/xilinx/transformer_export",
+    "dataset": "radioml2018",
+    "batch_size": 1,
+    "num_runs": 3,
+    "num_images": 10000,
+    "signal_shape": [
+      1,
+      1024,
+      2
+    ],
+    "runtime": "c",
+    "precision": "int4_o8",
+    "bitstream": "1x16_i4w4o8a32_15_14_17_17_166mhz",
+    "num_classes": 24,
+    "timestamp": "2026-04-27T02:04:17.872852",
+    "board": "AUP-ZU3",
+    "fpga_part": "xczu3eg-sfvc784-1-e",
+    "power_method": "fnb58"
+  },
+  "idle": {
+    "t_start": 1777255457.873023,
+    "t_end": 1777255467.877753
+  },
+  "runs": [
+    {
+      "run": 1,
+      "t_start": 1777255467.8778424,
+      "t_end": 1777256215.438917,
+      "time_s": 747.5610744953156,
+      "accuracy": 71.8,
+      "throughput_fps": 13.447,
+      "latency_ms": 74.3634,
+      "samples": 10000,
+      "correct": 7180,
+      "fnb58_power": {
+        "power_w_mean": 3.9388255438737287,
+        "power_w_std": 0.029770996284758985,
+        "power_w_min": 3.79691,
+        "power_w_max": 5.05116,
+        "voltage_v_mean": 9.147456739031567,
+        "current_a_mean": 0.4305926922150883,
+        "n_samples": 74760,
+        "dynamic_power_w": 0.12873128387372823,
+        "energy_total_j": 2944.5126558278403,
+        "energy_per_image_mj": 294.45126558278406
+      },
+      "avg_power_w": 3.9388255438737287,
+      "energy_total_j": 2944.5126558278403,
+      "energy_per_image_mj": 294.45126558278406
+    },
+    {
+      "run": 2,
+      "t_start": 1777256220.4442303,
+      "t_end": 1777256967.5731156,
+      "time_s": 747.128885269165,
+      "accuracy": 71.8,
+      "throughput_fps": 13.444,
+      "latency_ms": 74.3804,
+      "samples": 10000,
+      "correct": 7180,
+      "fnb58_power": {
+        "power_w_mean": 3.942317221478666,
+        "power_w_std": 0.031052089699340712,
+        "power_w_min": 3.8034,
+        "power_w_max": 5.05621,
+        "voltage_v_mean": 9.148244441752768,
+        "current_a_mean": 0.4309372830451309,
+        "n_samples": 74716,
+        "dynamic_power_w": 0.13222296147866563,
+        "energy_total_j": 2945.4190710607877,
+        "energy_per_image_mj": 294.5419071060788
+      },
+      "avg_power_w": 3.942317221478666,
+      "energy_total_j": 2945.4190710607877,
+      "energy_per_image_mj": 294.5419071060788
+    },
+    {
+      "run": 3,
+      "t_start": 1777256972.5784125,
+      "t_end": 1777257721.5611203,
+      "time_s": 748.9827077388763,
+      "accuracy": 71.8,
+      "throughput_fps": 13.411,
+      "latency_ms": 74.5675,
+      "samples": 10000,
+      "correct": 7180,
+      "fnb58_power": {
+        "power_w_mean": 3.9391604344459283,
+        "power_w_std": 0.03018952645379156,
+        "power_w_min": 3.79889,
+        "power_w_max": 5.06008,
+        "voltage_v_mean": 9.14801981094793,
+        "current_a_mean": 0.43060278397863827,
+        "n_samples": 74900,
+        "dynamic_power_w": 0.12906617444592783,
+        "energy_total_j": 2950.36304840916,
+        "energy_per_image_mj": 295.03630484091605
+      },
+      "avg_power_w": 3.9391604344459283,
+      "energy_total_j": 2950.36304840916,
+      "energy_per_image_mj": 295.03630484091605
+    }
+  ],
+  "summary": {
+    "accuracy": 71.8,
+    "throughput_fps_mean": 13.434,
+    "throughput_fps_std": 0.019974984355438357,
+    "latency_ms_mean": 74.4371,
+    "latency_ms_std": 0.11324915010718545,
+    "avg_power_w_mean": 3.9401010665994414,
+    "avg_power_w_std": 0.0015730108625121567,
+    "idle_power_w": 3.8100942600000005,
+    "idle_power_std": 0.044968402026894394,
+    "dynamic_power_w": 0.13000680659944086,
+    "energy_per_image_mj_mean": 294.6764925099263,
+    "energy_per_image_mj_std": 0.25710264692725976
+  },
+  "power_measurement": {
+    "method": "fnb58_external",
+    "power_log": "vta_transformer_power_3run.csv",
+    "clock_offset_applied": 0.0,
+    "total_power_samples": 227672,
+    "idle": {
+      "power_w_mean": 3.8100942600000005,
+      "power_w_std": 0.044968402026894394,
+      "power_w_min": 3.79418,
+      "power_w_max": 4.2954,
+      "voltage_v_mean": 9.15236299,
+      "current_a_mean": 0.41629629999999995,
+      "n_samples": 1000
+    }
+  }
+}

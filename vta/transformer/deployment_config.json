@@ -1,0 +1,677 @@
+{
+  "model": "radioml_transformer_int4_norm_none",
+  "checkpoint": "finn-transformers/outputs/radioml/model_int4_norm_none_70.97pct.pt",
+  "task": "RadioML 2018.01A 24-class modulation classification",
+  "eval_dataset": "radioml2018_eval_snr_filtered.npz",
+  "eval_samples": 186639,
+  "predicted_accuracy": {
+    "mode_e_tuned": 70.53,
+    "mode_a": 71.54,
+    "brevitas": 71.55,
+    "finn_t_board": 72.12
+  },
+  "vta_config": {
+    "bitstream": "1x16_i4w4o8a32_15_14_17_17_166mhz",
+    "BLOCK_IN": 16,
+    "BLOCK_OUT": 16,
+    "INP_WIDTH": 4,
+    "WGT_WIDTH": 4,
+    "OUT_WIDTH": 8,
+    "ACC_WIDTH": 32,
+    "clock_mhz": 166
+  },
+  "gemms": [
+    {
+      "index": 0,
+      "name": "q_proj",
+      "module_type": "3-arg",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        96
+      ],
+      "weight_shape": [
+        96,
+        96
+      ],
+      "output_shape": [
+        64,
+        96
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 6,
+        "m": 6
+      },
+      "in_scale": 0.28512388467788696,
+      "w_scale": 0.07275883108377457,
+      "out_scale": 0.3750433921813965,
+      "combined_float_scale": 0.05531434760806069,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": "q_proj_W_int.npy",
+      "bias_file": null,
+      "notes": "QuantLinear 96->96, INT4 weight, no bias. Preceding: BN + INT4 quant (attn_pre_out)."
+    },
+    {
+      "index": 1,
+      "name": "k_proj",
+      "module_type": "3-arg",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        96
+      ],
+      "weight_shape": [
+        96,
+        96
+      ],
+      "output_shape": [
+        64,
+        96
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 6,
+        "m": 6
+      },
+      "in_scale": 0.28512388467788696,
+      "w_scale": 0.0737423524260521,
+      "out_scale": 0.2912832796573639,
+      "combined_float_scale": 0.07218301721174755,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": "k_proj_W_int.npy",
+      "bias_file": null,
+      "notes": "QuantLinear 96->96, INT4 weight, no bias."
+    },
+    {
+      "index": 2,
+      "name": "v_proj",
+      "module_type": "3-arg",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        96
+      ],
+      "weight_shape": [
+        96,
+        96
+      ],
+      "output_shape": [
+        64,
+        96
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 6,
+        "m": 6
+      },
+      "in_scale": 0.28512388467788696,
+      "w_scale": 0.08723586797714233,
+      "out_scale": 0.13940021395683289,
+      "combined_float_scale": 0.1784289195466541,
+      "shift_coarse": 2,
+      "shift_coarse_note": "baseline-1",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": "v_proj_W_int.npy",
+      "bias_file": null,
+      "notes": "QuantLinear 96->96, INT4 weight, no bias. TUNED shift baseline-1 (gained +0.47pp on full eval)."
+    },
+    {
+      "index": 3,
+      "name": "qk_head0",
+      "module_type": "3-arg-activation-pair",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        32
+      ],
+      "weight_shape": [
+        32,
+        64
+      ],
+      "output_shape": [
+        64,
+        64
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 2,
+        "m": 4
+      },
+      "in_scale": 0.3750433921813965,
+      "w_scale": 0.2912832796573639,
+      "out_scale": 0.6048948764801025,
+      "attn_scale_folded_in_cpu_requant": 0.10206207261596577,
+      "combined_float_scale": 0.018432385780887937,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": null,
+      "bias_file": null,
+      "notes": "Head 0: slice Q/K along last dim. Both operands are activations (INT4 signed). 1/sqrt(96) attention scale applied in CPU float requant, NOT folded into VTA shift. All 3 heads share per-tensor scales so the shift is identical."
+    },
+    {
+      "index": 4,
+      "name": "qk_head1",
+      "module_type": "3-arg-activation-pair",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        32
+      ],
+      "weight_shape": [
+        32,
+        64
+      ],
+      "output_shape": [
+        64,
+        64
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 2,
+        "m": 4
+      },
+      "in_scale": 0.3750433921813965,
+      "w_scale": 0.2912832796573639,
+      "out_scale": 0.6048948764801025,
+      "attn_scale_folded_in_cpu_requant": 0.10206207261596577,
+      "combined_float_scale": 0.018432385780887937,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": null,
+      "bias_file": null,
+      "notes": "Head 1: slice Q/K along last dim. Both operands are activations (INT4 signed). 1/sqrt(96) attention scale applied in CPU float requant, NOT folded into VTA shift. All 3 heads share per-tensor scales so the shift is identical."
+    },
+    {
+      "index": 5,
+      "name": "qk_head2",
+      "module_type": "3-arg-activation-pair",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        32
+      ],
+      "weight_shape": [
+        32,
+        64
+      ],
+      "output_shape": [
+        64,
+        64
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 2,
+        "m": 4
+      },
+      "in_scale": 0.3750433921813965,
+      "w_scale": 0.2912832796573639,
+      "out_scale": 0.6048948764801025,
+      "attn_scale_folded_in_cpu_requant": 0.10206207261596577,
+      "combined_float_scale": 0.018432385780887937,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": null,
+      "bias_file": null,
+      "notes": "Head 2: slice Q/K along last dim. Both operands are activations (INT4 signed). 1/sqrt(96) attention scale applied in CPU float requant, NOT folded into VTA shift. All 3 heads share per-tensor scales so the shift is identical."
+    },
+    {
+      "index": 6,
+      "name": "av_head0",
+      "module_type": "3-arg-activation-pair",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        64
+      ],
+      "weight_shape": [
+        64,
+        32
+      ],
+      "output_shape": [
+        64,
+        32
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 4,
+        "m": 2
+      },
+      "in_scale": 0.010451252572238445,
+      "w_scale": 0.13940021395683289,
+      "out_scale": 0.14017151296138763,
+      "combined_float_scale": 0.010393744163182903,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": null,
+      "bias_file": null,
+      "notes": "Head 0: attn_weights (INT4) \u00d7 V (INT4). Output quantized by o_projection.input_quant (o_in scale)."
+    },
+    {
+      "index": 7,
+      "name": "av_head1",
+      "module_type": "3-arg-activation-pair",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        64
+      ],
+      "weight_shape": [
+        64,
+        32
+      ],
+      "output_shape": [
+        64,
+        32
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 4,
+        "m": 2
+      },
+      "in_scale": 0.010451252572238445,
+      "w_scale": 0.13940021395683289,
+      "out_scale": 0.14017151296138763,
+      "combined_float_scale": 0.010393744163182903,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": null,
+      "bias_file": null,
+      "notes": "Head 1: attn_weights (INT4) \u00d7 V (INT4). Output quantized by o_projection.input_quant (o_in scale)."
+    },
+    {
+      "index": 8,
+      "name": "av_head2",
+      "module_type": "3-arg-activation-pair",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        64
+      ],
+      "weight_shape": [
+        64,
+        32
+      ],
+      "output_shape": [
+        64,
+        32
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 4,
+        "m": 2
+      },
+      "in_scale": 0.010451252572238445,
+      "w_scale": 0.13940021395683289,
+      "out_scale": 0.14017151296138763,
+      "combined_float_scale": 0.010393744163182903,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": null,
+      "bias_file": null,
+      "notes": "Head 2: attn_weights (INT4) \u00d7 V (INT4). Output quantized by o_projection.input_quant (o_in scale)."
+    },
+    {
+      "index": 9,
+      "name": "o_proj",
+      "module_type": "3-arg",
+      "has_bias": false,
+      "input_shape": [
+        64,
+        96
+      ],
+      "weight_shape": [
+        96,
+        96
+      ],
+      "output_shape": [
+        64,
+        96
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 6,
+        "m": 6
+      },
+      "in_scale": 0.14017151296138763,
+      "w_scale": 0.0674523338675499,
+      "out_scale": 0.17021943628787994,
+      "combined_float_scale": 0.055545335463341144,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline-1",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": "o_proj_W_int.npy",
+      "bias_file": null,
+      "notes": "QuantLinear 96->96, INT4 weight, no bias. o_projection has no output_quant; next quantizer is the shared residual (attn_residual). TUNED shift baseline-1 (gained +0.69pp full eval \u2014 the single biggest lever)."
+    },
+    {
+      "index": 10,
+      "name": "fc1",
+      "module_type": "4-arg",
+      "has_bias": true,
+      "input_shape": [
+        64,
+        96
+      ],
+      "weight_shape": [
+        384,
+        96
+      ],
+      "output_shape": [
+        64,
+        384
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 6,
+        "m": 24
+      },
+      "in_scale": 0.24027536809444427,
+      "w_scale": 0.037845320999622345,
+      "out_scale": 0.17932777106761932,
+      "combined_float_scale": 0.050707697863527454,
+      "shift_coarse": 3,
+      "shift_coarse_note": "baseline",
+      "clip_lo": 0,
+      "clip_hi": 15,
+      "output_signed": false,
+      "weight_file": "fc1_W_int.npy",
+      "bias_file": "fc1_bias.npy",
+      "bias_int32_formula": "round(bias_float / (w_scale * in_scale))",
+      "notes": "QuantLinear 96->384, INT4 weight, has bias. ReLU implicit in clip lower bound (clip [0, 15] = unsigned INT4 post-ReLU). Output range represents post-ReLU values [0, 15 * fc1_out]."
+    },
+    {
+      "index": 11,
+      "name": "fc2",
+      "module_type": "4-arg",
+      "has_bias": true,
+      "input_shape": [
+        64,
+        384
+      ],
+      "weight_shape": [
+        96,
+        384
+      ],
+      "output_shape": [
+        64,
+        96
+      ],
+      "vta_tiles": {
+        "o": 4,
+        "n": 24,
+        "m": 6
+      },
+      "in_scale": 0.17932777106761932,
+      "w_scale": 0.04726411774754524,
+      "out_scale": 0.8087873458862305,
+      "combined_float_scale": 0.010479601257679737,
+      "shift_coarse": 4,
+      "shift_coarse_note": "baseline-1",
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "output_signed": true,
+      "weight_file": "fc2_W_int.npy",
+      "bias_file": "fc2_bias.npy",
+      "bias_int32_formula": "round(bias_float / (w_scale * in_scale)) + 8 * sum(W_fc2, axis=1)",
+      "unsigned_input_zero_point": 8,
+      "notes": "QuantLinear 384->96, INT4 weight, has bias. Input is unsigned fc1 output [0, 15]; VTA expects signed [-8, 7] so zero-point offset 8 is subtracted from fc1 output and folded into corrected bias = bias_int32 + 8 * sum(W_fc2, axis=1). Next quantizer after fc2 is the shared residual (mlp_residual). TUNED shift baseline-1 (gained +0.43pp full eval)."
+    }
+  ],
+  "cpu_ops": [
+    {
+      "name": "patch_embedding",
+      "description": "Conv2d(2->96, k=(1,16), s=(1,16)) as im2col GEMM + bias + BN + ReLU + unsigned quant + AvgPool",
+      "precision": "INT8",
+      "input_shape": [
+        1,
+        1024,
+        2
+      ],
+      "output_shape": [
+        64,
+        96
+      ],
+      "weight_file": "emb_conv_W_int.npy",
+      "weight_shape": [
+        96,
+        2,
+        1,
+        16
+      ],
+      "bias_file": "emb_conv_bias.npy",
+      "bn_mean_file": "bn_emb_mean.npy",
+      "bn_var_file": "bn_emb_var.npy",
+      "in_scale": 0.01308732945472002,
+      "w_scale": 0.005670934449881315,
+      "bias_int32_formula": "round(bias_float / (w_scale * in_scale))",
+      "unsigned_act_scale": 0.0062857321463525295,
+      "unsigned_act_range": [
+        0,
+        255
+      ],
+      "bn_eps": 1e-05,
+      "notes": "1) Quantize input to INT8 signed (scale emb_in). 2) Reshape (B,2,1,1024) -> (B,64,32) via im2col (64 non-overlapping [2,16] patches). 3) INT8 GEMM: acc[B,64,96] = X[B,64,32] @ W[96,32].T; add integer bias. 4) Dequant acc to float * (emb_w * emb_in). 5) BN2d(affine=False) per channel with eps=1e-5. 6) ReLU. 7) Quantize to UNSIGNED INT8 [0, 255] with scale emb_out. 8) AdaptiveAvgPool2d((1,64)) is no-op (already 1x64). 9) Rearrange (B,96,1,64) -> (B,64,96)."
+    },
+    {
+      "name": "positional_encoding",
+      "description": "Learned positional-encoding add (QuantEltwiseAdd, INT8 signed)",
+      "precision": "INT8",
+      "pos_file": "pos_enc.npy",
+      "pos_shape": [
+        1,
+        64,
+        96
+      ],
+      "in_scale": 0.012570053339004517,
+      "out_scale": 0.012025801464915276,
+      "notes": "1) Dequantize emb output (int8 unsigned * emb_out) to float. 2) Quantize both emb and pos with pos_in scale (INT8 signed). 3) Add in float (or integer at shared scale). 4) Quantize sum with pos_out scale (INT8 signed). Input quant applied identically to BOTH emb output and pos parameter."
+    },
+    {
+      "name": "bn_attention",
+      "description": "Pre-attention BatchNorm1d(96, affine=False) + INT4 quantize",
+      "bn_mean_file": "bn_attn_mean.npy",
+      "bn_var_file": "bn_attn_var.npy",
+      "in_scale": 0.012025801464915276,
+      "out_scale": 0.28512388467788696,
+      "bn_eps": 1e-05,
+      "notes": "Dequant INT8 positional-output to float, apply BN(affine=False) per channel, requant to INT4 signed [-8,7]. This INT4 is the Q/K/V GEMM input."
+    },
+    {
+      "name": "attention_scale_and_head_split",
+      "description": "Reshape Q/K/V [64,96] -> [3,64,32]; scalar 1/sqrt(96) applied in CPU requant of Q@K^T output",
+      "num_heads": 3,
+      "d_head": 32,
+      "attn_scale": 0.10206207261596577,
+      "notes": "Reshape Q: einops 'b s (h d) -> b h s d' with h=3,d=32 -> [3, 64, 32]. Reshape K: 'b s (h d) -> b h d s' -> [3, 32, 64] (transposed for matmul). Reshape V: 'b s (h d) -> b h s d' -> [3, 64, 32]. Attention scale 1/sqrt(96)=0.102062 is a float multiply in the CPU requant step following each Q@K^T VTA GEMM; NOT applied as integer multiply on the Q tensor (that would destroy INT4 precision)."
+    },
+    {
+      "name": "softmax",
+      "description": "Per-head float softmax between Q@K^T and attn@V VTA calls",
+      "in_scale": 0.6048948764801025,
+      "out_scale": 0.010451252572238445,
+      "shape": [
+        3,
+        64,
+        64
+      ],
+      "axis": -1,
+      "notes": "1) Dequant presoftmax int4 (softmax_in) to float. 2) Stable softmax: subtract row max, exp, divide by sum. 3) Quantize result to INT4 SIGNED [-8, 7] with softmax_out scale. Signed INT4 on [0,1] softmax output wastes half the code space \u2014 this is how the model was trained; keep as-is."
+    },
+    {
+      "name": "head_concat",
+      "description": "Concatenate 3 heads [B,3,64,32] -> [B,64,96]",
+      "notes": "einops 'b h s d -> b s (h d)'. Pure reshape, no arithmetic. Input to o_projection (after o_proj.input_quant requant to INT4 o_in scale)."
+    },
+    {
+      "name": "residual_attention",
+      "description": "Add O-projection output to positional-encoding skip branch (shared INT4 quantizer)",
+      "skip_source": "positional_encoding_output",
+      "skip_scale": 0.012025801464915276,
+      "main_source": "o_proj_output",
+      "main_scale": 0.17021943628787994,
+      "shared_out_scale": 0.17021943628787994,
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "notes": "The parent QuantIdentity module (enc.1.quant[0]) is applied to BOTH branches with the same learned attn_residual scale. CPU implementation:   skip_int4 = clip(round(skip_float / attn_residual), -8, 7)   main_int4 = o_proj output (already at attn_residual scale, -8..7)   sum_int = main_int4 + skip_int4    # range [-16, 14], not re-clipped   sum_float = sum_int * attn_residual post_norm is Identity (norm_placement=pre-norm)."
+    },
+    {
+      "name": "bn_mlp",
+      "description": "Pre-MLP BatchNorm1d(96, affine=False) + INT4 quantize",
+      "bn_mean_file": "bn_mlp_mean.npy",
+      "bn_var_file": "bn_mlp_var.npy",
+      "in_scale": 0.17021943628787994,
+      "out_scale": 0.24027536809444427,
+      "bn_eps": 1e-05,
+      "notes": "Same pattern as bn_attention. Input is the attention residual sum."
+    },
+    {
+      "name": "relu_and_unsigned_quant",
+      "description": "ReLU on fc1 output, requant to UNSIGNED INT4 [0, 15]",
+      "in_scale": null,
+      "out_scale": 0.17932777106761932,
+      "zero_point_for_next_gemm": 8,
+      "notes": "Mathematically equivalent to: clip(round(acc_float / fc1_out), 0, 15). In Mode E the implementation combines: fc1 GEMM produces int32 acc, VTA coarse-shifts to int8, CPU dequant * w*in then clips to [0, 15] (ReLU is implicit in the lower clip bound). Output is UNSIGNED INT4. fc2 expects SIGNED int4 input so we subtract 8 and fold +8*sum(W_fc2, axis=1) into fc2's bias (see fc2 bias_int32_formula)."
+    },
+    {
+      "name": "residual_mlp",
+      "description": "Add fc2 output to attention-block skip branch (shared INT4 quantizer)",
+      "skip_source": "attention_residual_output",
+      "skip_scale": 0.17021943628787994,
+      "main_source": "fc2_output",
+      "main_scale": 0.8087873458862305,
+      "shared_out_scale": 0.8087873458862305,
+      "clip_lo": -8,
+      "clip_hi": 7,
+      "notes": "Shared QuantIdentity with mlp_residual scale. skip_int4 = clip(round(skip_float / mlp_residual), -8, 7) main_int4 = fc2 output at mlp_residual scale sum_int = main + skip  # range [-16,14], kept as int or float * mlp_residual"
+    },
+    {
+      "name": "classifier",
+      "description": "GAP over 64 positions -> [96], INT8 matmul [1,96]x[24,96].T + float bias -> argmax",
+      "precision": "INT8",
+      "weight_file": "cls_W_int.npy",
+      "weight_shape": [
+        24,
+        96
+      ],
+      "bias_file": "cls_bias.npy",
+      "bias_shape": [
+        24
+      ],
+      "in_scale": 0.8087873458862305,
+      "w_scale": 0.00672035152092576,
+      "out_scale": 0.09700276702642441,
+      "pad_rows": 8,
+      "notes": "1) mlp_block_out (int) * mlp_residual -> float (B, 64, 96). 2) Global average pool over 64 temporal positions -> (B, 96). 3) logits = gap @ (W_cls * cls_w).T + cls_bias (float matmul with    dequantized INT8 weights; classifier has NO input quantizer in Brevitas). 4) Optional cls.1 quant: int = clip(round(logits / cls_out), -128, 127). 5) argmax(logits) = argmax(int) \u2014 scale-invariant; skip step 4 for prediction. If running the classifier GEMM on VTA-INT8 instead, zero-pad W_cls from [24, 96] to [32, 96] (add 8 zero rows) for BLOCK_OUT=16 alignment."
+    }
+  ],
+  "inference_order": [
+    "patch_embedding",
+    "positional_encoding",
+    "bn_attention",
+    "q_proj",
+    "k_proj",
+    "v_proj",
+    "attention_scale_and_head_split",
+    "qk_head0",
+    "qk_head1",
+    "qk_head2",
+    "softmax",
+    "av_head0",
+    "av_head1",
+    "av_head2",
+    "head_concat",
+    "o_proj",
+    "residual_attention",
+    "bn_mlp",
+    "fc1",
+    "relu_and_unsigned_quant",
+    "fc2",
+    "residual_mlp",
+    "classifier"
+  ],
+  "baseline_shifts_before_tuning": {
+    "q": 3,
+    "k": 3,
+    "v": 3,
+    "qk": 3,
+    "av": 3,
+    "o": 4,
+    "fc1": 3,
+    "fc2": 5
+  },
+  "tuned_shifts": {
+    "q": 3,
+    "k": 3,
+    "v": 2,
+    "qk": 3,
+    "av": 3,
+    "o": 3,
+    "fc1": 3,
+    "fc2": 4
+  },
+  "shift_tuning_rationale": {
+    "method": "Task-4 sensitivity sweep on 20k subset + top-3 full-eval (transformer_sim_results_phase3.json)",
+    "selected": [
+      "o_proj",
+      "v_proj",
+      "fc2"
+    ],
+    "per_change_pp_on_full_eval": {
+      "o-1": 0.69,
+      "v-1": 0.47,
+      "fc2-1": 0.43
+    },
+    "combined_full_eval_accuracy": 70.53,
+    "baseline_full_eval_accuracy": 69.1,
+    "clip_rate_at_tuned_shift_pct_from_1000_sample_measurement": {
+      "o": 0.0,
+      "v": 0.08,
+      "fc2": 0.04
+    }
+  },
+  "weight_files_dir": "transformer_weights/",
+  "notes": [
+    "All VTA GEMMs use INT4 inputs, INT4 weights, INT8 output (o8 bitstream 1x16_i4w4o8a32).",
+    "CPU does precise float requant from int8 coarse-shifted accumulator to int4 between VTA calls.",
+    "Tuned shifts use baseline_shifts_before_tuning with -1 on o_proj, v_proj, fc2 (see shift_tuning_rationale).",
+    "The 1/sqrt(96) attention scale is folded into CPU float requant of Q@K^T, not VTA shift.",
+    "Zero-point offset 8 for unsigned post-ReLU fc2 input is folded into fc2 corrected_bias = bias_int32 + 8*sum(W_fc2, axis=1).",
+    "Softmax runs on CPU in float between Q@K^T and attn@V VTA calls.",
+    "BN(affine=False) runs on CPU in float before attention and MLP blocks (eps=1e-5).",
+    "Classifier runs entirely on CPU \u2014 float matmul with dequantized INT8 weight + argmax (Brevitas cls.0 has no input_quant).",
+    "Patch embedding conv is INT8 on CPU (outside the 12 VTA INT4 GEMMs).",
+    "Mode E == Mode C numerically for this checkpoint (identical accuracy and per-sample predictions confirmed).",
+    "Accumulator max was measured on 1000 evenly-spaced eval samples; the tuned shifts have <1% measured clipping but small clipping on unseen outliers is possible."
+  ]
+}

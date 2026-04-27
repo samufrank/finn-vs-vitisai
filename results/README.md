@@ -59,6 +59,9 @@ Note on CNN INT4: requires a mixed-precision bitstream (int4 input/weights, int8
 
 Note on VTA CNN C runner: an accuracy regression of approximately 5 points at INT8 (86% vs 91%) was traced in session 21 to the dense-layer scale recomputation interacting with VTA hardware GEMM output jitter. Fixed by matching Python's scale logic (current_scale instead of feat_s) and rounding mode (rintf instead of roundf). C runner now matches Python accuracy.
 
+### vta/ (transformer)
+- RadioML 2018 transformer — INT4-o8, same checkpoint as FINN-T (3 heads, emb_dim=96, 1 layer, 122k params). 71.80% accuracy (10k samples, SNR ≥ -6 dB), 26.5 FPS (C runner, o32 optimized), 294.7 mJ/inference (o16 measurement, o32 rebench pending), 0.130 W dynamic power. 12 VTA GEMMs, CPU handles softmax/BN/residual.
+
 ### vitis_ai/
 - MLP tiny [64,32] MNIST — INT8, B512 DPU, 300/600 MHz
 - CNN tiny [8,16] MNIST — INT8, B512 DPU, 300/600 MHz
