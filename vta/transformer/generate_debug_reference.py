@@ -23,14 +23,16 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent           # finn-vs-vitisai/vta
+HERE = Path(__file__).resolve().parent           # finn-vs-vitisai/vta/transformer/
+VTA  = HERE.parent                                 # finn-vs-vitisai/vta/
+PROJ = HERE.parent.parent                          # finn-vs-vitisai/
 sys.path.insert(0, str(HERE))
-from vta_transformer_sim_o8 import TransformerSimO8
+from sim_o8 import TransformerSimO8                # post-reorg (was vta_transformer_sim_o8)
 
-NPZ_SCALES = HERE / "transformer_scales.npz"
-DATA       = HERE.parent / "data" / "radioml2018_eval_snr_filtered.npz"
-WEIGHTS_SRC = HERE / "transformer_weights"
-COARSE_PATH = HERE / "phase3_coarse_shifts.json"
+NPZ_SCALES  = HERE / "scales.npz"
+DATA        = PROJ / "data" / "radioml2018_eval_snr_filtered.npz"
+WEIGHTS_SRC = VTA  / "archive" / "transformer_weights"
+COARSE_PATH = VTA  / "archive" / "phase3_coarse_shifts.json"
 OUT_NPZ     = HERE / "debug_reference_sample0.npz"
 
 # Tuned shifts from Phase-3 (baseline-1 on v, o, fc2)

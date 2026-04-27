@@ -19,13 +19,15 @@ from pathlib import Path
 
 import numpy as np
 
-HERE = Path(__file__).resolve().parent              # finn-vs-vitisai/vta
+HERE = Path(__file__).resolve().parent              # finn-vs-vitisai/vta/transformer/
+VTA  = HERE.parent                                   # finn-vs-vitisai/vta/
+PROJ = HERE.parent.parent                            # finn-vs-vitisai/
 sys.path.insert(0, str(HERE))
-from vta_transformer_sim import TransformerSim, SQRT_96   # weights + scales loader
+from sim import TransformerSim, SQRT_96              # post-reorg (was vta_transformer_sim)
 
-NPZ_SCALES  = HERE / "transformer_scales.npz"
-DATA        = HERE.parent / "data" / "radioml2018_eval_snr_filtered.npz"
-COARSE_PATH = HERE / "phase3_coarse_shifts.json"
+NPZ_SCALES  = HERE / "scales.npz"
+DATA        = PROJ / "data" / "radioml2018_eval_snr_filtered.npz"
+COARSE_PATH = VTA  / "archive" / "phase3_coarse_shifts.json"
 OUT_NPZ     = HERE / "debug_full_reference_sample0.npz"
 
 

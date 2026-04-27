@@ -3,15 +3,17 @@
 RadioML 2018 modulation classifier (1 encoder layer, 3 heads, emb_dim=96, INT4)
 deployed on VTA INT4-o8 overlay (AUP-ZU3, 166 MHz).
 
-### Results
+### Results (o32 optimized, C runner, 3-run average)
 
-| Config | Accuracy | FPS | Latency | Energy/inf |
-|--------|----------|-----|---------|------------|
-| o16 baseline (C runner) | 71.80% | 13.4 | 74.6 ms | 294.7 mJ |
-| o32 optimized (C runner) | 74.0%* | 26.5 | 37.8 ms | TBD |
-| Python runner | 72.8% | 0.69 | 1449 ms | — |
-
-*100-sample measurement; 10k-sample accuracy expected ~71.8%
+| Metric | Value |
+|--------|-------|
+| Accuracy | 71.80% (10k samples, 3 runs identical) |
+| Throughput | 26.9 ± 0.05 FPS |
+| Latency | 37.2 ms |
+| Idle power | 3.828 W |
+| Active power | 3.981 ± 0.003 W |
+| Dynamic power | 0.153 W |
+| Energy/inference | 149.3 ± 0.4 mJ |
 
 Comparison target: FINN-T at 72.12%, 1460.8 FPS, 2.758 mJ/inference.
 
@@ -61,7 +63,7 @@ and conservative o_tile values (workaround for o×n hardware limit).
 10. VTA: O projection (o_tile=32)
 11. CPU: Attention residual add
 12. CPU: Pre-MLP BN + INT4 quant
-13. VTA: fc1 (o_tile=32, 24 m-slices)
+13. VTA: fc1 (o_tile=32, 24 m-slices, 2 M-chunks x 24 m-slices = 48 calls)
 14. CPU: ReLU + unsigned quant + zero-point offset
 15. VTA: fc2 (o_tile=8, 6 m-slices)
 16. CPU: MLP residual add + classifier
@@ -92,14 +94,24 @@ and conservative o_tile values (workaround for o×n hardware limit).
 
 ### Reproducing
 
-1. Activate finn-t-env, run checkpoint analysis (optional, results saved)
-2. Activate tvm-env with INT4-o8 config (`configs/switch_vta_config.sh int4_o8`)
-3. Run `export.py` or `export_o32.py` to compile modules and pack weights
-4. Copy `transformer_export/` (or `_o32/`) to board
-5. Link modules: `cd modules && for f in *.o; do gcc -shared -o "${f%.o}.so" "$f"; done`
-6. Load bitstream: `python3 -c "from pynq import Overlay; Overlay('vta.bit')"`
-7. Validate: `python3 -u debug_full_pipeline.py --export-dir transformer_export --reference debug_full_reference_sample0.npz`
-8. Benchmark: `./vta_transformer_infer --weights transformer_export_o32 --signals signals.npy --labels labels.npy --n 10000 --timing`
+All paths below are relative to this file (`vta/transformer/`).
+
+1. Activate `finn-t-env`, run checkpoint analysis (optional, results saved in this directory)
+2. Activate `tvm-env` with INT4-o8 config: `../configs/switch_vta_config.sh int4_o8`
+3. Run `export.py` or `export_o32.py` to compile modules and pack weights (output: `../transformer_export/` or `../transformer_export_o32/`)
+4. Copy the export directory to the board: `scp -r ../transformer_export_o32/ xilinx@board:/home/xilinx/`
+5. On board, link modules: `cd modules && for f in *.o; do gcc -shared -o "${f%.o}.so" "$f"; done`
+6. Load bitstream: `python3 -c "from pynq import Overlay; Overlay('/home/xilinx/vta.bit')"`
+7. Validate: `python3 -u debug_full_pipeline.py --export-dir /home/xilinx/transformer_export_o32 --reference /home/xilinx/debug_full_reference_sample0.npz`
+8. Benchmark: `LD_LIBRARY_PATH=/home/xilinx/tvm-src/build ./vta_transformer_infer --weights /home/xilinx/transformer_export_o32 --signals /home/xilinx/data/signals.npy --labels /home/xilinx/data/labels.npy --n 10000 --timing`
+
+Board-side scripts are at repo root under `board/` — copy to `/home/xilinx/` on the board. C runner must be compiled on the board:
+```
+gcc -O2 -o vta_transformer_infer vta_transformer_infer.c 
+-I/home/xilinx/tvm-src/include 
+-I/home/xilinx/tvm-src/3rdparty/dlpack/include 
+-L/home/xilinx/tvm-src/build -ltvm_runtime -ldl -lm
+```
 
 ### Known issues
 
@@ -111,6 +123,5 @@ and conservative o_tile values (workaround for o×n hardware limit).
 ### Possible improvements
 
 - o_tile tuning: Per-call overhead is ~0.17 ms. Reducing call count (currently 180) directly improves throughput.
-- 64-bit uop: Structural fix for the multi-tile and o×n limits. Would enable single-call GEMMs (12 calls total), potentially 100+ FPS. See `design_space_alternatives.md`.
+- 64-bit uop: Structural fix for the multi-tile and o×n limits. Would enable single-call GEMMs (12 calls total), potentially 100+ FPS.
 - Double-buffered DMA: Hide DMA setup behind VTA compute. Pattern exists in `finn_t_infer.c`.
-- Re-benchmark with o32 modules: Current power measurement is from o16. O32 energy should be ~149 mJ (estimated).

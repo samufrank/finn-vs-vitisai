@@ -917,6 +917,15 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
         print(f"  FINN_T_OPT={_finn_t_opt!r} not recognized; using 'both'")
         _v2_requested, _v2_uncached, _v2_double = True, True, True
 
+    # FINN_T_TIMING=1 enables per-stage wall-clock breakdown via the C
+    # runner. Adds two clock_gettime calls per stage (~200 ns each) so
+    # leave off for production runs. Only the v2 path is instrumented.
+    _finn_t_timing = os.environ.get(
+        'FINN_T_TIMING', '').strip().lower() in ('1', 'true', 'yes', 'on')
+    if _finn_t_timing:
+        print("  FINN_T_TIMING=1 -> per-stage timing enabled "
+              "(prints to stderr, captured in config)")
+
     _alloc_kwargs = {'shape': ishape_packed, 'dtype': np.uint8}
     _alloc_kwargs_o = {'shape': oshape_packed, 'dtype': np.uint8}
     if _v2_requested and _v2_uncached:
@@ -1036,12 +1045,35 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
             _lib.finn_t_runner_destroy.restype = ctypes.c_int
             _lib.finn_t_infer_batch_v2.argtypes = [
                 ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
-                ctypes.c_void_p, ctypes.c_void_p,
+                ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
             ]
             _lib.finn_t_infer_batch_v2.restype = ctypes.c_int
         except AttributeError:
             _has_v2 = False
             print("  C runner v2 symbols missing — rebuild libfinn_t_infer.so")
+
+        # finn_t_get_last_timings — optional getter for per-stage timing
+        # collected during finn_t_infer_batch_v2(..., print_timing=1).
+        # The 4 trailing pointers are cpu_tail sub-stages: cache_invalidate,
+        # fused_read_gap, matmul, argmax.
+        _has_get_timings = True
+        try:
+            _lib.finn_t_get_last_timings.argtypes = [
+                ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(ctypes.c_int),
+                ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(ctypes.c_double),
+                ctypes.POINTER(ctypes.c_double),
+            ]
+            _lib.finn_t_get_last_timings.restype = ctypes.c_int
+        except AttributeError:
+            _has_get_timings = False
+            if _finn_t_timing:
+                print("  finn_t_get_last_timings not present in .so; "
+                      "timing will print to stderr but won't be in results")
 
         _idma_mmio = ol.idma[0].mmio.array.ctypes.data
         _odma_mmio = ol.odma[0].mmio.array.ctypes.data
@@ -1167,7 +1199,8 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
                 s['labels_c'].ctypes.data,
                 len(s['signals_c']),
                 s['preds_c'].ctypes.data,
-                s['W_cls_int8'].ctypes.data)
+                s['W_cls_int8'].ctypes.data,
+                1 if _finn_t_timing else 0)
             total = len(s['signals_c'])
         elif c_runner is not None:
             s = c_runner_state
@@ -1198,6 +1231,38 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
                                          t_start=start_time, t_end=end_time))
 
     if use_v2:
+        if _finn_t_timing and _has_get_timings:
+            _input_ms = ctypes.c_double()
+            _accel_ms = ctypes.c_double()
+            _tail_ms  = ctypes.c_double()
+            _ntim     = ctypes.c_int()
+            _inv_ms   = ctypes.c_double()
+            _frg_ms   = ctypes.c_double()
+            _mm_ms    = ctypes.c_double()
+            _am_ms    = ctypes.c_double()
+            _rc_t = c_runner.finn_t_get_last_timings(
+                ctypes.byref(_input_ms),
+                ctypes.byref(_accel_ms),
+                ctypes.byref(_tail_ms),
+                ctypes.byref(_ntim),
+                ctypes.byref(_inv_ms),
+                ctypes.byref(_frg_ms),
+                ctypes.byref(_mm_ms),
+                ctypes.byref(_am_ms))
+            if _rc_t == 0:
+                config['input_prep_ms_per_inf']       = float(_input_ms.value)
+                config['accel_ms_per_inf']            = float(_accel_ms.value)
+                config['cpu_tail_ms_per_inf']         = float(_tail_ms.value)
+                config['timing_n_samples']            = int(_ntim.value)
+                config['cache_invalidate_ms_per_inf'] = float(_inv_ms.value)
+                config['fused_read_gap_ms_per_inf']   = float(_frg_ms.value)
+                config['matmul_ms_per_inf']           = float(_mm_ms.value)
+                config['argmax_ms_per_inf']           = float(_am_ms.value)
+                config['timing_note'] = (
+                    'wall-clock per stage from last run; in double-buffered '
+                    'mode stages overlap so sum > batch wall-clock; cpu_tail '
+                    'sub-stages (cache_invalidate, fused_read_gap, matmul, '
+                    'argmax) sum ~= cpu_tail modulo timing overhead')
         # Best-effort cleanup; the runner state is process-local static so this
         # is mostly cosmetic. Buffers are freed when the pynq.allocate refs
         # go out of scope.

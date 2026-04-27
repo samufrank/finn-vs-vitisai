@@ -33,12 +33,15 @@ from pathlib import Path
 import numpy as np
 
 
-HERE = Path(__file__).resolve().parent
-PROJ = HERE.parent.parent
-DEFAULT_CFG     = HERE / "vta_transformer_deployment_config.json"
-DEFAULT_WEIGHTS = HERE / "transformer_weights"
-DEFAULT_OUT     = HERE / "transformer_export"
-DEFAULT_SCALES  = HERE / "transformer_scales.npz"
+HERE = Path(__file__).resolve().parent          # finn-vs-vitisai/vta/transformer/
+VTA  = HERE.parent                                # finn-vs-vitisai/vta/
+PROJ = HERE.parent.parent                         # finn-vs-vitisai/
+# Paths are anchored to script location so the script works regardless of CWD.
+# Override any of these with --config / --weights-dir / --output-dir.
+DEFAULT_CFG     = HERE / "deployment_config.json"
+DEFAULT_WEIGHTS = VTA  / "archive" / "transformer_weights"
+DEFAULT_OUT     = VTA  / "transformer_export"
+DEFAULT_SCALES  = HERE / "scales.npz"
 
 # All 6 modules compile as 4-arg with m=1 (single output column tile per
 # VTA call). The board test confirmed that proj-shape modules with m>1
@@ -462,7 +465,7 @@ def main():
             continue
         b_zero = np.zeros((1, BLOCK), dtype=np.int32)
         out_path = out_dir / "weights" / f"{mod_id}_bias_zero.npy"
-        np.save(out_path, b_zero.astype(np.int32))
+        np.save(out_path, b_zero.astype(np.int32))  # C runner requires <i4 dtype
         bias_files[mod_id] = {
             "file": f"weights/{mod_id}_bias_zero.npy",
             "shape": list(b_zero.shape),
@@ -478,7 +481,7 @@ def main():
     # Tile to (m, BLOCK_OUT) for D-buffer broadcast
     m_fc1 = W_fc1.shape[0] // BLOCK
     b_fc1_tiled = b_fc1_int32.reshape(m_fc1, BLOCK)
-    np.save(out_dir / "weights" / "fc1_bias_int32.npy", b_fc1_tiled.astype(np.int32))
+    np.save(out_dir / "weights" / "fc1_bias_int32.npy", b_fc1_tiled.astype(np.int32))  # C runner requires <i4 dtype
     bias_files["fc1"] = {"file": "weights/fc1_bias_int32.npy", "shape": list(b_fc1_tiled.shape),
                          "int32_range": [int(b_fc1_int32.min()), int(b_fc1_int32.max())]}
     print(f"  fc1 bias: tiled {b_fc1_tiled.shape}  int range [{b_fc1_int32.min()}, {b_fc1_int32.max()}]")
@@ -492,7 +495,7 @@ def main():
                                                      fc2["w_scale"], fc2["in_scale"], zp=8)
     m_fc2 = W_fc2.shape[0] // BLOCK
     b_fc2_tiled = b_fc2_corrected.reshape(m_fc2, BLOCK)
-    np.save(out_dir / "weights" / "fc2_bias_int32_corrected.npy", b_fc2_tiled.astype(np.int32))
+    np.save(out_dir / "weights" / "fc2_bias_int32_corrected.npy", b_fc2_tiled.astype(np.int32))  # C runner requires <i4 dtype
     bias_files["fc2"] = {"file": "weights/fc2_bias_int32_corrected.npy",
                          "shape": list(b_fc2_tiled.shape),
                          "int32_range": [int(b_fc2_corrected.min()), int(b_fc2_corrected.max())],

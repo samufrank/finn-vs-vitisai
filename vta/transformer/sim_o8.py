@@ -29,7 +29,7 @@ import json
 from pathlib import Path
 import numpy as np
 
-from vta_transformer_sim import TransformerSim, SHIFTS, SQRT_96
+from sim import TransformerSim, SHIFTS, SQRT_96   # post-reorg name (was vta_transformer_sim)
 
 
 # ------------------------------------------------------------------

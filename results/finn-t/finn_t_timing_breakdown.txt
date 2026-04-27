@@ -1,0 +1,16 @@
+Stage                   Type    ms/inf      %total
+---------------------   -----   ---------   -------
+input_prep              CPU        0.006      0.4%
+accelerator             FPGA       0.747     50.0%
+cpu_tail                CPU        0.741     49.6%
+  cache_invalidate      CPU        0.001      0.0%
+  fused_read_gap        CPU        0.722     48.3%
+  matmul                CPU        0.018      1.2%
+  argmax                CPU        0.000      0.0%
+---------------------   -----   ---------   -------
+Total FPGA:    0.747 ms (50.0%)
+Total CPU:     0.747 ms (50.0%)
+Total:         1.494 ms
+(stages overlap due to double-buffering; batch wall-clock < sum of stages)
+(production run without timing overhead: 1460.8 FPS / 0.685 ms)
+(single-buffer baseline: 760 FPS — 2x speedup confirms overlap is real)

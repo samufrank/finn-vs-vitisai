@@ -1,0 +1,29 @@
+# VTA Transformer INT4-o8, o32 optimized, C runner, 100 samples
+# 180 VTA calls per inference
+
+[result] samples=100 correct=74 acc=74.00% fps=26.5 latency=37.796 ms
+
+Stage                   Type    ms/inf      %total
+---------------------   -----   ---------   -------
+patch_embed             CPU        1.358      3.6%
+positional              CPU        0.388      1.0%
+bn_attn                 CPU        0.388      1.0%
+vta_qkv                 VTA        6.685     14.7%
+cpu_requant_qkv         CPU        0.463      1.2%
+cpu_head_split          CPU        0.008      0.0%
+vta_qkt                 VTA        3.985      8.8%
+cpu_softmax             CPU        1.365      3.6%
+vta_av                  VTA        2.086      4.6%
+cpu_head_concat         CPU        0.147      0.3%
+vta_o_proj              VTA        2.060      4.5%
+cpu_resid_attn          CPU        0.293      0.6%
+bn_mlp                  CPU        0.389      1.0%
+vta_fc1                 VTA        8.129     21.5%
+cpu_relu_quant          CPU        0.551      1.5%
+vta_fc2                 VTA        9.046     23.9%
+cpu_resid_mlp           CPU        0.281      0.7%
+classifier              CPU        0.096      0.3%
+---------------------   -----   ---------   -------
+Total VTA:   32.067 ms (84.9%)
+Total CPU:    5.724 ms (15.1%)
+Total:       37.792 ms

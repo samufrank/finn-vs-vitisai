@@ -39,12 +39,14 @@ from pathlib import Path
 import numpy as np
 
 
-HERE = Path(__file__).resolve().parent
-PROJ = HERE.parent.parent
-DEFAULT_CFG     = HERE / "vta_transformer_deployment_config.json"
-DEFAULT_WEIGHTS = HERE / "transformer_weights"
-DEFAULT_OUT     = HERE / "transformer_export_o32"
-DEFAULT_SCALES  = HERE / "transformer_scales.npz"
+HERE = Path(__file__).resolve().parent          # finn-vs-vitisai/vta/transformer/
+VTA  = HERE.parent                                # finn-vs-vitisai/vta/
+PROJ = HERE.parent.parent                         # finn-vs-vitisai/
+# Paths anchored to script location; override with CLI flags as needed.
+DEFAULT_CFG     = HERE / "deployment_config.json"
+DEFAULT_WEIGHTS = VTA  / "archive" / "transformer_weights"
+DEFAULT_OUT     = VTA  / "transformer_export_o32"
+DEFAULT_SCALES  = HERE / "scales.npz"
 
 # All 6 modules compile as 4-arg with m=1 (single output column tile per
 # VTA call). The board test confirmed that proj-shape modules with m>1
@@ -73,14 +75,13 @@ DEFAULT_SCALES  = HERE / "transformer_scales.npz"
 # `o_tile` sets the per-VTA-call M (row count). o32 variant — larger
 # o_tile values to reduce M-chunk count, while keeping every o×n <= 200
 # (empirical safe zone for this PL; >200 triggers intermittent all-zero
-# output). Compared to the o16 build, fc1 drops from 8 to 4 chunks
-# (largest single saving). Per-module o×n bounds with these values:
-#   proj_k96_s3_m1  o=32 n=6   -> 192   (was o=16 -> 96; chunks 4 -> 2)
-#   proj_k96_s2_m1  o=32 n=6   -> 192   (was o=16 -> 96; chunks 4 -> 2)
-#   qkt_s3_m1       o=32 n=2   ->  64   (was o=16 -> 32; chunks 4 -> 2)
-#   av_s3_m1        o=32 n=4   -> 128   (was o=16 -> 64; chunks 4 -> 2)
-#   fc1_s3_m1       o=16 n=6   ->  96   (was o=8  -> 48; chunks 8 -> 4)
-#   fc2_s4_m1       o=8  n=24  -> 192   (unchanged — already at safe bound)
+# output). Per-module o×n bounds with these values:
+#   proj_k96_s3_m1  o=32 n=6   -> 192   (chunks: 64/32 = 2)
+#   proj_k96_s2_m1  o=32 n=6   -> 192   (chunks: 64/32 = 2)
+#   qkt_s3_m1       o=32 n=2   ->  64   (chunks: 64/32 = 2)
+#   av_s3_m1        o=32 n=4   -> 128   (chunks: 64/32 = 2)
+#   fc1_s3_m1       o=32 n=6   -> 192   (chunks: 64/32 = 2)  validated
+#   fc2_s4_m1       o=8  n=24  -> 192   (chunks: 64/8  = 8 — unchanged)
 MODULE_PLAN = {
     "proj_k96_s3_m1": {"M": 64, "K": 96,  "shift": 3, "clip": (-128, 127),
                        "o_tile": 32,
@@ -99,7 +100,7 @@ MODULE_PLAN = {
                        "zero_bias": True,  "kind": "attn_pair",
                        "gemms": ["av_head0", "av_head1", "av_head2"]},
     "fc1_s3_m1":      {"M": 64, "K": 96,  "shift": 3, "clip": (-128, 127),
-                       "o_tile": 16,
+                       "o_tile": 32,
                        "zero_bias": False, "kind": "mlp",
                        "gemms": ["fc1"]},
     "fc2_s4_m1":      {"M": 64, "K": 384, "shift": 4, "clip": (-128, 127),
@@ -468,7 +469,7 @@ def main():
             continue
         b_zero = np.zeros((1, BLOCK), dtype=np.int32)
         out_path = out_dir / "weights" / f"{mod_id}_bias_zero.npy"
-        np.save(out_path, b_zero)
+        np.save(out_path, b_zero.astype(np.int32))  # C runner requires <i4 dtype
         bias_files[mod_id] = {
             "file": f"weights/{mod_id}_bias_zero.npy",
             "shape": list(b_zero.shape),
@@ -484,7 +485,7 @@ def main():
     # Tile to (m, BLOCK_OUT) for D-buffer broadcast
     m_fc1 = W_fc1.shape[0] // BLOCK
     b_fc1_tiled = b_fc1_int32.reshape(m_fc1, BLOCK)
-    np.save(out_dir / "weights" / "fc1_bias_int32.npy", b_fc1_tiled)
+    np.save(out_dir / "weights" / "fc1_bias_int32.npy", b_fc1_tiled.astype(np.int32))  # C runner requires <i4 dtype
     bias_files["fc1"] = {"file": "weights/fc1_bias_int32.npy", "shape": list(b_fc1_tiled.shape),
                          "int32_range": [int(b_fc1_int32.min()), int(b_fc1_int32.max())]}
     print(f"  fc1 bias: tiled {b_fc1_tiled.shape}  int range [{b_fc1_int32.min()}, {b_fc1_int32.max()}]")
@@ -498,7 +499,7 @@ def main():
                                                      fc2["w_scale"], fc2["in_scale"], zp=8)
     m_fc2 = W_fc2.shape[0] // BLOCK
     b_fc2_tiled = b_fc2_corrected.reshape(m_fc2, BLOCK)
-    np.save(out_dir / "weights" / "fc2_bias_int32_corrected.npy", b_fc2_tiled)
+    np.save(out_dir / "weights" / "fc2_bias_int32_corrected.npy", b_fc2_tiled.astype(np.int32))  # C runner requires <i4 dtype
     bias_files["fc2"] = {"file": "weights/fc2_bias_int32_corrected.npy",
                          "shape": list(b_fc2_tiled.shape),
                          "int32_range": [int(b_fc2_corrected.min()), int(b_fc2_corrected.max())],

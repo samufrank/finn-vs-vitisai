@@ -1,0 +1,108 @@
+{
+  "config": {
+    "toolchain": "finn-t",
+    "deploy_dir": "/home/xilinx/finn-t-fix9",
+    "weights_dir": "/home/xilinx/finn-t-fix9/weights",
+    "dataset": "radioml2018",
+    "batch_size": 1,
+    "num_runs": 1,
+    "num_images": 186639,
+    "signal_shape": [
+      1,
+      1024,
+      2
+    ],
+    "accel_input_shape": [
+      1,
+      1,
+      1024,
+      2
+    ],
+    "accel_output_shape": [
+      64,
+      96
+    ],
+    "cpu_tail_ops": [
+      "SignExtend",
+      "Transpose",
+      "GAP",
+      "MatMul[96,24]",
+      "argmax"
+    ],
+    "runtime": "c-v2-double",
+    "finn_t_opt_env": "doublebuf",
+    "num_classes": 24,
+    "timestamp": "2026-04-27T20:35:56.494852",
+    "board": "AUP-ZU3",
+    "fpga_part": "xczu3eg-sbva484-1-e",
+    "power_method": "none",
+    "input_prep_ms_per_inf": 0.005846574151168834,
+    "accel_ms_per_inf": 0.7474021777227695,
+    "cpu_tail_ms_per_inf": 0.7410868868242971,
+    "timing_n_samples": 186639,
+    "cache_invalidate_ms_per_inf": 0.0006614427263326529,
+    "fused_read_gap_ms_per_inf": 0.7219488411639582,
+    "matmul_ms_per_inf": 0.01782194367200853,
+    "argmax_ms_per_inf": 0.0002894140077904403,
+    "timing_note": "wall-clock per stage from last run; in double-buffered mode stages overlap so sum > batch wall-clock; cpu_tail sub-stages (cache_invalidate, fused_read_gap, matmul, argmax) sum ~= cpu_tail modulo timing overhead"
+  },
+  "idle": {
+    "t_start": 1777322161.5000517,
+    "t_end": 1777322167.0042589,
+    "power": {
+      "mean": null,
+      "std": null,
+      "n_samples": 0
+    },
+    "sysmon": {
+      "temp_ps_c": 43.61367940178486,
+      "temp_pl_c": 42.85816381004419,
+      "vccint_v": 0.84247192037736,
+      "n_samples": 250
+    }
+  },
+  "runs": [
+    {
+      "run": 1,
+      "t_start": 1777322167.0214634,
+      "t_end": 1777322306.5361607,
+      "accuracy": 72.11943913115694,
+      "time_s": 139.51469492912292,
+      "throughput_fps": 1337.7730574891586,
+      "latency_ms": 0.7475109432065267,
+      "avg_power_w": null,
+      "energy_total_j": null,
+      "energy_per_image_mj": null,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 44.133610409802664,
+        "temp_pl_c_mean": 43.42493967337702,
+        "temp_pl_c_max": 46.100626339344004,
+        "vccint_v_mean": 0.8413718298426228,
+        "vccbram_v_mean": 0.8411976481878474,
+        "n_samples": 11629
+      }
+    }
+  ],
+  "summary": {
+    "accuracy": 72.11943913115694,
+    "throughput_fps_mean": 1337.7730574891586,
+    "throughput_fps_std": 0.0,
+    "latency_ms_mean": 0.7475109432065267,
+    "latency_ms_std": 0.0,
+    "idle_power_w": null,
+    "idle_power_std": null,
+    "idle_temp_pl_c": 42.85816381004419,
+    "avg_power_w_mean": null,
+    "avg_power_w_std": null,
+    "dynamic_power_w": null,
+    "energy_per_image_mj_mean": null,
+    "energy_per_image_mj_std": null,
+    "sysmon": {
+      "temp_ps_c_mean": 44.133610409802664,
+      "temp_pl_c_mean": 43.42493967337702,
+      "temp_pl_c_max": 46.100626339344004,
+      "vccint_v_mean": 0.8413718298426228
+    }
+  }
+}
