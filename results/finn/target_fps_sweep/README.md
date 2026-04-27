@@ -18,6 +18,78 @@ Total wall-time is dominated by Vivado synthesis; expect 10-24 h for the full
 sweep depending on how many high-target builds reach `step_synthesize_bitfile`.
 
 
+## Summary
+
+Sweep across all 4 (model, precision) combinations at target_fps in [1000, 10000, 100000, 500000] characterizing FINN's design space on AUP-ZU3 (ZU3EG). 15/16 builds successful; cnn_int8 fps=100K hit ZU3's CLB capacity (84,243 LUTs needed vs 70,560 available). 4 sweep builds (one per sweep) deployed to board for benchmarking. Total wall time ~5.5 hours unattended.
+
+**Headline findings:**
+- CNN INT8 ceiling on ZU3: target_fps in [10K, 100K]. CNN INT4 fits at all tested targets up to 500K with the auto-folder plateauing at fps=100K (PE=16/SIMD=9, 144 DSPs).
+- Partition is invariant across target_fps. FINN's auto-folder controls per-layer parallelism but never migrates layers between CPU and FPGA.
+- CNN throughput gains substantial (44-62%); MLP gains modest (3-4%, CPU-bottlenecked).
+- Sub-byte precision provides substantially more design-space headroom than INT8 on this device.
+
+
+## Compiled vs. benchmarked
+
+| Sweep | Target_fps | Compile status | Benchmarked? | Reason for selection |
+|---|---|---|---|---|
+| mlp_int8 | 1000 | success | yes (baseline) | matched-comparison reference |
+| mlp_int8 | 10000 | success | no | byte-identical to fps=1000 (PE=SIMD=1) |
+| mlp_int8 | 100000 | success | no | minor folding change (SIMD=4); skipped for the bigger fps=500K jump |
+| mlp_int8 | 500000 | success | yes | first MLP INT8 point with materially different folding (PE=4/SIMD=4) |
+| mlp_int4 | 1000 | success | yes (baseline) | matched-comparison reference |
+| mlp_int4 | 10000 | success | no | byte-identical to fps=1000 |
+| mlp_int4 | 100000 | success | no | minor folding change; skipped for the bigger fps=500K jump |
+| mlp_int4 | 500000 | success | yes | first MLP INT4 point with new folding (PE=1/SIMD=16); also exposed 2-per-byte input pack requirement |
+| cnn_int8 | 1000 | success | yes (baseline) | matched-comparison reference |
+| cnn_int8 | 10000 | success | yes | only successful post-baseline CNN INT8 build |
+| cnn_int8 | 100000 | resource_fail | n/a | place-design exhausts ZU3 CLB capacity (84,243 LUTs vs 70,560 available); initially misclassified as `tool_fail`, reclassified post-hoc |
+| cnn_int8 | 500000 | (skipped) | n/a | sweep stopped at 100K resource fail |
+| cnn_int4 | 1000 | success | yes (baseline) | matched-comparison reference |
+| cnn_int4 | 10000 | success | no | intermediate folding (PE=4/SIMD=9); could be added later for finer curve |
+| cnn_int4 | 100000 | success | yes | auto-folder ceiling (PE=16/SIMD=9, 44.4% DSP) |
+| cnn_int4 | 500000 | success | no | identical bitstream to fps=100000 |
+
+
+## Resource utilization (all successful builds)
+
+| Sweep | Target_fps | LUT | LUT% | FF | BRAM18 | BRAM% | DSP | DSP% | Fmax (MHz) | Est FPS | MVAU folding |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| mlp_int8 | 1000 | 13150 | 18.6% | 16025 | 6 | 1.4% | 2 | 0.6% | 158.8 | 48828 | PE=1/SIMD=1 |
+| mlp_int8 | 10000 | 13150 | 18.6% | 16025 | 6 | 1.4% | 2 | 0.6% | 158.8 | 48828 | PE=1/SIMD=1 |
+| mlp_int8 | 100000 | 13232 | 18.8% | 16140 | 6 | 1.4% | 5 | 1.4% | 162.4 | 195312 | PE=1/SIMD=4 |
+| mlp_int8 | 500000 | 25256 | 35.8% | 28490 | 9 | 2.1% | 18 | 5.0% | 129.8 | 625000 | PE=4/SIMD=4 |
+| mlp_int4 | 1000 | 8348 | 11.8% | 11926 | 6 | 1.4% | 2 | 0.6% | 219.7 | 48828 | PE=1/SIMD=1 |
+| mlp_int4 | 10000 | 8348 | 11.8% | 11926 | 6 | 1.4% | 2 | 0.6% | 219.7 | 48828 | PE=1/SIMD=1 |
+| mlp_int4 | 100000 | 8551 | 12.1% | 12189 | 6 | 1.4% | 5 | 1.4% | 233.4 | 195312 | PE=1/SIMD=4 |
+| mlp_int4 | 500000 | 8758 | 12.4% | 12502 | 7 | 1.6% | 20 | 5.6% | 156.9 | 625000 | PE=1/SIMD=16 |
+| cnn_int8 | 1000 | 17930 | 25.4% | 19889 | 29 | 6.7% | 3 | 0.8% | 166.8 | 1329 | PE=1/SIMD=3 |
+| cnn_int8 | 10000 | 36787 | 52.1% | 41032 | 9 | 2.1% | 32 | 8.9% | 120.1 | 13897 | PE=8/SIMD=4 |
+| cnn_int8 | 100000 | resource_fail (84243 LUT vs 70560 available, +28% over capacity) |||||||||
+| cnn_int4 | 1000 | 10966 | 15.5% | 13986 | 22 | 5.1% | 3 | 0.8% | 243.9 | 1329 | PE=1/SIMD=3 |
+| cnn_int4 | 10000 | 11532 | 16.3% | 14987 | 7 | 1.6% | 40 | 11.1% | 190.1 | 13897 | PE=4/SIMD=9 |
+| cnn_int4 | 100000 | 13224 | 18.7% | 16832 | 6 | 1.4% | 160 | 44.4% | 164.3 | 63776 | PE=16/SIMD=9 |
+| cnn_int4 | 500000 | 13224 | 18.7% | 16832 | 6 | 1.4% | 160 | 44.4% | 164.3 | 63776 | PE=16/SIMD=9 |
+
+ZU3EG total: 70,560 LUT, 141,120 FF, 432 BRAM_18K, 360 DSP. All bitstreams are 5.31 MB (PYNQ shell-dominated, accelerator IP itself is tens of KB).
+
+
+## Benchmark results (deployed builds)
+
+| Build | Folding | Accuracy | FPS | Latency (ms) | Idle (W) | Active (W) | Dynamic (W) | Energy/inf (mJ) | vs baseline FPS |
+|---|---|---|---|---|---|---|---|---|---|
+| mlp_int8 baseline | PE=1/SIMD=1 | 96.58% | 1575 | 0.635 | 3.27 | 3.44 | 0.18 | 2.21 | — |
+| mlp_int8 fps=500K | PE=4/SIMD=4 | 96.58% | 1629 | 0.614 | 3.32 | 3.49 | 0.18 | 2.15 | +3.4% |
+| mlp_int4 baseline | PE=1/SIMD=1 | 97.29% | 1811 | 0.552 | 3.27 | 3.44 | 0.16 | 1.90 | — |
+| mlp_int4 fps=500K | PE=1/SIMD=16 | 97.18% | 1882 | 0.531 | 3.27 | 3.44 | 0.16 | 1.83 | +3.9% |
+| cnn_int8 baseline | PE=1/SIMD=3 | 91.99% | 454 | 2.205 | 3.27 | 3.44 | 0.18 | 7.59 | — |
+| cnn_int8 fps=10K | PE=8/SIMD=4 | 91.99% | 656 | 1.525 | 3.32 | 3.51 | 0.19 | 5.36 | +44% |
+| cnn_int4 baseline | PE=1/SIMD=3 | 88.27% | 525 | 1.903 | 3.29 | 3.45 | 0.16 | 6.57 | — |
+| cnn_int4 fps=100K | PE=16/SIMD=9 | 88.27% | 851 | 1.175 | 3.30 | 3.48 | 0.18 | 4.09 | +62% |
+
+CNN gains attributable to DMA stage compression (CNN INT4 baseline DMA was 759 µs / 39% of inference; fps=100K is 31 µs / 2.5%). MLP gains bounded by CPU MatMul which dominates 84-97% of inference time at the tiny [64,32] topology — folding cannot move it to fabric.
+
+
 ## Methodology
 
 Two phases per sweep.
@@ -113,6 +185,8 @@ too many lut           too many bram            too many dsp
 
 Patterns are refined as the sweep observes real failures.
 
+**Known classifier limitation:** the cnn_int8 fps=100K build was initially misclassified as `tool_fail` because FINN's relayed exception (`ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open`) didn't match the resource-fail patterns above. The actual cause was Vivado place-design CLB exhaustion, found in the deeper `runme.log` at `/tmp/finn_dev_samu/vivado_zynq_proj_*/finn_zynq_link.runs/impl_1/runme.log`. Reclassified as `resource_fail` post-hoc. The classifier should ideally chase the "Check logs under <path>" hint into runme.log; this is a deferred follow-on improvement.
+
 
 ## File layout
 
@@ -136,9 +210,19 @@ results/finn/target_fps_sweep/
 ├── README.md                  # this file
 ├── sweep_state.json           # SINGLE SOURCE OF TRUTH for resume
 ├── resource_summary.csv       # one row per build, all sweeps
-├── partitioning_changes.md    # findings (filled in post-sweep)
+├── sweep_analysis.md          # detailed per-sweep tables, generated by analyze.py
+├── analyze.py                 # regenerates sweep_analysis.md from CSV + final_hw_config.json
 ├── sweep_driver.log           # high-level driver events
-└── tool_fails.txt             # tool-fail summary for post-hoc review
+├── tool_fails.txt             # tool-fail summary for post-hoc review
+└── benchmarks/                # merged JSON + power timeline PNG per deployed build
+    ├── mlp_int8_fps500000_c.json
+    ├── mlp_int8_fps500000_c_power.png
+    ├── mlp_int4_fps500000_c.json
+    ├── mlp_int4_fps500000_c_power.png
+    ├── cnn_int8_fps10000_c.json
+    ├── cnn_int8_fps10000_c_power.png
+    ├── cnn_int4_fps100000_c.json
+    └── cnn_int4_fps100000_c_power.png
 ```
 
 Existing baseline builds at `finn/output_*_mnist_tiny*/` are **not touched**.
