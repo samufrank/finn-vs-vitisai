@@ -10,22 +10,34 @@ matrix multiply, then executed via the same GEMM+shift+clip schedule
 as the MLP. MaxPool, GlobalAvgPool, and ReLU run on CPU between
 VTA GEMM calls.
 
-Architecture: CNN tiny [8, 16] on MNIST (28x28, 1 channel)
-  Conv1(1->8, 3x3, pad=1) -> BN -> ReLU -> MaxPool(2)
-  Conv2(8->16, 3x3, pad=1) -> BN -> ReLU -> MaxPool(2)
-  GlobalAvgPool(7x7) -> Dense(16->10)
+Two architectures supported (--arch flag, default 'cnn' for legacy):
+
+  cnn:     CNN tiny/small/medium/deep_3/large on MNIST (28x28, 1 channel)
+           Conv->BN->ReLU->MaxPool blocks under model.features Sequential,
+           single QuantLinear under model.classifier. No skip connections.
+
+  resnet8: MLPerf Tiny ResNet-8 on CIFAR-10 (32x32, 3 channels). Stem +
+           three residual blocks (stages 1-3) + GAP + FC. Skip-add is in
+           CPU float-space post-dequant, pre-ReLU. Layers carry optional
+           skip metadata: 'consume_input_from' (override default chain),
+           'skip_add_from' (post-dequant float add).
 
 Usage (from Ubuntu host):
     cd ~/dev/CEN571-final/tvm-v0.12.0
     PYTHONPATH=$(pwd)/python:$(pwd)/vta/python TVM_HOME=$(pwd) \
         python3 export_vta_cnn.py \
+            --arch cnn --dataset mnist \
             --checkpoint ../finn-vs-vitisai/finn/cnn_mnist_tiny.pth \
             --output-dir ./vta_export/cnn_mnist_tiny/
 
-Then copy to board:
-    scp -r ./vta_export/cnn_mnist_tiny/ xilinx@192.168.3.1:/home/xilinx/models/vta/cnn_mnist_tiny/
+    PYTHONPATH=$(pwd)/python:$(pwd)/vta/python TVM_HOME=$(pwd) \
+        python3 export_vta_cnn.py \
+            --arch resnet8 --dataset cifar10 \
+            --checkpoint ../finn-vs-vitisai/finn/resnet8_cifar10_int8.pth \
+            --output-dir ./vta_export/resnet8_cifar10_int8/
 
-Date: April 1, 2026
+Then copy to board:
+    scp -r ./vta_export/<dir>/ xilinx@192.168.3.1:/home/xilinx/models/vta/<dir>/
 """
 import numpy as np
 import tvm
@@ -82,6 +94,30 @@ def load_mnist_labels(path):
     with gzip.open(path, 'rb') as f:
         magic, n = struct.unpack('>II', f.read(8))
         return np.frombuffer(f.read(), dtype=np.uint8)
+
+
+# ---- CIFAR-10 loading (for ResNet-8 calibration/verify) ----
+
+def load_cifar10_test(data_dir):
+    """Load CIFAR-10 test set from torchvision pickle batches.
+
+    Expects ``cifar-10-batches-py/`` under ``data_dir`` (already present in
+    finn-vs-vitisai/data/). Returns (images, labels) where:
+      images: float32 (N, 3, 32, 32) in [0, 1]
+      labels: uint8 (N,)
+    """
+    import pickle
+    test_path = os.path.join(data_dir, 'cifar-10-batches-py', 'test_batch')
+    if not os.path.exists(test_path):
+        raise FileNotFoundError(
+            f"CIFAR-10 test_batch not found at {test_path}. "
+            f"Expected torchvision-extracted batches under {data_dir}/cifar-10-batches-py/")
+    with open(test_path, 'rb') as f:
+        batch = pickle.load(f, encoding='bytes')
+    raw = batch[b'data']  # (10000, 3072) uint8, RGB row-major
+    labels = np.array(batch[b'labels'], dtype=np.uint8)
+    images = raw.reshape(-1, 3, 32, 32).astype(np.float32) / 255.0
+    return images, labels
 
 
 # ---- BN folding ----
@@ -246,71 +282,246 @@ def compile_gemm_with_shift(env, o, n, m, shift_bits):
 
 # ---- Weight extraction and preparation ----
 
-def load_brevitas_cnn(checkpoint_path):
+def load_brevitas_cnn(checkpoint_path, size='tiny'):
     """Load Brevitas CNN checkpoint, fold BN, return layer list.
+
+    Walks model.features Sequential dynamically to find every QuantConv2d
+    block, so 2-conv (tiny/small/medium) and 3-conv (deep_3/large) topologies
+    both work without code changes.
 
     Returns list of dicts with keys:
       'type': 'conv' or 'dense'
       'W': weight array (for conv: flattened to 2D after im2col reshape)
       'b': bias array
-      'kernel_size', 'padding', 'in_channels', 'out_channels' (conv only)
+      'kernel_size', 'padding', 'in_channels', 'out_channels', 'pool' (conv only)
     """
+    # Need brevitas to introspect QuantConv2d/QuantLinear modules.
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, os.path.join(repo_root, 'models'))
+    import torch.nn as nn
+    import brevitas.nn as qnn
+    from cnn import CNN_Brevitas, get_cnn_config
+
+    channels = get_cnn_config(size)
+    model = CNN_Brevitas(in_channels=1, channels=channels)
     sd = torch.load(checkpoint_path, map_location='cpu')
     if isinstance(sd, dict) and 'state_dict' in sd:
         sd = sd['state_dict']
+    model.load_state_dict(sd)
+    model.eval()
 
     layers = []
 
-    # Conv1: features.0 (conv) + features.1 (BN)
-    conv1_w = sd['features.0.weight'].numpy()  # (8, 1, 3, 3)
-    bn1_w = sd['features.1.weight'].numpy()
-    bn1_b = sd['features.1.bias'].numpy()
-    bn1_m = sd['features.1.running_mean'].numpy()
-    bn1_v = sd['features.1.running_var'].numpy()
-    W1_folded, b1_folded = fold_bn_into_conv(conv1_w, bn1_w, bn1_b, bn1_m, bn1_v)
-    # Reshape conv weight to 2D for im2col GEMM: (C_out, kH*kW*C_in)
-    # im2col with HWC input produces patches in (kH, kW, C_in) order,
-    # so we must transpose weight from (C_out, C_in, kH, kW) to (C_out, kH, kW, C_in)
-    C_out1, C_in1, kH1, kW1 = W1_folded.shape
-    layers.append({
-        'type': 'conv',
-        'W': W1_folded.transpose(0, 2, 3, 1).reshape(C_out1, -1),  # (8, 9)
-        'b': b1_folded,                       # (8,)
-        'kernel_size': kH1,
-        'padding': 1,
-        'in_channels': C_in1,
-        'out_channels': C_out1,
-        'pool': 2,
-    })
+    # Walk features for QuantConv2d → BatchNorm2d → QuantReLU → MaxPool2d blocks.
+    # Standard CNN_Brevitas block is 4 modules; we don't assume the offset and
+    # instead scan forward from each conv until the next conv (or end).
+    feats = list(model.features)
+    i = 0
+    while i < len(feats):
+        m = feats[i]
+        if isinstance(m, qnn.QuantConv2d):
+            conv = m
+            bn = None
+            pool = 0
+            j = i + 1
+            while j < len(feats) and not isinstance(feats[j], qnn.QuantConv2d):
+                if isinstance(feats[j], nn.BatchNorm2d):
+                    bn = feats[j]
+                elif isinstance(feats[j], nn.MaxPool2d):
+                    p = feats[j].kernel_size
+                    pool = p[0] if isinstance(p, tuple) else int(p)
+                j += 1
 
-    # Conv2: features.4 (conv) + features.5 (BN)
-    conv2_w = sd['features.4.weight'].numpy()  # (16, 8, 3, 3)
-    bn2_w = sd['features.5.weight'].numpy()
-    bn2_b = sd['features.5.bias'].numpy()
-    bn2_m = sd['features.5.running_mean'].numpy()
-    bn2_v = sd['features.5.running_var'].numpy()
-    W2_folded, b2_folded = fold_bn_into_conv(conv2_w, bn2_w, bn2_b, bn2_m, bn2_v)
-    C_out2, C_in2, kH2, kW2 = W2_folded.shape
-    layers.append({
-        'type': 'conv',
-        'W': W2_folded.transpose(0, 2, 3, 1).reshape(C_out2, -1),  # (16, 72)
-        'b': b2_folded,                       # (16,)
-        'kernel_size': kH2,
-        'padding': 1,
-        'in_channels': C_in2,
-        'out_channels': C_out2,
-        'pool': 2,
-    })
+            conv_w = conv.weight.detach().numpy()
+            if bn is not None:
+                W_folded, b_folded = fold_bn_into_conv(
+                    conv_w,
+                    bn.weight.detach().numpy(),
+                    bn.bias.detach().numpy(),
+                    bn.running_mean.detach().numpy(),
+                    bn.running_var.detach().numpy(),
+                    bn.eps,
+                )
+            else:
+                W_folded = conv_w
+                b_folded = (conv.bias.detach().numpy() if conv.bias is not None
+                            else np.zeros(conv_w.shape[0], dtype=np.float32))
 
-    # Dense: classifier.1
-    W_cls = sd['classifier.1.weight'].numpy()  # (10, 16)
-    b_cls = sd['classifier.1.bias'].numpy()    # (10,)
+            C_out, C_in, kH, kW = W_folded.shape
+            pad = conv.padding
+            if isinstance(pad, tuple):
+                pad = pad[0]
+
+            layers.append({
+                'type':         'conv',
+                'W':            W_folded.transpose(0, 2, 3, 1).reshape(C_out, -1),
+                'b':            b_folded,
+                'kernel_size':  int(kH),
+                'padding':      int(pad),
+                'in_channels':  int(C_in),
+                'out_channels': int(C_out),
+                'pool':         int(pool),
+            })
+            i = j
+        else:
+            i += 1
+
+    # Classifier: single QuantLinear inside the Sequential.
+    cls_lins = [m for m in model.classifier if isinstance(m, qnn.QuantLinear)]
+    if len(cls_lins) != 1:
+        raise RuntimeError(
+            f'expected exactly one QuantLinear in classifier; got {len(cls_lins)}')
+    cls = cls_lins[0]
     layers.append({
         'type': 'dense',
-        'W': W_cls,
-        'b': b_cls,
+        'W':    cls.weight.detach().numpy(),
+        'b':    cls.bias.detach().numpy(),
     })
 
+    return layers
+
+
+def _extract_conv_layer(conv, bn, kernel_h, kernel_w, padding, stride):
+    """Build a layer dict from a Brevitas QuantConv2d (+ optional BatchNorm).
+
+    Returns a dict with the standard schema used downstream
+    (W reshaped to (C_out, kH*kW*C_in), b folded, kernel/padding/in/out).
+    Caller fills in skip metadata (consume_input_from, skip_add_from,
+    branch_only) and the 'pool' field as appropriate.
+    """
+    conv_w = conv.weight.detach().numpy()
+    if bn is not None:
+        W_folded, b_folded = fold_bn_into_conv(
+            conv_w,
+            bn.weight.detach().numpy(),
+            bn.bias.detach().numpy(),
+            bn.running_mean.detach().numpy(),
+            bn.running_var.detach().numpy(),
+            bn.eps,
+        )
+    else:
+        W_folded = conv_w
+        b_folded = (conv.bias.detach().numpy() if conv.bias is not None
+                    else np.zeros(conv_w.shape[0], dtype=np.float32))
+    C_out, C_in, kH, kW = W_folded.shape
+    return {
+        'type':         'conv',
+        'W':            W_folded.transpose(0, 2, 3, 1).reshape(C_out, -1),
+        'b':            b_folded,
+        'kernel_size':  int(kH),
+        'padding':      int(padding),
+        'stride':       int(stride),
+        'in_channels':  int(C_in),
+        'out_channels': int(C_out),
+        'pool':         0,
+    }
+
+
+def load_brevitas_resnet8(checkpoint_path):
+    """Load Brevitas ResNet-8 checkpoint, fold BN, return layer list with skip metadata.
+
+    Schema additions vs load_brevitas_cnn:
+      'consume_input_from': index of an earlier layer whose post-dequant float
+                            output is the input to this layer's GEMM (overrides
+                            the default chain input from prev layer).
+      'skip_add_from':      index of an earlier layer whose post-dequant float
+                            output is added to this layer's post-dequant output
+                            BEFORE the post-add ReLU (residual add).
+      'branch_only':        True if this layer's output feeds only a future
+                            skip-add (not the next layer's chain input). The
+                            following layer should ignore this layer's output
+                            and pull from its own consume_input_from.
+      'apply_relu':         True if the layer's post-dequant (and post-skip-add
+                            if any) should be passed through ReLU. False on
+                            stem-relu placement is captured per ResNet-8's spec
+                            (relu after the BN of the FIRST conv in each block;
+                            the second conv's relu happens AFTER the skip-add).
+
+    Layer order produced for ResNet-8 (10 layers total, 9 conv + 1 dense):
+      0: stem conv    (3->16, stride 1)            relu, no pool
+      1: stage1 conv1 (16->16, stride 1)            relu, no pool
+      2: stage1 conv2 (16->16, stride 1) skip+=0   relu after skip-add
+      3: stage2 down  (16->32, 1x1, stride 2)      branch only, NO relu
+      4: stage2 conv1 (16->32, stride 2) input=2   relu, no pool
+      5: stage2 conv2 (32->32, stride 1) skip+=3   relu after skip-add
+      6: stage3 down  (32->64, 1x1, stride 2)      branch only, NO relu
+      7: stage3 conv1 (32->64, stride 2) input=5   relu, no pool
+      8: stage3 conv2 (64->64, stride 1) skip+=6   relu after skip-add
+      9: dense        (64->10), GAP on input
+    """
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    sys.path.insert(0, os.path.join(repo_root, 'models'))
+    import brevitas.nn as qnn
+    from resnet import ResNet8_Brevitas
+
+    model = ResNet8_Brevitas(in_channels=3, num_classes=10)
+    sd = torch.load(checkpoint_path, map_location='cpu')
+    if isinstance(sd, dict) and 'state_dict' in sd:
+        sd = sd['state_dict']
+    model.load_state_dict(sd)
+    model.eval()
+
+    layers = []
+
+    # 0: stem conv (3->16, stride 1) — relu, no pool
+    L = _extract_conv_layer(model.stem_conv, model.stem_bn, 3, 3, 1, 1)
+    L['apply_relu'] = True
+    layers.append(L)
+
+    def add_block(block, prev_chain_idx, fork_input_idx, downsample_present):
+        """Append block layers to `layers`, return updated (chain_idx_after_block).
+
+        block:               Brevitas BasicBlock_Brevitas
+        prev_chain_idx:      index of the layer whose output feeds this block
+                             (= identity skip source, AND = downsample input,
+                             AND = main path conv1 input).
+        fork_input_idx:      same as prev_chain_idx (only here for clarity)
+        downsample_present:  True if the block has a 1x1 downsample
+        """
+        if downsample_present:
+            ds_conv = block.downsample[0]
+            ds_bn = block.downsample[1]
+            ds = _extract_conv_layer(ds_conv, ds_bn, 1, 1,
+                                     0, ds_conv.stride[0])
+            ds['consume_input_from'] = fork_input_idx
+            ds['branch_only'] = True
+            ds['apply_relu'] = False  # downsample is just a skip path
+            layers.append(ds)
+            skip_src = len(layers) - 1
+        else:
+            skip_src = fork_input_idx  # identity skip = pre-block activation
+
+        c1 = _extract_conv_layer(block.conv1, block.bn1, 3, 3,
+                                 1, block.conv1.stride[0])
+        c1['consume_input_from'] = fork_input_idx  # main path also forks here
+        c1['apply_relu'] = True
+        layers.append(c1)
+
+        c2 = _extract_conv_layer(block.conv2, block.bn2, 3, 3, 1, 1)
+        c2['skip_add_from'] = skip_src
+        c2['apply_relu'] = True   # ReLU after skip-add (post_add_relu)
+        layers.append(c2)
+
+        return len(layers) - 1  # this block's output is the last layer added
+
+    # stage 1: identity skip (16->16, stride 1)
+    chain = add_block(model.stage1, prev_chain_idx=0, fork_input_idx=0,
+                      downsample_present=False)
+    # stage 2: 1x1 downsample (16->32, stride 2)
+    chain = add_block(model.stage2, prev_chain_idx=chain, fork_input_idx=chain,
+                      downsample_present=True)
+    # stage 3: 1x1 downsample (32->64, stride 2)
+    chain = add_block(model.stage3, prev_chain_idx=chain, fork_input_idx=chain,
+                      downsample_present=True)
+
+    # FC: 64->10 (after GAP). The dense layer's "input layer" is `chain`
+    # (the post-stage3 spatial activation), GAP'd to a 64-dim vector.
+    layers.append({
+        'type':              'dense',
+        'W':                 model.fc.weight.detach().numpy(),
+        'b':                 model.fc.bias.detach().numpy(),
+        'consume_input_from': chain,
+    })
     return layers
 
 
@@ -372,6 +583,14 @@ def prepare_vta_layers(layers, env):
             info['in_channels'] = layer['in_channels']
             info['out_channels'] = layer['out_channels']
             info['pool'] = layer.get('pool', 0)
+            if 'stride' in layer:
+                info['stride'] = layer['stride']
+
+        # Skip-connection metadata (resnet8 path; absent in legacy cnn flow).
+        for k in ('consume_input_from', 'skip_add_from', 'branch_only',
+                  'apply_relu'):
+            if k in layer:
+                info[k] = layer[k]
 
         vta_layers.append(info)
         print(f"  Layer {i} ({layer['type']}): {real_in}->{real_out} "
@@ -383,11 +602,39 @@ def prepare_vta_layers(layers, env):
 
 # ---- Calibration ----
 
+def _normalize_calibration_image(img):
+    """Convert calibration image to spatial format used by im2col.
+
+    MNIST (legacy): img shape (H, W) — leave as 2D so the layer-0 conv hits
+                    the existing `h_float.ndim == 2` branch.
+    CIFAR-10:       img shape (C, H, W) — transpose to (H, W, C).
+    """
+    if img.ndim == 2:
+        return img
+    if img.ndim == 3:
+        return img.transpose(1, 2, 0)
+    raise ValueError(f"unsupported calibration image ndim {img.ndim}")
+
+
+def _save_targets(vta_layers):
+    """Set of layer indices whose post-dequant output future layers reference."""
+    targets = set()
+    for vl in vta_layers:
+        for k in ('consume_input_from', 'skip_add_from'):
+            if k in vl:
+                targets.add(vl[k])
+    return targets
+
+
 def calibrate_cnn(vta_layers, cal_images, env):
     """Run calibration images through CNN pipeline to determine shift amounts.
 
-    cal_images: (N, 28, 28) float32 [0, 1]
-    Returns list of shift amounts and global_x_scale.
+    cal_images: (N, H, W) for MNIST OR (N, C, H, W) for CIFAR-10. float32 [0,1].
+    Returns (shift_amounts, global_x_scale).
+
+    Legacy CNN-on-MNIST path is byte-identical to the pre-refactor logic when
+    no layer carries skip metadata. Skip-add layers (resnet8 path) update the
+    saved-activations dict and apply the residual add post-dequant, pre-ReLU.
     """
     N = len(cal_images)
     shift_amounts = []
@@ -397,81 +644,103 @@ def calibrate_cnn(vta_layers, cal_images, env):
     if global_x_scale < 1e-10:
         global_x_scale = 1e-10
 
-    # Process each calibration image through the pipeline
-    # Accumulate max accumulator values per layer across all images
+    save_targets = _save_targets(vta_layers)
     layer_max_acc = [0.0 for _ in vta_layers]
 
     for img_idx in range(N):
-        img = cal_images[img_idx]  # (28, 28)
+        img = cal_images[img_idx]
 
         # Quantize input
         x_s = np.max(np.abs(img)) / 127.0 if np.max(np.abs(img)) > 0 else 1e-10
         current_scale = x_s
 
         # Process through layers
-        h_float = img  # current activation (spatial)
+        h_float = _normalize_calibration_image(img)
+        # saved_activations: layer_idx -> (post-dequant float, scale-of-that-output)
+        saved_activations = {}
 
         for i, vl in enumerate(vta_layers):
+            # --- Resolve input for this layer ---
+            if 'consume_input_from' in vl:
+                input_h, input_scale = saved_activations[vl['consume_input_from']]
+            else:
+                input_h = h_float
+                input_scale = current_scale
+
             if vl['layer_type'] == 'conv':
                 # im2col
-                if h_float.ndim == 2:
-                    # First layer: (H, W) -> (H, W, 1)
-                    h_spatial = h_float[:, :, np.newaxis]
+                if input_h.ndim == 2:
+                    h_spatial = input_h[:, :, np.newaxis]
                 else:
-                    h_spatial = h_float  # (H, W, C)
+                    h_spatial = input_h  # (H, W, C)
 
                 patches, H_out, W_out = im2col(
                     h_spatial, vl['kernel_size'], vl['kernel_size'],
-                    pad=vl['padding'])
-                # patches: (H_out*W_out, kH*kW*C_in)
+                    pad=vl['padding'], stride=vl.get('stride', 1))
 
-                # Pad patches to BLOCK_IN alignment
                 real_patch_dim = patches.shape[1]
                 if real_patch_dim < vl['in_f']:
                     patches = np.pad(patches, ((0, 0), (0, vl['in_f'] - real_patch_dim)),
                                      mode='constant')
 
-                # Quantize patches
-                p_int8 = np.clip(np.round(patches / current_scale), -128, 127).astype(np.int8)
+                p_int8 = np.clip(np.round(patches / input_scale), -128, 127).astype(np.int8)
 
-                # Compute accumulator range
                 acc = p_int8.astype(np.int32) @ vl['W_int8'].T.astype(np.int32)
                 max_abs = np.max(np.abs(acc))
                 if max_abs > layer_max_acc[i]:
                     layer_max_acc[i] = max_abs
 
-                # Simulate VTA: shift + clip
                 shift = int(math.ceil(math.log2(max_abs / 127.0))) if max_abs > 127 else 0
                 shifted = acc >> shift
                 clipped = np.clip(shifted, -128, 127).astype(np.int8)
 
-                # Dequantize
-                combined = current_scale * vl['w_scale'] * (2 ** shift)
+                combined = input_scale * vl['w_scale'] * (2 ** shift)
                 y_float = clipped.astype(np.float32) * combined + vl['b_float'][:vl['out_f']]
 
-                # ReLU
-                y_float = np.maximum(y_float, 0)
-
-                # Reshape to spatial and take real output channels
+                # Reshape to spatial (real output channels). Skip-add and ReLU
+                # operate in spatial layout so saved activations match what
+                # consume_input_from layers will see as their input.
                 y_spatial = y_float[:, :vl['real_out']].reshape(H_out, W_out, vl['real_out'])
+
+                # Skip-add (residual): saved[X] is the post-dequant spatial
+                # activation of layer X. For ResNet-8 the skip source has the
+                # same H, W, C as y_spatial (downsamples handle stride/channel
+                # change separately as their own VTA layer).
+                if 'skip_add_from' in vl:
+                    skip_h, _ = saved_activations[vl['skip_add_from']]
+                    if skip_h.shape != y_spatial.shape:
+                        raise ValueError(
+                            f"layer {i} skip-add shape mismatch: "
+                            f"main {y_spatial.shape} vs skip {skip_h.shape}")
+                    y_spatial = y_spatial + skip_h
+
+                # ReLU. Default for conv is True (preserves legacy behavior);
+                # downsample 1x1 layers explicitly set apply_relu=False.
+                if vl.get('apply_relu', True):
+                    y_spatial = np.maximum(y_spatial, 0)
 
                 # MaxPool
                 if vl.get('pool', 0) > 0:
                     y_spatial = maxpool2d(y_spatial, vl['pool'])
 
-                h_float = y_spatial
-                next_scale = np.max(np.abs(h_float)) / 127.0
-                current_scale = max(next_scale, 1e-10)
+                # Save if any future layer references this index
+                if i in save_targets:
+                    saved_activations[i] = (y_spatial, max(np.max(np.abs(y_spatial)) / 127.0, 1e-10))
+
+                # Update chain (unless this layer is a side-branch)
+                if not vl.get('branch_only', False):
+                    h_float = y_spatial
+                    current_scale = max(np.max(np.abs(h_float)) / 127.0, 1e-10)
 
             elif vl['layer_type'] == 'dense':
                 # GlobalAvgPool: (H, W, C) -> (C,)
-                h_vec = h_float.mean(axis=(0, 1))
+                h_vec = input_h.mean(axis=(0, 1))
 
                 # Pad to BLOCK_IN alignment
                 if len(h_vec) < vl['in_f']:
                     h_vec = np.pad(h_vec, (0, vl['in_f'] - len(h_vec)), mode='constant')
 
-                h_int8 = np.clip(np.round(h_vec / current_scale), -128, 127).astype(np.int8)
+                h_int8 = np.clip(np.round(h_vec / input_scale), -128, 127).astype(np.int8)
 
                 acc = h_int8.astype(np.int32) @ vl['W_int8'].T.astype(np.int32)
                 max_abs = np.max(np.abs(acc))
@@ -493,7 +762,13 @@ def calibrate_cnn(vta_layers, cal_images, env):
 # ---- CPU-side inference verification ----
 
 def verify_cnn(vta_layers, shift_amounts, test_images, test_labels, env, num_verify=100):
-    """Run CPU-side VTA-equivalent inference to verify accuracy before compilation."""
+    """Run CPU-side VTA-equivalent inference to verify accuracy before compilation.
+
+    test_images: (N, H, W) for MNIST OR (N, C, H, W) for CIFAR-10. float32 [0,1].
+    Legacy CNN-on-MNIST path is byte-identical to the pre-refactor logic when
+    no layer carries skip metadata.
+    """
+    save_targets = _save_targets(vta_layers)
     correct = 0
     for img_idx in range(min(num_verify, len(test_labels))):
         img = test_images[img_idx]
@@ -501,55 +776,71 @@ def verify_cnn(vta_layers, shift_amounts, test_images, test_labels, env, num_ver
 
         x_s = np.max(np.abs(img)) / 127.0 if np.max(np.abs(img)) > 0 else 1e-10
         current_scale = x_s
-        h_float = img
+        h_float = _normalize_calibration_image(img)
+        saved_activations = {}
 
         for i, (vl, shift) in enumerate(zip(vta_layers, shift_amounts)):
+            if 'consume_input_from' in vl:
+                input_h, input_scale = saved_activations[vl['consume_input_from']]
+            else:
+                input_h = h_float
+                input_scale = current_scale
+
             if vl['layer_type'] == 'conv':
-                if h_float.ndim == 2:
-                    h_spatial = h_float[:, :, np.newaxis]
+                if input_h.ndim == 2:
+                    h_spatial = input_h[:, :, np.newaxis]
                 else:
-                    h_spatial = h_float
+                    h_spatial = input_h
 
                 patches, H_out, W_out = im2col(
                     h_spatial, vl['kernel_size'], vl['kernel_size'],
-                    pad=vl['padding'])
+                    pad=vl['padding'], stride=vl.get('stride', 1))
 
                 real_patch_dim = patches.shape[1]
                 if real_patch_dim < vl['in_f']:
                     patches = np.pad(patches, ((0, 0), (0, vl['in_f'] - real_patch_dim)),
                                      mode='constant')
 
-                p_int8 = np.clip(np.round(patches / current_scale), -128, 127).astype(np.int8)
+                p_int8 = np.clip(np.round(patches / input_scale), -128, 127).astype(np.int8)
 
                 # VTA-equivalent: GEMM + shift + clip (truncating, not saturating)
                 acc = p_int8.astype(np.int32) @ vl['W_int8'].T.astype(np.int32)
                 shifted = acc >> shift
                 clipped = shifted.astype(np.int8)  # VTA truncates
 
-                combined = current_scale * vl['w_scale'] * (2 ** shift)
+                combined = input_scale * vl['w_scale'] * (2 ** shift)
                 y_float = clipped.astype(np.float32) * combined + vl['b_float'][:vl['out_f']]
 
-                y_float = np.maximum(y_float, 0)
                 y_spatial = y_float[:, :vl['real_out']].reshape(H_out, W_out, vl['real_out'])
+
+                if 'skip_add_from' in vl:
+                    skip_h, _ = saved_activations[vl['skip_add_from']]
+                    y_spatial = y_spatial + skip_h
+
+                if vl.get('apply_relu', True):
+                    y_spatial = np.maximum(y_spatial, 0)
 
                 if vl.get('pool', 0) > 0:
                     y_spatial = maxpool2d(y_spatial, vl['pool'])
 
-                h_float = y_spatial
-                next_scale = np.max(np.abs(h_float)) / 127.0
-                current_scale = max(next_scale, 1e-10)
+                if i in save_targets:
+                    saved_activations[i] = (y_spatial, max(np.max(np.abs(y_spatial)) / 127.0, 1e-10))
+
+                if not vl.get('branch_only', False):
+                    h_float = y_spatial
+                    current_scale = max(np.max(np.abs(h_float)) / 127.0, 1e-10)
 
             elif vl['layer_type'] == 'dense':
-                h_vec = h_float.mean(axis=(0, 1))
+                h_vec = input_h.mean(axis=(0, 1))
                 if len(h_vec) < vl['in_f']:
                     h_vec = np.pad(h_vec, (0, vl['in_f'] - len(h_vec)), mode='constant')
 
-                h_int8 = np.clip(np.round(h_vec / current_scale), -128, 127).astype(np.int8)
+                h_int8 = np.clip(np.round(h_vec / input_scale), -128, 127).astype(np.int8)
                 acc = h_int8.astype(np.int32) @ vl['W_int8'].T.astype(np.int32)
                 shifted = acc >> shift
                 clipped = shifted.astype(np.int8)
 
-                combined = current_scale * vl['w_scale'] * (2 ** shift)
+                combined = input_scale * vl['w_scale'] * (2 ** shift)
                 y_float = clipped.astype(np.float32) * combined + vl['b_float'][:vl['out_f']]
 
                 pred = np.argmax(y_float[:vl['real_out']])
@@ -566,12 +857,34 @@ def main():
                         help='Brevitas CNN checkpoint (.pth)')
     parser.add_argument('--output-dir', required=True,
                         help='Output directory for compiled model')
+    parser.add_argument('--arch', default='cnn', choices=['cnn', 'resnet8'],
+                        help='Architecture family. cnn=Sequential CNN_Brevitas '
+                             '(legacy MNIST flow). resnet8=MLPerf Tiny ResNet-8 '
+                             'with residual blocks (CIFAR-10).')
+    parser.add_argument('--size', default='tiny',
+                        help='CNN size config name (tiny, small, medium, '
+                             'deep_3, large). Only used for --arch cnn.')
+    parser.add_argument('--dataset', default='mnist', choices=['mnist', 'cifar10'],
+                        help='Calibration/verification dataset.')
     parser.add_argument('--mnist-dir', default='./mnist_data',
-                        help='MNIST data directory')
+                        help='MNIST data directory (used when --dataset mnist)')
+    parser.add_argument('--cifar10-dir',
+                        default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                             '..', 'data'),
+                        help='CIFAR-10 data directory (must contain '
+                             'cifar-10-batches-py/test_batch).')
     parser.add_argument('--cal-samples', type=int, default=200,
                         help='Number of calibration samples')
     parser.add_argument('--verify-samples', type=int, default=500,
                         help='Number of verification samples (0 to skip)')
+    parser.add_argument('--force-m1', action='store_true',
+                        help='Compile each VTA module with m=1, regardless of '
+                             'the layer\'s m_tiles. Weights are still tiled at '
+                             'full m_tiles; the runtime loops over m_chunks. '
+                             'Mirrors session 23\'s INT4-o8 transformer fix; '
+                             'also needed for INT8 250 MHz CNN deploys whose '
+                             'layers have m>1 AND n_chunks>1 (m>1 alone is fine '
+                             'on single-call MLPs but fails on tiled-conv calls).')
     args = parser.parse_args()
 
     env = vta.get_env()
@@ -580,19 +893,39 @@ def main():
     os.makedirs(args.output_dir, exist_ok=True)
 
     # ---- Load and prepare weights ----
-    print(f"\nLoading Brevitas checkpoint: {args.checkpoint}")
-    raw_layers = load_brevitas_cnn(args.checkpoint)
+    if args.arch == 'cnn':
+        print(f"\nLoading Brevitas CNN checkpoint: {args.checkpoint} (size={args.size})")
+        raw_layers = load_brevitas_cnn(args.checkpoint, size=args.size)
+    elif args.arch == 'resnet8':
+        print(f"\nLoading Brevitas ResNet-8 checkpoint: {args.checkpoint}")
+        raw_layers = load_brevitas_resnet8(args.checkpoint)
+    else:
+        raise ValueError(f"unknown --arch {args.arch}")
     for i, l in enumerate(raw_layers):
-        print(f"  Layer {i} ({l['type']}): W={l['W'].shape}, b={l['b'].shape}")
+        skip_info = ''
+        if 'skip_add_from' in l:
+            skip_info = f" skip_add_from={l['skip_add_from']}"
+        if 'consume_input_from' in l:
+            skip_info += f" consume_input_from={l['consume_input_from']}"
+        if l.get('branch_only'):
+            skip_info += ' branch_only'
+        print(f"  Layer {i} ({l['type']}): W={l['W'].shape}, b={l['b'].shape}{skip_info}")
 
     print(f"\nPreparing VTA layers (pad + quantize + tile)...")
     vta_layers = prepare_vta_layers(raw_layers, env)
 
-    # ---- Calibrate shift amounts ----
-    print(f"\nLoading MNIST for calibration...")
-    mnist = download_mnist(args.mnist_dir)
-    test_images = load_mnist_images(mnist['test_images'])  # (10000, 28, 28)
-    test_labels = load_mnist_labels(mnist['test_labels'])
+    # ---- Load calibration dataset ----
+    if args.dataset == 'mnist':
+        print(f"\nLoading MNIST for calibration...")
+        mnist = download_mnist(args.mnist_dir)
+        test_images = load_mnist_images(mnist['test_images'])  # (10000, 28, 28)
+        test_labels = load_mnist_labels(mnist['test_labels'])
+    elif args.dataset == 'cifar10':
+        print(f"\nLoading CIFAR-10 test set for calibration...")
+        test_images, test_labels = load_cifar10_test(args.cifar10_dir)
+        print(f"  Loaded {len(test_images)} test images, shape {test_images.shape}")
+    else:
+        raise ValueError(f"unknown --dataset {args.dataset}")
 
     print(f"\nCalibrating shift amounts ({args.cal_samples} samples)...")
     shift_amounts, global_x_scale = calibrate_cnn(
@@ -604,8 +937,9 @@ def main():
         acc = verify_cnn(vta_layers, shift_amounts, test_images, test_labels, env,
                          num_verify=args.verify_samples)
         print(f"  VTA-equivalent accuracy: {acc:.4f} ({int(acc * args.verify_samples)}/{args.verify_samples})")
-        if acc < 0.85:
-            print("  WARNING: Accuracy below 85%. Check weight folding and quantization.")
+        threshold = 0.85 if args.dataset == 'mnist' else 0.65
+        if acc < threshold:
+            print(f"  WARNING: Accuracy below {threshold:.2f}. Check weight folding and quantization.")
 
     # ---- Compile VTA modules ----
     # VTA hardware limitation: when n_tiles > 1, the maximum o dimension is ~96.
@@ -616,21 +950,48 @@ def main():
 
     print(f"\nCompiling VTA modules...")
     module_filenames = []
+    # Dynamic spatial tracker for the chain h_float (NOT branch-only side
+    # outputs). For legacy CNN paths every conv participates in the chain;
+    # for ResNet-8 we also track per-saved-layer spatial dims so that
+    # consume_input_from can recover the right (H, W) for downstream layers.
+    if args.dataset == 'mnist':
+        cur_h, cur_w = 28, 28
+    elif args.dataset == 'cifar10':
+        cur_h, cur_w = 32, 32
+    else:
+        raise ValueError(f"unknown --dataset {args.dataset}")
+    saved_spatial = {}  # layer_idx -> (H, W) of that layer's output
     for i, vl in enumerate(vta_layers):
         shift = shift_amounts[i]
 
         if vl['layer_type'] == 'conv':
-            if i == 0:
-                o_total = 28 * 28  # Conv1: 28x28 output
-            elif i == 1:
-                o_total = 14 * 14  # Conv2: 14x14 input after maxpool
+            # Resolve input spatial dims (chain or fork)
+            if 'consume_input_from' in vl:
+                in_h, in_w = saved_spatial[vl['consume_input_from']]
             else:
-                raise ValueError(f"Unexpected conv layer index {i}")
+                in_h, in_w = cur_h, cur_w
+            stride = vl.get('stride', 1)
+            kH = vl['kernel_size']
+            pad = vl['padding']
+            out_h = (in_h + 2 * pad - kH) // stride + 1
+            out_w = (in_w + 2 * pad - kH) // stride + 1
+            o_total = out_h * out_w
+            # MaxPool divides spatial dims (legacy CNN); ResNet-8 has no pools.
+            if vl.get('pool', 0) > 0:
+                out_h //= vl['pool']
+                out_w //= vl['pool']
+            # Save this layer's output spatial dims for any future consumer.
+            saved_spatial[i] = (out_h, out_w)
+            # Update chain unless side-branch.
+            if not vl.get('branch_only', False):
+                cur_h, cur_w = out_h, out_w
         else:
-            o_total = 1  # Dense layer
+            o_total = 1                       # dense
 
         n_t = vl['n_tiles']
         m_t = vl['m_tiles']
+        # Compile-time m: 1 if --force-m1 (runtime loops m_t m-chunks).
+        m_compiled = 1 if args.force_m1 else m_t
 
         # Determine o_tile: tile o when n>1 and o exceeds hardware limit
         if n_t > 1 and o_total > MAX_O_WHEN_N_GT1:
@@ -646,11 +1007,15 @@ def main():
             o_tile = o_total
             n_chunks = 1
 
-        fname = f"layer{i}_o{o_tile}_n{n_t}_m{m_t}_s{shift}.o"
+        # Filename encodes the COMPILED tile shape so different builds with
+        # the same model but different --force-m1 settings don't collide.
+        fname = f"layer{i}_o{o_tile}_n{n_t}_m{m_compiled}_s{shift}.o"
+        m_log = f"m={m_compiled}(of {m_t})" if m_compiled != m_t else f"m={m_t}"
         print(f"  Layer {i} ({vl['layer_type']}, o_total={o_total}, o_tile={o_tile}, "
-              f"chunks={n_chunks}, n={n_t}, m={m_t}, shift={shift})...", end=" ", flush=True)
+              f"chunks={n_chunks}, n={n_t}, {m_log}, shift={shift})...",
+              end=" ", flush=True)
 
-        mod = compile_gemm_with_shift(env, o_tile, n_t, m_t, shift)
+        mod = compile_gemm_with_shift(env, o_tile, n_t, m_compiled, shift)
         out_path = os.path.join(args.output_dir, fname)
         mod.save(out_path)
         module_filenames.append(fname)
@@ -667,10 +1032,36 @@ def main():
         print(f"  W{i}_tiled.npy: {vl['W_tiled'].shape}, b{i}.npy: {vl['b_float'].shape}")
 
     # ---- Save config ----
-    config = {
-        'model_type': 'cnn',
-        'architecture': 'cnn_tiny_8_16_mnist',
-        'input_shape': [1, 28, 28],
+    # Preserve the legacy `architecture` string for arch=cnn size=tiny dataset=mnist
+    # so byte-exact regression against the existing
+    # tvm-v0.12.0/vta_export/cnn_mnist_tiny/ holds. Other variants get
+    # arch+size+dataset-derived tags.
+    if args.arch == 'cnn' and args.dataset == 'mnist' and args.size == 'tiny':
+        config = {
+            'model_type': 'cnn',
+            'architecture': 'cnn_tiny_8_16_mnist',
+            'input_shape': [1, 28, 28],
+        }
+    elif args.arch == 'cnn':
+        config = {
+            'model_type': 'cnn',
+            'architecture': f'cnn_{args.size}_{args.dataset}',
+            'size': args.size,
+            'input_shape': [1, 28, 28] if args.dataset == 'mnist' else [3, 32, 32],
+        }
+    elif args.arch == 'resnet8':
+        # ResNet-8 uses the CNN runner path on board (vta_infer.c is_cnn,
+        # benchmark.py is_cnn). The residual structure is carried per-layer
+        # in skip_add_from / consume_input_from / branch_only / apply_relu.
+        # `architecture` retains the family label for human-readable logs.
+        config = {
+            'model_type': 'cnn',
+            'architecture': f'resnet8_{args.dataset}',
+            'input_shape': [3, 32, 32],
+        }
+    else:
+        raise ValueError(f"unknown --arch {args.arch}")
+    config.update({
         'num_layers': len(vta_layers),
         'layers': [],
         'global_x_scale': float(global_x_scale),
@@ -681,9 +1072,14 @@ def main():
         },
         'bitstream': '1x16_i8w8a32_15_15_18_17.bit',
         'calibration_samples': args.cal_samples,
-    }
+    })
 
     for i, vl in enumerate(vta_layers):
+        # m_compiled is the m used at TVM/HLS compile time. m_tiles is the
+        # number of m-chunks the runtime must loop over. Legacy: equal, and
+        # the m_compiled field is OMITTED to keep config.json bit-identical
+        # with pre-refactor outputs (regression on cnn-tiny-mnist holds).
+        m_compiled = 1 if args.force_m1 else vl['m_tiles']
         layer_config = {
             'index': i,
             'type': vl['layer_type'],
@@ -708,6 +1104,19 @@ def main():
             layer_config['in_channels'] = vl['in_channels']
             layer_config['out_channels'] = vl['out_channels']
             layer_config['pool'] = vl.get('pool', 0)
+            if 'stride' in vl:
+                layer_config['stride'] = vl['stride']
+        # Skip metadata (resnet8 path; absent in legacy cnn flow so config
+        # bytes for cnn-tiny-mnist remain identical).
+        for k in ('consume_input_from', 'skip_add_from', 'branch_only',
+                  'apply_relu'):
+            if k in vl:
+                layer_config[k] = vl[k]
+        # Emit m_compiled only when it differs from m_tiles (i.e., --force-m1
+        # AND m_tiles > 1). Legacy CNN configs without --force-m1 do NOT
+        # carry this field — preserves bit-identical regression.
+        if m_compiled != vl['m_tiles']:
+            layer_config['m_compiled'] = m_compiled
         config['layers'].append(layer_config)
 
     config_path = os.path.join(args.output_dir, 'config.json')

@@ -14,8 +14,11 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-TVM_CFG="$(cd "$HERE/../../tvm-v0.12.0/3rdparty/vta-hw/config" && pwd)"
-CONFIGS="$HERE/configs"
+# tvm-v0.12.0 is a sibling of finn-vs-vitisai (under CEN571-final), and this
+# script lives at finn-vs-vitisai/vta/configs/, so three ../ to reach CEN571-final.
+TVM_CFG="$(cd "$HERE/../../../tvm-v0.12.0/3rdparty/vta-hw/config" && pwd)"
+# int8/ and int4_o8/ are siblings of this script, not in a sub-configs/ dir.
+CONFIGS="$HERE"
 ACTIVE_JSON="$TVM_CFG/vta_config.json"
 ACTIVE_PKG="$TVM_CFG/pkg_config.py"
 

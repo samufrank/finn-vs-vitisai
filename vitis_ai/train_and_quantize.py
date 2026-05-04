@@ -19,15 +19,20 @@ from pytorch_nndct.apis import torch_quantizer
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'models'))
 from mlp import MLP, get_mlp_config
 from cnn import CNN, get_cnn_config
+from resnet import ResNet8
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--model', required=True, choices=['mlp', 'cnn'])
+parser.add_argument('--model', required=True, choices=['mlp', 'cnn', 'resnet8'])
 parser.add_argument('--dataset', required=True, choices=['mnist', 'cifar10'])
-parser.add_argument('--size', default='tiny', help='Model size config')
+parser.add_argument('--size', default='tiny', help='Model size config (ignored for resnet8)')
 parser.add_argument('--epochs', type=int, default=10)
 parser.add_argument('--batch_size', type=int, default=1, help='Batch size for compiled xmodel')
-parser.add_argument('--target', default='DPUCZDX8G_ISA1_B2304')
+parser.add_argument('--target', default='DPUCZDX8G_ISA1_B512')
 parser.add_argument('--calib_size', type=int, default=1000, help='Number of calibration images')
+parser.add_argument('--from-pretrained', default=None,
+                    help='If set, load this .pth and skip training (use it as the '
+                         'float input to PTQ). Useful for cross-toolchain comparison '
+                         'where the float weights were trained separately.')
 args = parser.parse_args()
 
 # Clean previous quantization
@@ -55,34 +60,46 @@ if args.model == 'mlp':
 elif args.model == 'cnn':
     channels = get_cnn_config(args.size)
     model = CNN(in_channels=in_channels, channels=channels)
+elif args.model == 'resnet8':
+    model = ResNet8(in_channels=in_channels, num_classes=10)
 
-name = f"{args.model}_{args.dataset}_{args.size}"
+name = f"{args.model}_{args.dataset}" if args.model == 'resnet8' \
+       else f"{args.model}_{args.dataset}_{args.size}"
 print(f"Model: {name}")
 print(f"Parameters: {sum(p.numel() for p in model.parameters())}")
 
-# Train
-optimizer = optim.Adam(model.parameters(), lr=0.001)
-loss_fn = nn.CrossEntropyLoss()
-
-for epoch in range(args.epochs):
-    model.train()
-    for images, labels in train_loader:
-        optimizer.zero_grad()
-        loss = loss_fn(model(images), labels)
-        loss.backward()
-        optimizer.step()
-    
+if args.from_pretrained:
+    # Load externally-trained weights; skip training.
+    print(f"Loading pre-trained weights from {args.from_pretrained}")
+    sd = torch.load(args.from_pretrained, map_location='cpu')
+    if isinstance(sd, dict) and 'state_dict' in sd:
+        sd = sd['state_dict']
+    model.load_state_dict(sd)
     model.eval()
-    correct = total = 0
-    with torch.no_grad():
-        for images, labels in test_loader:
-            preds = model(images).argmax(1)
-            correct += (preds == labels).sum().item()
-            total += labels.size(0)
-    print(f"  Epoch {epoch+1}/{args.epochs}: {100*correct/total:.2f}%")
+else:
+    # Train
+    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    loss_fn = nn.CrossEntropyLoss()
 
-torch.save(model.state_dict(), f"{name}.pth")
-model.eval()
+    for epoch in range(args.epochs):
+        model.train()
+        for images, labels in train_loader:
+            optimizer.zero_grad()
+            loss = loss_fn(model(images), labels)
+            loss.backward()
+            optimizer.step()
+
+        model.eval()
+        correct = total = 0
+        with torch.no_grad():
+            for images, labels in test_loader:
+                preds = model(images).argmax(1)
+                correct += (preds == labels).sum().item()
+                total += labels.size(0)
+        print(f"  Epoch {epoch+1}/{args.epochs}: {100*correct/total:.2f}%")
+
+    torch.save(model.state_dict(), f"{name}.pth")
+    model.eval()
 
 # Float accuracy
 correct = total = 0
@@ -129,4 +146,4 @@ print(f"Quantized accuracy: {100*correct/total:.2f}%")
 
 quantizer.export_xmodel()
 print(f"Exported: quantize_result/MLP_int.xmodel or CNN_int.xmodel")
-print(f"Next: vai_c_xir -x quantize_result/*_int.xmodel -a arch_zu3_pynq.json -o compiled -n {name}")
+print(f"Next: vai_c_xir -x quantize_result/*_int.xmodel -a arch_zu3_b512.json -o compiled -n {name}")
