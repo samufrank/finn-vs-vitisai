@@ -58,6 +58,16 @@ parser.add_argument('--cosine-lr', action='store_true',
                     help='Use CosineAnnealingLR(T_max=epochs). Default: constant lr.')
 parser.add_argument('--grad-clip', type=float, default=None,
                     help='If set, clip gradient norm to this value before optimizer.step().')
+parser.add_argument('--quantize-input', action='store_true',
+                    help='Prepend QuantIdentity(8b) before the first conv/linear so '
+                         'FINN partitions Conv1/Linear1 onto the FPGA streaming '
+                         'region. Use _qi suffix for resulting filenames.')
+parser.add_argument('--cifar-augment', action='store_true',
+                    help='CIFAR-10 standard recipe: train transform = '
+                         'RandomCrop(32, padding=4) + RandomHorizontalFlip + '
+                         'ToTensor + Normalize(mean=(0.4914,0.4822,0.4465), '
+                         'std=(0.2470,0.2435,0.2616)); test transform = '
+                         'ToTensor + Normalize. Requires --dataset cifar10.')
 args = parser.parse_args()
 
 # Conditional defaults for INT4 CNN (user-provided --lr / --epochs always win).
@@ -67,24 +77,51 @@ if args.lr is None:
     args.lr = 3e-4 if (args.int4 and args.model == 'cnn') else 1e-3
 
 # Dataset
-transform = transforms.Compose([transforms.ToTensor()])
+if args.cifar_augment and args.dataset != 'cifar10':
+    raise ValueError('--cifar-augment requires --dataset cifar10')
+
+if args.cifar_augment:
+    cifar_mean = (0.4914, 0.4822, 0.4465)
+    cifar_std  = (0.2470, 0.2435, 0.2616)
+    train_transform = transforms.Compose([
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        transforms.Normalize(cifar_mean, cifar_std),
+    ])
+    test_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize(cifar_mean, cifar_std),
+    ])
+else:
+    train_transform = transforms.Compose([transforms.ToTensor()])
+    test_transform = train_transform
+
 if args.dataset == 'mnist':
-    train_data = datasets.MNIST('./data', train=True, download=True, transform=transform)
-    test_data = datasets.MNIST('./data', train=False, download=True, transform=transform)
+    train_data = datasets.MNIST('./data', train=True, download=True, transform=train_transform)
+    test_data = datasets.MNIST('./data', train=False, download=True, transform=test_transform)
     input_size, in_channels, img_size = 784, 1, 28
 elif args.dataset == 'cifar10':
-    train_data = datasets.CIFAR10('./data', train=True, download=True, transform=transform)
-    test_data = datasets.CIFAR10('./data', train=False, download=True, transform=transform)
+    train_data = datasets.CIFAR10('./data', train=True, download=True, transform=train_transform)
+    test_data = datasets.CIFAR10('./data', train=False, download=True, transform=test_transform)
     input_size, in_channels, img_size = 3072, 3, 32
 
 train_loader = torch.utils.data.DataLoader(train_data, batch_size=args.batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_data, batch_size=args.batch_size, shuffle=False)
 
 # Model
+if args.quantize_input and args.int4 and (args.no_bn or args.per_channel):
+    raise ValueError('--quantize-input is wired for the basic INT4 classes only '
+                     '(MLP_Brevitas_INT4 / CNN_Brevitas_INT4). The _NoBN, '
+                     '_NoBN_Wide, _PerChan variants do not yet accept quantize_input.')
+
 if args.model == 'mlp':
     hidden = get_mlp_config(args.size)
     ModelClass = MLP_Brevitas_INT4 if args.int4 else MLP_Brevitas
-    model = ModelClass(input_size=input_size, hidden_sizes=hidden)
+    if args.quantize_input:
+        model = ModelClass(input_size=input_size, hidden_sizes=hidden, quantize_input=True)
+    else:
+        model = ModelClass(input_size=input_size, hidden_sizes=hidden)
     dummy = torch.randn(1, in_channels, img_size, img_size)
 elif args.model == 'cnn':
     channels = get_cnn_config(args.size)
@@ -99,7 +136,10 @@ elif args.model == 'cnn':
         ModelClass = CNN_Brevitas_INT4
     else:
         ModelClass = CNN_Brevitas
-    model = ModelClass(in_channels=in_channels, channels=channels)
+    if args.quantize_input:
+        model = ModelClass(in_channels=in_channels, channels=channels, quantize_input=True)
+    else:
+        model = ModelClass(in_channels=in_channels, channels=channels)
     dummy = torch.randn(1, in_channels, img_size, img_size)
 
 print(f"Model: {args.model} ({args.size}), Dataset: {args.dataset}, "
@@ -121,8 +161,43 @@ if args.init_from:
     missing, unexpected = model.load_state_dict(src_state, strict=False)
     print(f"  Loaded {len(src_state)} keys, dropped {len(drop_keys)} quantizer scales "
           f"(missing={len(missing)}, unexpected={len(unexpected)})")
+
+    # Hard assertion: any "missing" key reported by load_state_dict that is
+    # NOT a quantizer scale (we filtered those from the source on purpose)
+    # signals a real mismatch — the source checkpoint doesn't match the
+    # target architecture (wrong --size, wrong --model, mismatched variant
+    # flags). Refuse to silently cold-start the INT4 training.
+    #
+    # We can't pre-enumerate the expected "missing" set from target.state_dict()
+    # because Brevitas's ParameterFromRuntimeStatsScaling lazily instantiates
+    # its `value` Parameter — pre-load state_dict() doesn't list it, but
+    # load_state_dict still reports it as missing. The robust check is:
+    # every missing key must have 'scaling_impl' or 'zero_point' in its name.
+    non_scale_missing = [k for k in missing
+                         if 'scaling_impl' not in k and 'zero_point' not in k]
     if unexpected:
-        print(f"  Unexpected keys: {unexpected}")
+        raise RuntimeError(
+            f"Warm-start has unexpected keys not present in target model.\n"
+            f"  Unexpected ({len(unexpected)}): "
+            f"{sorted(unexpected)[:10]}{'...' if len(unexpected) > 10 else ''}\n"
+            f"  Source likely doesn't match target architecture (wrong --size?)."
+        )
+    if non_scale_missing:
+        raise RuntimeError(
+            f"Warm-start has non-scale keys MISSING after load — these are "
+            f"weights/biases/BN params the target needs but the source "
+            f"didn't have.\n"
+            f"  Non-scale missing ({len(non_scale_missing)}): "
+            f"{sorted(non_scale_missing)[:10]}\n"
+            f"  Total missing: {len(missing)} (of which {len(non_scale_missing)} "
+            f"are non-scale, {len(missing) - len(non_scale_missing)} are scales)\n"
+            f"  Source likely doesn't match target architecture "
+            f"(wrong --size? wrong --model? mismatched variant flags?)."
+        )
+    n_scale_missing = len(missing) - len(non_scale_missing)
+    print(f"  Warm-start assertion OK: 0 unexpected, "
+          f"{n_scale_missing} scale-key misses (expected — quantizer scales reset for INT4).")
+
     n_reinit = 0
     for name, mod in model.named_modules():
         for attr in ('weight_quant', 'act_quant'):
@@ -178,16 +253,23 @@ print()
 print(f"Best val accuracy: {100*best_val_acc:.2f}% @ epoch {best_val_epoch}")
 print(f"Final epoch accuracy: {100*final_val_acc:.2f}% @ epoch {args.epochs}")
 
-# Save weights
-weight_file = args.output or f"{args.model}_{args.dataset}_{args.size}"
-if args.int4:
-    weight_file += "_int4"
-if args.per_channel:
-    weight_file += "_perchan"
-if args.no_bn:
-    weight_file += "_nobn"
-if args.wide:
-    weight_file += "_wide"
+# Save weights — when --output is given, use it verbatim. Otherwise build
+# the conventional name from args. This lets callers override the full name
+# (e.g. _v2 suffix that would otherwise land mid-string after auto-append).
+if args.output:
+    weight_file = args.output
+else:
+    weight_file = f"{args.model}_{args.dataset}_{args.size}"
+    if args.int4:
+        weight_file += "_int4"
+    if args.per_channel:
+        weight_file += "_perchan"
+    if args.no_bn:
+        weight_file += "_nobn"
+    if args.wide:
+        weight_file += "_wide"
+    if args.quantize_input:
+        weight_file += "_qi"
 
 for ext in ('pth', 'onnx'):
     path = f"{weight_file}.{ext}"

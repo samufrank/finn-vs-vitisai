@@ -55,21 +55,34 @@ class CNN(nn.Module):
 try:
     import brevitas.nn as qnn
     from brevitas.quant import (
+        Int8ActPerTensorFloat,
         Int8WeightPerTensorFloat,
         Int8WeightPerChannelFloat,
         Uint8ActPerTensorFloat,
     )
-    
+
     class CNN_Brevitas(nn.Module):
         """Brevitas CNN for FINN quantization-aware training.
         Weights: INT8 signed. Activations after ReLU: UINT8 unsigned (FINN requirement).
+
+        quantize_input=True prepends a QuantIdentity(8b) so the first conv's
+        input edge is annotated as INT8 in QONNX. This moves Conv1 onto the
+        FPGA streaming partition (FINN's step_convert_to_hw checks input
+        idtype). Default False keeps backward compat with existing models;
+        new "_qi" deploys set True. Adds ~1 KB threshold table to the CPU
+        side (one-shot per image) but eliminates Conv1's CPU im2col+MatMul.
         """
-        def __init__(self, in_channels=3, num_classes=10, channels=None):
+        def __init__(self, in_channels=3, num_classes=10, channels=None,
+                     quantize_input=False):
             super().__init__()
             if channels is None:
                 channels = get_cnn_config('tiny')
 
             features = []
+            if quantize_input:
+                features.append(qnn.QuantIdentity(
+                    bit_width=8, act_quant=Int8ActPerTensorFloat,
+                    return_quant_tensor=True))
             prev_ch = in_channels
             for ch in channels:
                 features.extend([
@@ -98,10 +111,15 @@ try:
 
         Same topology as CNN_Brevitas: Conv→BN→ReLU→MaxPool blocks, AvgPool,
         Linear classifier. BN modules stay as plain nn.BatchNorm2d (float,
-        unquantized) - deploy path handles BN on CPU post-VTA. 
+        unquantized) - deploy path handles BN on CPU post-VTA.
         Extraction reads unfolded BN params from the state_dict.
+
+        quantize_input=True prepends QuantIdentity(bit_width=8). The QI
+        bit-width is fixed at 8 regardless of weight/act precision so the
+        FPGA partition's input edge matches the INT8 QI variant.
         """
-        def __init__(self, in_channels=3, num_classes=10, channels=None):
+        def __init__(self, in_channels=3, num_classes=10, channels=None,
+                     quantize_input=False):
             super().__init__()
             if channels is None:
                 channels = get_cnn_config('tiny')
@@ -110,6 +128,10 @@ try:
             Uint4A = Uint8ActPerTensorFloat.let(bit_width=4)
 
             features = []
+            if quantize_input:
+                features.append(qnn.QuantIdentity(
+                    bit_width=8, act_quant=Int8ActPerTensorFloat,
+                    return_quant_tensor=True))
             prev_ch = in_channels
             for ch in channels:
                 features.extend([

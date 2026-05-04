@@ -1,0 +1,566 @@
+FINN CNN tiny INT8
+
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT8, geometry 28x28x1 k=3 pad=1 -> 7x7x16)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.07 µs   (  0.4 %)
+  im2col                :    150.27 µs   (  6.7 %)
+  MatMul1               :    618.70 µs   ( 27.4 %)
+  MultiThreshold        :    707.80 µs   ( 31.4 %)
+  Pack                  :      2.25 µs   (  0.1 %)
+  DMA trig+wait         :    758.83 µs   ( 33.7 %)
+  CacheInv              :      0.99 µs   (  0.0 %)
+  MaxPool2x2            :      0.15 µs   (  0.0 %)
+  GAP                   :      5.19 µs   (  0.2 %)
+  MatMul2               :      2.52 µs   (  0.1 %)
+  Post dequant+argmax   :      0.27 µs   (  0.0 %)
+  total                 :   2255.04 µs   (steady-state upper bound ~ 443 FPS)
+Running 1 measured runs...
+  Run 1: 453.0 FPS, pwr=N/A, N/A, temp=43.6C
+
+
+FINN CNN tiny INT8 with QI
+
+  CNN runner: double-buffered batch enabled
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT8, partition=qi, geometry 28x28x1 k=3 pad=1 -> 7x7x16)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  (qi noop)             :      0.00 µs   (  0.0 %)
+  (qi noop)             :      0.00 µs   (  0.0 %)
+  (qi noop)             :      0.00 µs   (  0.0 %)
+  InputMultiThreshold   :     86.04 µs   (  9.2 %)
+  Pack                  :      0.66 µs   (  0.1 %)
+  DMA trig+wait         :    836.31 µs   ( 89.7 %)
+  CacheInv              :      1.02 µs   (  0.1 %)
+  MaxPool2x2            :      0.15 µs   (  0.0 %)
+  GAP                   :      5.25 µs   (  0.6 %)
+  MatMul2               :      2.10 µs   (  0.2 %)
+  Post dequant+argmax   :      0.33 µs   (  0.0 %)
+  total                 :    931.86 µs   (steady-state upper bound ~ 1073 FPS)
+Running 3 measured runs...
+  Run 1: 1196.0 FPS, pwr=N/A, N/A, temp=41.4C
+  Run 2: 1196.0 FPS, pwr=N/A, N/A, temp=41.6C
+  Run 3: 1195.8 FPS, pwr=N/A, N/A, temp=41.6C
+
+
+
+FINN CNN tiny INT4
+
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT4, geometry 28x28x1 k=3 pad=1 -> 7x7x16)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.04 µs   (  0.4 %)
+  im2col                :    149.76 µs   (  7.7 %)
+  MatMul1               :    618.44 µs   ( 32.0 %)
+  MultiThreshold        :    373.20 µs   ( 19.3 %)
+  Pack                  :     16.68 µs   (  0.9 %)
+  DMA trig+wait         :    758.75 µs   ( 39.2 %)
+  CacheInv              :      2.43 µs   (  0.1 %)
+  MaxPool2x2            :      0.15 µs   (  0.0 %)
+  GAP                   :      5.19 µs   (  0.3 %)
+  MatMul2               :      2.19 µs   (  0.1 %)
+  Post dequant+argmax   :      0.24 µs   (  0.0 %)
+  total                 :   1935.07 µs   (steady-state upper bound ~ 517 FPS)
+Running 1 measured runs...
+  Run 1: 525.2 FPS, pwr=N/A, N/A, temp=41.6C
+
+
+
+FINN CNN small INT8
+
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT8, geometry 28x28x1 k=3 pad=1 -> 7x7x32)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.43 µs   (  0.3 %)
+  im2col                :    150.39 µs   (  4.5 %)
+  MatMul1               :   1256.64 µs   ( 37.5 %)
+  MultiThreshold        :   1342.89 µs   ( 40.1 %)
+  Pack                  :      4.59 µs   (  0.1 %)
+  DMA trig+wait         :    571.63 µs   ( 17.1 %)
+  CacheInv              :      1.17 µs   (  0.0 %)
+  MaxPool2x2            :      0.12 µs   (  0.0 %)
+  GAP                   :      9.51 µs   (  0.3 %)
+  MatMul2               :      4.08 µs   (  0.1 %)
+  Post dequant+argmax   :      0.24 µs   (  0.0 %)
+  total                 :   3349.69 µs   (steady-state upper bound ~ 299 FPS)
+Running 3 measured runs...
+  Run 1: 308.0 FPS, pwr=N/A, N/A, temp=40.4C
+  Run 2: 308.1 FPS, pwr=N/A, N/A, temp=40.6C
+  Run 3: 308.0 FPS, pwr=N/A, N/A, temp=40.5C
+
+  Input shape: (1, 28, 28, 1), Output shape: (1, 7, 7, 32)
+  CPU pre/post processing: CNN input-quant + classifier (QI partition; cpu_post_maxpool_k=0)
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT8, partition=qi, geometry 28x28x1 k=3 pad=1 -> 7x7x32)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  (qi noop)             :      0.00 µs   (  0.0 %)
+  (qi noop)             :      0.00 µs   (  0.0 %)
+  (qi noop)             :      0.00 µs   (  0.0 %)
+  InputMultiThreshold   :     86.46 µs   ( 11.9 %)
+  Pack                  :      0.69 µs   (  0.1 %)
+  DMA trig+wait         :    621.36 µs   ( 85.8 %)
+  CacheInv              :      1.23 µs   (  0.2 %)
+  MaxPool2x2            :      0.18 µs   (  0.0 %)
+  GAP                   :      9.48 µs   (  1.3 %)
+  MatMul2               :      4.11 µs   (  0.6 %)
+  Post dequant+argmax   :      0.39 µs   (  0.1 %)
+  total                 :    723.90 µs   (steady-state upper bound ~ 1381 FPS)
+Running 3 measured runs...
+  Run 1: 1394.3 FPS, pwr=N/A, N/A, temp=41.5C
+  Run 2: 1394.4 FPS, pwr=N/A, N/A, temp=41.6C
+  Run 3: 1393.8 FPS, pwr=N/A, N/A, temp=41.7C
+
+
+
+FINN CNN deep_3 INT8
+
+  CPU pre/post processing: CNN first+last layers (partial hardware mapping; cpu_post_maxpool_k=2)
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT8, geometry 28x28x1 k=3 pad=1 -> 7x7x64)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.07 µs   (  0.2 %)
+  im2col                :    150.33 µs   (  4.2 %)
+  MatMul1               :   1272.87 µs   ( 35.9 %)
+  MultiThreshold        :   1355.52 µs   ( 38.2 %)
+  Pack                  :      4.56 µs   (  0.1 %)
+  DMA trig+wait         :    732.42 µs   ( 20.7 %)
+  CacheInv              :      1.86 µs   (  0.1 %)
+  MaxPool2x2            :      5.85 µs   (  0.2 %)
+  GAP                   :      4.59 µs   (  0.1 %)
+  MatMul2               :      7.56 µs   (  0.2 %)
+  Post dequant+argmax   :      0.30 µs   (  0.0 %)
+  total                 :   3543.93 µs   (steady-state upper bound ~ 282 FPS)
+Running 3 measured runs...
+  Run 1: 290.9 FPS, pwr=N/A, N/A, temp=42.9C
+  Run 2: 290.9 FPS, pwr=N/A, N/A, temp=42.6C
+  Run 3: 291.0 FPS, pwr=N/A, N/A, temp=42.4C
+
+
+FINN CNN small INT4
+
+  Input shape: (1, 28, 28, 16), Output shape: (1, 7, 7, 32)
+  CPU pre/post processing: CNN first+last layers (partial hardware mapping; cpu_post_maxpool_k=0)
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT4, geometry 28x28x1 k=3 pad=1 -> 7x7x32)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.16 µs   (  0.3 %)
+  im2col                :    150.39 µs   (  5.2 %)
+  MatMul1               :   1267.71 µs   ( 43.9 %)
+  MultiThreshold        :    649.80 µs   ( 22.5 %)
+  Pack                  :     32.88 µs   (  1.1 %)
+  DMA trig+wait         :    759.66 µs   ( 26.3 %)
+  CacheInv              :      4.11 µs   (  0.1 %)
+  MaxPool2x2            :      0.09 µs   (  0.0 %)
+  GAP                   :      9.48 µs   (  0.3 %)
+  MatMul2               :      3.96 µs   (  0.1 %)
+  Post dequant+argmax   :      0.27 µs   (  0.0 %)
+  total                 :   2886.51 µs   (steady-state upper bound ~ 346 FPS)
+
+
+FINN CNN medium INT4
+
+  CPU pre/post processing: CNN first+last layers (partial hardware mapping; cpu_post_maxpool_k=0)
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT4, geometry 28x28x1 k=3 pad=1 -> 7x7x64)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.04 µs   (  0.2 %)
+  im2col                :    151.44 µs   (  3.4 %)
+  MatMul1               :   2390.64 µs   ( 53.3 %)
+  MultiThreshold        :   1261.05 µs   ( 28.1 %)
+  Pack                  :     66.24 µs   (  1.5 %)
+  DMA trig+wait         :    573.87 µs   ( 12.8 %)
+  CacheInv              :      7.92 µs   (  0.2 %)
+  MaxPool2x2            :      0.09 µs   (  0.0 %)
+  GAP                   :     18.15 µs   (  0.4 %)
+  MatMul2               :      7.68 µs   (  0.2 %)
+  Post dequant+argmax   :      0.27 µs   (  0.0 %)
+  total                 :   4485.39 µs   (steady-state upper bound ~ 223 FPS)
+Running 3 measured runs...
+  Run 1: 226.9 FPS, pwr=N/A, N/A, temp=41.2C
+  Run 2: 226.9 FPS, pwr=N/A, N/A, temp=41.3C
+  Run 3: 226.9 FPS, pwr=N/A, N/A, temp=41.4C
+
+
+FINN CNN deep_3 INT4
+
+  Input shape: (1, 28, 28, 16), Output shape: (1, 7, 7, 64)
+  CPU pre/post processing: CNN first+last layers (partial hardware mapping; cpu_post_maxpool_k=2)
+Thermal stabilization (10s)...
+Measuring idle (10s)...
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT4, geometry 28x28x1 k=3 pad=1 -> 7x7x64)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.40 µs   (  0.3 %)
+  im2col                :    150.57 µs   (  4.8 %)
+  MatMul1               :   1258.44 µs   ( 40.1 %)
+  MultiThreshold        :    678.06 µs   ( 21.6 %)
+  Pack                  :     33.03 µs   (  1.1 %)
+  DMA trig+wait         :    974.97 µs   ( 31.1 %)
+  CacheInv              :     14.13 µs   (  0.5 %)
+  MaxPool2x2            :      5.79 µs   (  0.2 %)
+  GAP                   :      4.53 µs   (  0.1 %)
+  MatMul2               :      7.53 µs   (  0.2 %)
+  Post dequant+argmax   :      0.36 µs   (  0.0 %)
+  total                 :   3135.81 µs   (steady-state upper bound ~ 319 FPS)
+Running 3 measured runs...
+  Run 1: 322.6 FPS, pwr=N/A, N/A, temp=39.8C
+  Run 2: 322.6 FPS, pwr=N/A, N/A, temp=40.0C
+  Run 3: 322.6 FPS, pwr=N/A, N/A, temp=40.1C
+
+
+CNN large INT4 (INT8 exceeds resources)
+
+  Input shape: (1, 28, 28, 32), Output shape: (1, 7, 7, 128)
+  CPU pre/post processing: CNN first+last layers (partial hardware mapping; cpu_post_maxpool_k=2)
+  CNN C runner loaded: /home/xilinx/board/libfinn_cnn_infer.so (INT4, geometry 28x28x1 k=3 pad=1 -> 7x7x128)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  CastNorm              :      8.19 µs   (  0.2 %)
+  im2col                :    150.42 µs   (  3.2 %)
+  MatMul1               :   2400.00 µs   ( 51.2 %)
+  MultiThreshold        :   1292.85 µs   ( 27.6 %)
+  Pack                  :     66.06 µs   (  1.4 %)
+  DMA trig+wait         :    717.66 µs   ( 15.3 %)
+  CacheInv              :     14.52 µs   (  0.3 %)
+  MaxPool2x2            :     11.16 µs   (  0.2 %)
+  GAP                   :      8.58 µs   (  0.2 %)
+  MatMul2               :     14.85 µs   (  0.3 %)
+  Post dequant+argmax   :      0.42 µs   (  0.0 %)
+  total                 :   4684.71 µs   (steady-state upper bound ~ 213 FPS)
+Running 3 measured runs...
+  Run 1: 216.7 FPS, pwr=N/A, N/A, temp=44.8C
+  Run 2: 216.7 FPS, pwr=N/A, N/A, temp=44.3C
+  Run 3: 216.7 FPS, pwr=N/A, N/A, temp=44.2C
+
+
+
+-----
+
+MLP tiny INT8 QI
+
+  Input shape: (1, 784), Output shape: (1, 10)
+  double-buffer: allocated 2nd buffer pair (784+30 bytes/img)
+  CPU pre-processing: MLP input quant only (QI partition)
+Thermal stabilization (10s)...
+Measuring idle (10s)...
+  Idle power: collected host-side (FNB58)
+  Idle temp:  PS=42.2C  PL=41.4C  VCCINT=0.843V
+  MLP runner: double-buffered batch enabled
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255, partition=qi)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  (qi: no MatMul)       :      0.00 µs   (  0.0 %)
+  InputMultiThreshold   :   1291.41 µs   ( 71.0 %)
+  Pack                  :      0.69 µs   (  0.0 %)
+  DMA trig+wait         :    526.68 µs   ( 28.9 %)
+  Unpack                :      0.45 µs   (  0.0 %)
+  Post dequant+argmax   :      0.36 µs   (  0.0 %)
+  total                 :   1819.59 µs   (steady-state upper bound ~ 550 FPS)
+Running 3 measured runs...
+  Run 1: 715.0 FPS, pwr=N/A, N/A, temp=41.7C
+  Run 2: 714.9 FPS, pwr=N/A, N/A, temp=41.8C
+  Run 3: 715.0 FPS, pwr=N/A, N/A, temp=41.9C
+
+
+
+
+MLP tiny_plus INT8
+
+  Input shape: (1, 96), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :    768.06 µs   ( 80.1 %)
+  MultiThreshold        :    134.64 µs   ( 14.0 %)
+  Pack                  :      0.54 µs   (  0.1 %)
+  DMA trig+wait         :     54.42 µs   (  5.7 %)
+  Unpack                :      0.45 µs   (  0.0 %)
+  Post dequant+argmax   :      0.42 µs   (  0.0 %)
+  total                 :    958.53 µs   (steady-state upper bound ~ 1043 FPS)
+Running 3 measured runs...
+  Run 1: 1043.0 FPS, pwr=N/A, N/A, temp=41.9C
+  Run 2: 1042.6 FPS, pwr=N/A, N/A, temp=41.9C
+  Run 3: 1043.0 FPS, pwr=N/A, N/A, temp=42.0C
+
+
+MLP tiny_plus INT4
+
+  Input shape: (1, 96), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT4, nthres=15)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :    769.35 µs   ( 92.2 %)
+  MultiThreshold        :     10.29 µs   (  1.2 %)
+  Pack                  :      0.63 µs   (  0.1 %)
+  DMA trig+wait         :     52.53 µs   (  6.3 %)
+  Unpack                :      0.39 µs   (  0.0 %)
+  Post dequant+argmax   :      0.81 µs   (  0.1 %)
+  total                 :    834.00 µs   (steady-state upper bound ~ 1199 FPS)
+Running 3 measured runs...
+  Run 1: 1197.4 FPS, pwr=N/A, N/A, temp=41.8C
+  Run 2: 1197.8 FPS, pwr=N/A, N/A, temp=41.8C
+  Run 3: 1197.5 FPS, pwr=N/A, N/A, temp=41.9C
+
+
+MLP small INT8
+
+  Input shape: (1, 128), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   1021.05 µs   ( 79.1 %)
+  MultiThreshold        :    178.77 µs   ( 13.8 %)
+  Pack                  :      0.60 µs   (  0.0 %)
+  DMA trig+wait         :     89.91 µs   (  7.0 %)
+  Unpack                :      0.45 µs   (  0.0 %)
+  Post dequant+argmax   :      0.30 µs   (  0.0 %)
+  total                 :   1291.08 µs   (steady-state upper bound ~ 775 FPS)
+Running 3 measured runs...
+  Run 1: 773.7 FPS, pwr=N/A, N/A, temp=41.9C
+  Run 2: 773.5 FPS, pwr=N/A, N/A, temp=41.9C
+  Run 3: 773.8 FPS, pwr=N/A, N/A, temp=42.0C
+
+
+
+MLP small INT4
+
+  Input shape: (1, 128), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT4, nthres=15)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   1019.94 µs   ( 90.7 %)
+  MultiThreshold        :     13.56 µs   (  1.2 %)
+  Pack                  :      0.87 µs   (  0.1 %)
+  DMA trig+wait         :     89.79 µs   (  8.0 %)
+  Unpack                :      0.54 µs   (  0.0 %)
+  Post dequant+argmax   :      0.36 µs   (  0.0 %)
+  total                 :   1125.06 µs   (steady-state upper bound ~ 889 FPS)
+Running 3 measured runs...
+  Run 1: 886.8 FPS, pwr=N/A, N/A, temp=42.0C
+  Run 2: 886.4 FPS, pwr=N/A, N/A, temp=42.0C
+  Run 3: 886.7 FPS, pwr=N/A, N/A, temp=42.1C
+
+
+
+MLP small_plus INT8
+
+  Input shape: (1, 192), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   1543.83 µs   ( 77.0 %)
+  MultiThreshold        :    264.57 µs   ( 13.2 %)
+  Pack                  :      0.66 µs   (  0.0 %)
+  DMA trig+wait         :    195.57 µs   (  9.8 %)
+  Unpack                :      0.45 µs   (  0.0 %)
+  Post dequant+argmax   :      0.36 µs   (  0.0 %)
+  total                 :   2005.44 µs   (steady-state upper bound ~ 499 FPS)
+Running 3 measured runs...
+  Run 1: 500.8 FPS, pwr=N/A, N/A, temp=42.3C
+  Run 2: 501.2 FPS, pwr=N/A, N/A, temp=42.6C
+  Run 3: 500.9 FPS, pwr=N/A, N/A, temp=42.7C
+
+
+
+MLP small_plus INT4
+
+  Input shape: (1, 192), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT4, nthres=15)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   1522.89 µs   ( 87.5 %)
+  MultiThreshold        :     19.62 µs   (  1.1 %)
+  Pack                  :      1.11 µs   (  0.1 %)
+  DMA trig+wait         :    195.15 µs   ( 11.2 %)
+  Unpack                :      0.36 µs   (  0.0 %)
+  Post dequant+argmax   :      0.39 µs   (  0.0 %)
+  total                 :   1739.52 µs   (steady-state upper bound ~ 575 FPS)
+Running 3 measured runs...
+  Run 1: 572.3 FPS, pwr=N/A, N/A, temp=42.7C
+  Run 2: 572.3 FPS, pwr=N/A, N/A, temp=42.8C
+  Run 3: 572.3 FPS, pwr=N/A, N/A, temp=42.7C
+
+
+MLP medium INT8
+
+  Input shape: (1, 256), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   2069.91 µs   ( 74.8 %)
+  MultiThreshold        :    353.40 µs   ( 12.8 %)
+  Pack                  :      0.90 µs   (  0.0 %)
+  DMA trig+wait         :    341.58 µs   ( 12.3 %)
+  Unpack                :      0.66 µs   (  0.0 %)
+  Post dequant+argmax   :      0.54 µs   (  0.0 %)
+  total                 :   2766.99 µs   (steady-state upper bound ~ 361 FPS)
+Running 3 measured runs...
+  Run 1: 363.4 FPS, pwr=N/A, N/A, temp=42.7C
+  Run 2: 363.5 FPS, pwr=N/A, N/A, temp=42.9C
+  Run 3: 363.5 FPS, pwr=N/A, N/A, temp=43.0C
+
+
+
+MLP medium INT4
+
+  Input shape: (1, 256), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT4, nthres=15)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   2102.49 µs   ( 85.0 %)
+  MultiThreshold        :     25.98 µs   (  1.1 %)
+  Pack                  :      1.65 µs   (  0.1 %)
+  DMA trig+wait         :    341.55 µs   ( 13.8 %)
+  Unpack                :      0.36 µs   (  0.0 %)
+  Post dequant+argmax   :      0.84 µs   (  0.0 %)
+  total                 :   2472.87 µs   (steady-state upper bound ~ 404 FPS)
+Running 3 measured runs...
+  Run 1: 405.1 FPS, pwr=N/A, N/A, temp=42.8C
+  Run 2: 414.3 FPS, pwr=N/A, N/A, temp=42.8C
+  Run 3: 414.5 FPS, pwr=N/A, N/A, temp=43.0C
+
+
+
+MLP large INT8
+
+  Input shape: (1, 512), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   4123.32 µs   ( 74.2 %)
+  MultiThreshold        :    704.22 µs   ( 12.7 %)
+  Pack                  :      1.08 µs   (  0.0 %)
+  DMA trig+wait         :    723.96 µs   ( 13.0 %)
+  Unpack                :      0.60 µs   (  0.0 %)
+  Post dequant+argmax   :      0.60 µs   (  0.0 %)
+  total                 :   5553.78 µs   (steady-state upper bound ~ 180 FPS)
+Running 3 measured runs...
+  Run 1: 182.2 FPS, pwr=N/A, N/A, temp=43.1C
+  Run 2: 182.3 FPS, pwr=N/A, N/A, temp=43.0C
+  Run 3: 182.2 FPS, pwr=N/A, N/A, temp=42.9C
+
+
+MLP large INT4
+
+  Input shape: (1, 512), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT4, nthres=15)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   4116.03 µs   ( 84.9 %)
+  MultiThreshold        :     50.82 µs   (  1.0 %)
+  Pack                  :      2.16 µs   (  0.0 %)
+  DMA trig+wait         :    680.55 µs   ( 14.0 %)
+  Unpack                :      0.39 µs   (  0.0 %)
+  Post dequant+argmax   :      0.57 µs   (  0.0 %)
+  total                 :   4850.52 µs   (steady-state upper bound ~ 206 FPS)
+Running 3 measured runs...
+  Run 1: 206.9 FPS, pwr=N/A, N/A, temp=42.2C
+  Run 2: 207.0 FPS, pwr=N/A, N/A, temp=42.3C
+  Run 3: 207.1 FPS, pwr=N/A, N/A, temp=42.2C
+
+
+MLP original INT8
+
+  Input shape: (1, 256), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT8, nthres=255)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   2065.08 µs   ( 60.5 %)
+  MultiThreshold        :    351.69 µs   ( 10.3 %)
+  Pack                  :      1.14 µs   (  0.0 %)
+  DMA trig+wait         :    994.41 µs   ( 29.1 %)
+  Unpack                :      0.42 µs   (  0.0 %)
+  Post dequant+argmax   :      0.60 µs   (  0.0 %)
+  total                 :   3413.34 µs   (steady-state upper bound ~ 293 FPS)
+Running 3 measured runs...
+  Run 1: 293.6 FPS, pwr=N/A, N/A, temp=42.3C
+  Run 2: 293.5 FPS, pwr=N/A, N/A, temp=42.5C
+  Run 3: 293.7 FPS, pwr=N/A, N/A, temp=42.6C
+
+
+MLP original INT4
+
+  Input shape: (1, 256), Output shape: (1, 10)
+  CPU pre-processing: MLP first layer (partial hardware mapping)
+  MLP C runner loaded: /home/xilinx/board/libfinn_mlp_infer.so (INT4, nthres=15)
+Warmup (10 images via C batch)...
+[C runner timing breakdown — one inference on images_flat[0]]:
+  MatMul                :   2031.81 µs   ( 66.5 %)
+  MultiThreshold        :     25.83 µs   (  0.8 %)
+  Pack                  :      1.32 µs   (  0.0 %)
+  DMA trig+wait         :    994.26 µs   ( 32.6 %)
+  Unpack                :      0.48 µs   (  0.0 %)
+  Post dequant+argmax   :      0.39 µs   (  0.0 %)
+  total                 :   3054.09 µs   (steady-state upper bound ~ 327 FPS)
+Running 3 measured runs...
+  Run 1: 326.0 FPS, pwr=N/A, N/A, temp=42.3C
+  Run 2: 326.0 FPS, pwr=N/A, N/A, temp=42.3C
+  Run 3: 326.0 FPS, pwr=N/A, N/A, temp=42.3C
+
+
+
+VTA small CNN INT8
+
+[VTA timing breakdown — one inference]:
+  input_scale           :     10.26 µs   (  0.2 %)
+  L0.im2col             :    135.72 µs   (  2.4 %)
+  L0.quant              :    450.93 µs   (  8.0 %)
+  L0.gemm               :    330.42 µs   (  5.8 %)
+  L0.dequant            :    913.17 µs   ( 16.1 %)
+  L0.maxpool            :    125.55 µs   (  2.2 %)
+  L1.im2col             :    314.43 µs   (  5.6 %)
+  L1.quant              :    920.67 µs   ( 16.3 %)
+  L1.gemm               :   1010.37 µs   ( 17.8 %)
+  L1.dequant            :    498.36 µs   (  8.8 %)
+  L1.maxpool            :     76.26 µs   (  1.3 %)
+  GAP                   :     28.89 µs   (  0.5 %)
+  dense_quant           :      1.47 µs   (  0.0 %)
+  dense_gemm            :    401.19 µs   (  7.1 %)
+  dequant+argmax        :    446.40 µs   (  7.9 %)
+  total                 :   5664.09 µs   (steady-state upper bound ~ 177 FPS)
+Running 3 benchmark runs (10000 images each)...
+  Run 1: 269.0 FPS, 3.717 ms/img, accuracy=94.01% (9401/10000)
+  Run 2: 269.0 FPS, 3.718 ms/img, accuracy=93.87% (9387/10000)
+  Run 3: 269.0 FPS, 3.717 ms/img, accuracy=93.78% (9378/10000)
+
+
+VTA small CNN INT4-o8
+
+[VTA timing breakdown — one inference]:
+  input_quant           :     29.46 µs   (  1.1 %)
+  L0.im2col             :    167.61 µs   (  6.3 %)
+  L0.gemm               :    604.35 µs   ( 22.6 %)
+  L0.dequant            :    226.77 µs   (  8.5 %)
+  L0.maxpool            :     86.52 µs   (  3.2 %)
+  L0.requant            :    111.63 µs   (  4.2 %)
+  L1.im2col             :    187.17 µs   (  7.0 %)
+  L1.gemm               :    877.71 µs   ( 32.8 %)
+  L1.dequant            :    108.96 µs   (  4.1 %)
+  L1.maxpool            :     54.72 µs   (  2.0 %)
+  L1.requant            :     58.05 µs   (  2.2 %)
+  GAP+quant             :     11.82 µs   (  0.4 %)
+  dense_gemm            :    147.93 µs   (  5.5 %)
+  dequant+argmax        :      0.66 µs   (  0.0 %)
+  total                 :   2673.36 µs   (steady-state upper bound ~ 374 FPS)
+
+Verification (100 images)...
+  Accuracy: 80/100
+Thermal stabilization (10s)...
+Idle measurement (10s)...
+Running 3 benchmark runs (10000 images each)...
+  Run 1: 382.3 FPS, 2.616 ms/img, accuracy=77.15% (7715/10000)
+  Run 2: 382.2 FPS, 2.617 ms/img, accuracy=77.16% (7716/10000)
+  Run 3: 382.3 FPS, 2.616 ms/img, accuracy=77.15% (7715/10000)
+
+

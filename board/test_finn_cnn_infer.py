@@ -35,6 +35,7 @@ Five checks (all must PASS; no board execution):
 
 import argparse
 import ctypes
+import json
 import os
 import struct
 import subprocess
@@ -47,6 +48,12 @@ THIS_DIR = os.path.dirname(os.path.abspath(__file__))
 REPO_ROOT = os.path.abspath(os.path.join(THIS_DIR, '..', '..'))
 DEPLOY_CNN_INT8 = os.path.join(REPO_ROOT, 'finn-vs-vitisai/finn/output_cnn_mnist_tiny/deploy')
 DEPLOY_CNN_INT4 = os.path.join(REPO_ROOT, 'finn-vs-vitisai/finn/output_cnn_mnist_tiny_int4/deploy')
+DEPLOY_CNN_DEEP3_INT8 = os.path.join(
+    REPO_ROOT, 'finn-vs-vitisai/finn/size_sweep_runs/cnn_int8_deep_3/deploy')
+DEPLOY_CNN_DEEP3_INT4 = os.path.join(
+    REPO_ROOT, 'finn-vs-vitisai/finn/size_sweep_runs/cnn_int4_deep_3/deploy')
+DEPLOY_CNN_QI_SMALL_INT8 = os.path.join(
+    REPO_ROOT, 'finn-vs-vitisai/finn/size_sweep_runs/cnn_int8_small_qi/deploy')
 MNIST_RAW       = os.path.join(REPO_ROOT, 'finn-vs-vitisai/data/MNIST/raw')
 
 
@@ -107,7 +114,7 @@ def load_lib(so_path):
     lib.finn_cnn_unpack_uint4.restype  = None
 
     lib.finn_cnn_runner_init.argtypes = [
-        ctypes.c_int,                   # precision
+        ctypes.c_int, ctypes.c_int,                          # in_precision, out_precision
         ctypes.c_int, ctypes.c_int, ctypes.c_int,            # img_h, img_w, img_c
         ctypes.c_int, ctypes.c_int,                          # kernel, pad
         ctypes.c_int,                                        # fpga_in_c
@@ -119,6 +126,10 @@ def load_lib(so_path):
         ctypes.c_void_p, ctypes.c_void_p,                    # idma, odma mmio
         ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,   # W_conv, thres, W_cls
         ctypes.c_float, ctypes.c_void_p,                     # mul, add
+        ctypes.c_int,                                        # cpu_post_maxpool_k
+        ctypes.c_int, ctypes.c_int,                          # ibuf_packed_bytes, obuf_packed_bytes
+        ctypes.c_int,                                        # partition (0=classic, 1=qi)
+        ctypes.c_int,                                        # idt_signed (0=unsigned, 1=signed)
     ]
     lib.finn_cnn_runner_init.restype = ctypes.c_int
 
@@ -350,13 +361,18 @@ def test_gap_all_max(lib, precision):
     obuf = np.zeros(pc['obuf_packed_bytes'], dtype=np.uint8)
 
     rc = lib.finn_cnn_runner_init(
-        precision, 28, 28, 1, 3, 1, 8, 7, 7, 16, 10, pc['num_thresholds'],
+        precision, precision,            # in_precision, out_precision (same for classic)
+        28, 28, 1, 3, 1, 8, 7, 7, 16, 10, pc['num_thresholds'],
         0,                               # use_cache_ops=0
         ibuf.ctypes.data, 0,
         obuf.ctypes.data, 0,
         0, 0,
         W_conv.ctypes.data, thres.ctypes.data, W_cls.ctypes.data,
-        mul_out, add_out.ctypes.data)
+        mul_out, add_out.ctypes.data,
+        0,                               # cpu_post_maxpool_k=0 (tiny: FPGA includes final MaxPool)
+        pc['ibuf_packed_bytes'],         # 6272 INT8 / 3136 INT4 (2-per-byte for tiny)
+        pc['obuf_packed_bytes'],         # 784 INT8 / 392 INT4
+        0, 0)                            # partition=classic, idt_signed=unsigned
     if rc != 0:
         print(f'    runner_init rc={rc}')
         return False
@@ -433,13 +449,18 @@ def test_end_to_end(lib, precision, n_trials, mnist_imgs, rng, DataType, py_pack
     obuf = np.zeros(pc['obuf_packed_bytes'], dtype=np.uint8)
 
     rc = lib.finn_cnn_runner_init(
-        precision, 28, 28, 1, 3, 1, 8, 7, 7, 16, 10, pc['num_thresholds'],
+        precision, precision,            # in_precision, out_precision
+        28, 28, 1, 3, 1, 8, 7, 7, 16, 10, pc['num_thresholds'],
         0,
         ibuf.ctypes.data, 0,
         obuf.ctypes.data, 0,
         0, 0,
         W_conv.ctypes.data, thres.ctypes.data, W_cls.ctypes.data,
-        mul_out, add_out.ctypes.data)
+        mul_out, add_out.ctypes.data,
+        0,                               # cpu_post_maxpool_k=0 (tiny)
+        pc['ibuf_packed_bytes'],
+        pc['obuf_packed_bytes'],
+        0, 0)                            # partition=classic, idt_signed=unsigned
     if rc != 0:
         print(f'    runner_init rc={rc}')
         return False
@@ -509,6 +530,385 @@ def test_end_to_end(lib, precision, n_trials, mnist_imgs, rng, DataType, py_pack
     return (n_fail_pred == 0) and (n_fail_pack == 0)
 
 
+# ----- Check 6: deep_3 (3-conv) end-to-end mock with CPU MaxPool stage ----
+
+def _maxpool2x2_valid_nhwc(x):
+    """2x2 stride-2 valid-pad MaxPool over an NHWC array (matches PyTorch
+    MaxPool2d(2) and the C cpu_maxpool_2x2 helper). Drops the last row/col
+    when H or W is odd."""
+    H, W, C = x.shape
+    OH, OW = (H - 2) // 2 + 1, (W - 2) // 2 + 1
+    return x[:OH * 2, :OW * 2].reshape(OH, 2, OW, 2, C).max(axis=(1, 3))
+
+
+def test_deep3_e2e_mock(lib, deploy_dir, n_trials, mnist_imgs, rng):
+    """End-to-end mock for the deep_3 [16,32,64] 3-conv topology.
+
+    Validates the new CPU 2x2 MaxPool stage that sits between unpack and GAP
+    when cpu_post_maxpool_k > 0. Geometry:
+        CPU pre  : Conv1 (1->16) at 28x28x16
+        FPGA     : MaxPool->Conv2->MaxPool->Conv3 (opaque)
+        CPU post : MaxPool (7x7x64 -> 3x3x64) -> GAP -> classifier (64->10)
+
+    Only INT8 is exercised here; INT4 deep_3 follows the same pattern but is
+    out of scope for this work item. mock_obuf is random uint8 bytes — the
+    test only validates the post-FPGA pipeline, not the FPGA itself."""
+    print(f'[6] deep_3 end-to-end mock — INT8, {n_trials} MNIST images')
+
+    cfg_path = os.path.join(deploy_dir, 'cpu_config.json')
+    if not os.path.exists(cfg_path):
+        print(f'    SKIP: {cfg_path} not found '
+              f'(run extract_finn_cpu_weights.py first)')
+        return True
+    with open(cfg_path) as f:
+        cfg = json.load(f)
+    if cfg.get('cpu_post_maxpool_k', 0) != 2:
+        print(f'    SKIP: cpu_post_maxpool_k={cfg.get("cpu_post_maxpool_k")}, '
+              f'expected 2 for deep_3')
+        return True
+    if cfg.get('precision') != 8:
+        print(f'    SKIP: precision={cfg.get("precision")}, this test is INT8-only')
+        return True
+
+    files = cfg['weight_files']
+    W_conv  = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['W_conv'])).astype(np.float32))
+    thres   = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['thres'])).astype(np.float32))
+    W_cls   = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['W_cls'])).astype(np.float32))
+    mul_out = float(np.load(os.path.join(deploy_dir, files['mul'])).flatten()[0])
+    add_out = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['add'])).astype(np.float32))
+
+    fpga_in_c   = int(W_conv.shape[1])              # 16
+    fpga_out_h  = int(cfg['oshape_normal'][1])      # 7
+    fpga_out_w  = int(cfg['oshape_normal'][2])      # 7
+    fpga_out_c  = int(cfg['oshape_normal'][3])      # 64
+    num_classes = int(W_cls.shape[1])               # 10
+    nthres      = int(thres.shape[1])               # 255
+
+    # INT8 packed buffers: 1 byte per element regardless of folding.
+    ibuf_packed_bytes = 28 * 28 * fpga_in_c
+    obuf_packed_bytes = fpga_out_h * fpga_out_w * fpga_out_c
+
+    ibuf = np.zeros(ibuf_packed_bytes, dtype=np.uint8)
+    obuf = np.zeros(obuf_packed_bytes, dtype=np.uint8)
+
+    rc = lib.finn_cnn_runner_init(
+        8, 8,                            # in_precision, out_precision (INT8 classic)
+        28, 28, 1, 3, 1, fpga_in_c,
+        fpga_out_h, fpga_out_w, fpga_out_c,
+        num_classes, nthres,
+        0,
+        ibuf.ctypes.data, 0,
+        obuf.ctypes.data, 0,
+        0, 0,
+        W_conv.ctypes.data, thres.ctypes.data, W_cls.ctypes.data,
+        mul_out, add_out.ctypes.data,
+        2,                               # cpu_post_maxpool_k=2
+        ibuf_packed_bytes,               # INT8: == n_in_elements
+        obuf_packed_bytes,               # INT8: == n_out_elements
+        0, 0)                            # partition=classic, idt_signed=unsigned
+    if rc != 0:
+        print(f'    runner_init rc={rc}')
+        return False
+
+    def py_cpu_pre(img_flat):
+        img = img_flat.reshape(28, 28, 1).astype(np.float32) / 255.0
+        patches = _im2col_py(img)
+        x_f = patches @ W_conv
+        return np.sum(x_f[..., None] >= thres, axis=-1).astype(np.uint8)
+
+    def py_cpu_post_from_obuf(mock_obuf):
+        # INT8: mock_obuf is the dense (fpga_out_h, fpga_out_w, fpga_out_c)
+        # uint8 view (memcpy unpack). Apply CPU MaxPool, GAP, classifier.
+        hw_out = mock_obuf.reshape(fpga_out_h, fpga_out_w, fpga_out_c)
+        pooled = _maxpool2x2_valid_nhwc(hw_out)              # (3, 3, 64)
+        feat   = pooled.astype(np.float32).mean(axis=(0, 1)) # (64,)
+        logits = feat @ W_cls
+        out = logits.astype(np.float32) * mul_out + add_out
+        return int(np.argmax(out))
+
+    n_fail_pred = 0
+    n_fail_pack = 0
+    pack_scratch = np.zeros(ibuf_packed_bytes, dtype=np.uint8)
+
+    for i in range(n_trials):
+        img = np.ascontiguousarray(mnist_imgs[i].flatten().astype(np.uint8))
+        mock_obuf = np.ascontiguousarray(
+            rng.integers(0, 256, size=obuf_packed_bytes, dtype=np.uint8))
+
+        py_act  = py_cpu_pre(img)                            # (28, 28, 16)
+        py_pred = py_cpu_post_from_obuf(mock_obuf)
+        c_pred  = lib.finn_cnn_infer_one_mock(
+            img.ctypes.data, mock_obuf.ctypes.data, pack_scratch.ctypes.data)
+
+        # Pack scratch at INT8 is just the activations flattened.
+        expected_pack = py_act.flatten().astype(np.uint8)
+        if not np.array_equal(pack_scratch, expected_pack):
+            n_fail_pack += 1
+            if n_fail_pack <= 3:
+                diffs = np.where(pack_scratch != expected_pack)[0]
+                print(f'    FAIL pack i={i}: {len(diffs)} byte diffs, '
+                      f'first @ {diffs[:5].tolist()}')
+
+        if c_pred != py_pred:
+            n_fail_pred += 1
+            if n_fail_pred <= 3:
+                print(f'    FAIL argmax i={i}: py={py_pred}, c={c_pred}')
+
+    lib.finn_cnn_runner_destroy()
+    print(f'    argmax: {n_trials - n_fail_pred}/{n_trials} OK,  '
+          f'pack:   {n_trials - n_fail_pack}/{n_trials} OK')
+    return (n_fail_pred == 0) and (n_fail_pack == 0)
+
+
+# ----- Check 7: deep_3 INT4 — exercises 1-per-byte output unpack -----------
+
+def test_deep3_int4_e2e_mock(lib, deploy_dir, n_trials, mnist_imgs, rng):
+    """End-to-end mock for the deep_3 INT4 topology.
+
+    Critical regression: deep_3 INT4 has asymmetric packing — ishape_packed
+    is (1, 28, 28, 1, 8) → input is 2-per-byte (4 bytes/pixel), but
+    oshape_packed is (1, 7, 7, 64, 1) → output is 1-per-byte (64 bytes/pixel,
+    only low nibble carries the 4-bit value). Tiny INT4 has SIMD=16 on the
+    output → 2-per-byte both directions, so the original C unpack assumption
+    (always 2-per-byte at INT4) only broke on deep_3 INT4. This test
+    catches that regression by verifying Python ↔ C argmax agreement on
+    100 random obuf bytes."""
+    print(f'[7] deep_3 INT4 end-to-end mock — {n_trials} MNIST images')
+
+    cfg_path = os.path.join(deploy_dir, 'cpu_config.json')
+    if not os.path.exists(cfg_path):
+        print(f'    SKIP: {cfg_path} not found '
+              f'(run extract_finn_cpu_weights.py first)')
+        return True
+    with open(cfg_path) as f:
+        cfg = json.load(f)
+    if cfg.get('cpu_post_maxpool_k', 0) != 2:
+        print(f'    SKIP: cpu_post_maxpool_k={cfg.get("cpu_post_maxpool_k")}, '
+              f'expected 2 for deep_3')
+        return True
+    if cfg.get('precision') != 4:
+        print(f'    SKIP: precision={cfg.get("precision")}, this test is INT4-only')
+        return True
+
+    files = cfg['weight_files']
+    W_conv  = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['W_conv'])).astype(np.float32))
+    thres   = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['thres'])).astype(np.float32))
+    W_cls   = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['W_cls'])).astype(np.float32))
+    mul_out = float(np.load(os.path.join(deploy_dir, files['mul'])).flatten()[0])
+    add_out = np.ascontiguousarray(np.load(os.path.join(
+        deploy_dir, files['add'])).astype(np.float32))
+
+    fpga_in_c   = int(W_conv.shape[1])              # 16
+    fpga_out_h  = int(cfg['oshape_normal'][1])      # 7
+    fpga_out_w  = int(cfg['oshape_normal'][2])      # 7
+    fpga_out_c  = int(cfg['oshape_normal'][3])      # 64
+    num_classes = int(W_cls.shape[1])               # 10
+    nthres      = int(thres.shape[1])               # 15
+
+    n_in_elems  = 28 * 28 * fpga_in_c                # 12544
+    n_out_elems = fpga_out_h * fpga_out_w * fpga_out_c  # 3136
+    # deep_3 INT4 packing: input 2-per-byte, output 1-per-byte (per driver.py).
+    ibuf_packed_bytes = n_in_elems // 2              # 6272
+    obuf_packed_bytes = n_out_elems                  # 3136 (1-per-byte)
+
+    ibuf = np.zeros(ibuf_packed_bytes, dtype=np.uint8)
+    obuf = np.zeros(obuf_packed_bytes, dtype=np.uint8)
+
+    rc = lib.finn_cnn_runner_init(
+        4, 4,                            # in_precision, out_precision (INT4 classic)
+        28, 28, 1, 3, 1, fpga_in_c,
+        fpga_out_h, fpga_out_w, fpga_out_c,
+        num_classes, nthres,
+        0,
+        ibuf.ctypes.data, 0,
+        obuf.ctypes.data, 0,
+        0, 0,
+        W_conv.ctypes.data, thres.ctypes.data, W_cls.ctypes.data,
+        mul_out, add_out.ctypes.data,
+        2,                               # cpu_post_maxpool_k=2
+        ibuf_packed_bytes,
+        obuf_packed_bytes,
+        0, 0)                            # partition=classic, idt_signed=unsigned
+    if rc != 0:
+        print(f'    runner_init rc={rc}')
+        return False
+
+    def py_cpu_pre(img_flat):
+        img = img_flat.reshape(28, 28, 1).astype(np.float32) / 255.0
+        patches = _im2col_py(img)
+        x_f = patches @ W_conv
+        return np.sum(x_f[..., None] >= thres, axis=-1).astype(np.uint8)
+
+    def py_cpu_post_from_obuf(mock_obuf):
+        # 1-per-byte INT4: low nibble is the 4-bit value, high nibble masked off.
+        # Mirrors finn_cnn_unpack_uint4_1pb in C.
+        obuf_unpacked = (mock_obuf & 0x0F).reshape(fpga_out_h, fpga_out_w, fpga_out_c)
+        pooled = _maxpool2x2_valid_nhwc(obuf_unpacked)
+        feat   = pooled.astype(np.float32).mean(axis=(0, 1))
+        logits = feat @ W_cls
+        out = logits.astype(np.float32) * mul_out + add_out
+        return int(np.argmax(out))
+
+    def py_pack_2pb_expected(py_act):
+        # 2-per-byte INT4 input pack: byte[i] = (act[2i] & 0xF) | ((act[2i+1] & 0xF) << 4).
+        flat = py_act.flatten().astype(np.uint8)
+        return ((flat[0::2] & 0x0F) | ((flat[1::2] & 0x0F) << 4)).astype(np.uint8)
+
+    n_fail_pred = 0
+    n_fail_pack = 0
+    pack_scratch = np.zeros(ibuf_packed_bytes, dtype=np.uint8)
+
+    for i in range(n_trials):
+        img = np.ascontiguousarray(mnist_imgs[i].flatten().astype(np.uint8))
+        # Random obuf bytes (full 0..255) — C's 1pb unpack masks to low nibble.
+        mock_obuf = np.ascontiguousarray(
+            rng.integers(0, 256, size=obuf_packed_bytes, dtype=np.uint8))
+
+        py_act  = py_cpu_pre(img)
+        py_pred = py_cpu_post_from_obuf(mock_obuf)
+        c_pred  = lib.finn_cnn_infer_one_mock(
+            img.ctypes.data, mock_obuf.ctypes.data, pack_scratch.ctypes.data)
+
+        expected_pack = py_pack_2pb_expected(py_act)
+        if not np.array_equal(pack_scratch, expected_pack):
+            n_fail_pack += 1
+            if n_fail_pack <= 3:
+                diffs = np.where(pack_scratch != expected_pack)[0]
+                print(f'    FAIL pack i={i}: {len(diffs)} byte diffs, '
+                      f'first @ {diffs[:5].tolist()}')
+
+        if c_pred != py_pred:
+            n_fail_pred += 1
+            if n_fail_pred <= 3:
+                print(f'    FAIL argmax i={i}: py={py_pred}, c={c_pred}')
+
+    lib.finn_cnn_runner_destroy()
+    print(f'    argmax: {n_trials - n_fail_pred}/{n_trials} OK,  '
+          f'pack:   {n_trials - n_fail_pack}/{n_trials} OK')
+    return (n_fail_pred == 0) and (n_fail_pack == 0)
+
+
+# ----- Check 8: QI partition end-to-end mock -----------------------------
+
+def test_qi_e2e_mock(lib, deploy_dir, n_trials, mnist_imgs, rng):
+    """End-to-end mock for the QI partition (CNN small INT8 with input
+    QuantIdentity). The CPU pre-stage is just per-channel input
+    MultiThreshold on the float-normalized image — no im2col, no Conv1
+    MatMul. The post-stage (optional MaxPool, GAP, classifier MatMul,
+    dequant, argmax) is identical to the classic path. Asserts c
+    argmax == numpy reference over n_trials random mock obufs.
+    """
+    print(f'[qi-e2e] CNN QI mock — {n_trials} MNIST images, deploy={deploy_dir}')
+    if not os.path.isdir(deploy_dir):
+        print(f'    SKIP: deploy not found: {deploy_dir}')
+        return True
+    cfg_path = os.path.join(deploy_dir, 'cpu_config.json')
+    if not os.path.isfile(cfg_path):
+        print(f'    SKIP: no cpu_config.json')
+        return True
+    with open(cfg_path) as f:
+        cfg = json.load(f)
+    if cfg.get('partition') != 'qi':
+        print(f'    SKIP: cpu_config.json partition={cfg.get("partition")!r}')
+        return True
+
+    wf = cfg['weight_files']
+    input_thres = np.ascontiguousarray(np.load(os.path.join(deploy_dir, wf['input_thres'])).astype(np.float32))
+    W_cls       = np.ascontiguousarray(np.load(os.path.join(deploy_dir, wf['W_cls'])).astype(np.float32))
+    add_out     = np.ascontiguousarray(np.load(os.path.join(deploy_dir, wf['add'])).astype(np.float32))
+    mul_out     = float(np.load(os.path.join(deploy_dir, wf['mul'])).flatten()[0])
+
+    fpga_in_c = int(input_thres.shape[0])     # 1 for MNIST
+    fpga_out_h, fpga_out_w, fpga_out_c = (int(x) for x in cfg['oshape_normal'][1:])
+    cpu_post_maxpool_k = int(cfg.get('cpu_post_maxpool_k', 0))
+    num_classes = int(add_out.shape[0])
+    num_thresholds = int(input_thres.shape[1])
+    n_in_elems  = 28 * 28 * fpga_in_c
+    n_out_elems = fpga_out_h * fpga_out_w * fpga_out_c
+
+    ibuf = np.zeros(n_in_elems, dtype=np.uint8)
+    obuf = np.zeros(n_out_elems, dtype=np.uint8)
+
+    # QI: W_conv NULL (Conv1 is on FPGA). Pass 0 for the pointer.
+    rc = lib.finn_cnn_runner_init(
+        8, 8,                               # in_precision, out_precision (INT8 QI)
+        28, 28, 1,                          # img_h,w,c
+        3, 1,                               # kernel, pad (unused on QI)
+        fpga_in_c,
+        fpga_out_h, fpga_out_w, fpga_out_c,
+        num_classes, num_thresholds,
+        0,                                  # use_cache_ops=0 (mock — no DMA)
+        ibuf.ctypes.data, 0,
+        obuf.ctypes.data, 0,
+        0, 0,                               # idma, odma mmio (unused)
+        0,                                  # W_conv = NULL
+        input_thres.ctypes.data, W_cls.ctypes.data,
+        mul_out, add_out.ctypes.data,
+        cpu_post_maxpool_k,
+        n_in_elems, n_out_elems,
+        1,                                  # partition=qi
+        1 if cfg.get('idt_signed', True) else 0)  # idt_signed (default True for QI deploys)
+    if rc != 0:
+        print(f'    runner_init rc={rc}')
+        return False
+
+    # idt_signed default True for QI deploys (QuantIdentity(Int8...)). For
+    # signed IDT the C runner shifts the count by 2^(N-1) so the byte
+    # reinterpreted as int8 matches the MultiThreshold's signed output.
+    idt_signed = bool(cfg.get('idt_signed', True))
+    bias = (num_thresholds + 1) // 2 if idt_signed else 0
+    def py_cpu_pre_qi(img_flat):
+        img = img_flat.reshape(28, 28, 1).astype(np.float32) / 255.0
+        # input_thres shape (C_in, T), broadcast over H,W positions.
+        # >= matches the FINN convention (qonnx multithreshold:78).
+        count = np.sum(img[..., np.newaxis] >= input_thres, axis=-1).astype(np.int32)
+        return (count - bias).astype(np.uint8)   # wraps for negative values
+
+    def py_cpu_post(obuf_dense):
+        feat = obuf_dense.reshape(fpga_out_h, fpga_out_w, fpga_out_c).astype(np.float32)
+        if cpu_post_maxpool_k == 2:
+            H, Wd, Cd = feat.shape
+            OH, OW = (H - 2) // 2 + 1, (Wd - 2) // 2 + 1
+            feat = feat[:OH * 2, :OW * 2].reshape(OH, 2, OW, 2, Cd).max(axis=(1, 3))
+        feat = feat.mean(axis=(0, 1))
+        logits = feat @ W_cls
+        out = logits.astype(np.float32) * mul_out + add_out
+        return int(np.argmax(out))
+
+    pack_scratch = np.zeros(n_in_elems, dtype=np.uint8)
+    n_fail_pred = 0
+    n_fail_pack = 0
+    for i in range(n_trials):
+        img = np.ascontiguousarray(mnist_imgs[i].flatten().astype(np.uint8))
+        mock_obuf = np.ascontiguousarray(
+            rng.integers(0, 256, size=n_out_elems, dtype=np.uint8))
+        py_act = py_cpu_pre_qi(img)
+        py_pred = py_cpu_post(mock_obuf)
+        c_pred = lib.finn_cnn_infer_one_mock(
+            img.ctypes.data, mock_obuf.ctypes.data, pack_scratch.ctypes.data)
+        # INT8 pack is memcpy, so pack_scratch must equal py_act flattened.
+        if not np.array_equal(pack_scratch, py_act.reshape(-1)):
+            n_fail_pack += 1
+            if n_fail_pack <= 3:
+                print(f'    FAIL pack i={i}')
+        if c_pred != py_pred:
+            n_fail_pred += 1
+            if n_fail_pred <= 3:
+                print(f'    FAIL argmax i={i}: py={py_pred}, c={c_pred}')
+
+    lib.finn_cnn_runner_destroy()
+    print(f'    argmax: {n_trials - n_fail_pred}/{n_trials} OK,  '
+          f'pack:   {n_trials - n_fail_pack}/{n_trials} OK')
+    return (n_fail_pred == 0) and (n_fail_pack == 0)
+
+
 # ----- main --------------------------------------------------------------
 
 def main():
@@ -522,6 +922,16 @@ def main():
     ap.add_argument('--precision', type=int, choices=[8, 4], default=8,
                     help='Test the INT8 path (default) or the INT4 path. '
                          'Both must pass.')
+    ap.add_argument('--deep3-deploy', default=DEPLOY_CNN_DEEP3_INT8,
+                    help='Path to the deep_3 INT8 FINN deploy/.')
+    ap.add_argument('--deep3-int4-deploy', default=DEPLOY_CNN_DEEP3_INT4,
+                    help='Path to the deep_3 INT4 FINN deploy/.')
+    ap.add_argument('--skip-deep3', action='store_true',
+                    help='Skip the deep_3 mock tests (both INT8 and INT4).')
+    ap.add_argument('--qi-deploy', default=DEPLOY_CNN_QI_SMALL_INT8,
+                    help='Path to a CNN QI partition deploy/ for the QI mock test.')
+    ap.add_argument('--skip-qi', action='store_true',
+                    help='Skip the QI partition mock test.')
     args = ap.parse_args()
 
     so_path = args.so or tempfile.NamedTemporaryFile(
@@ -554,6 +964,24 @@ def main():
     mnist_imgs, _ = load_mnist_test()
     ok &= test_end_to_end(lib, args.precision, args.e2e_trials, mnist_imgs, rng,
                           DataType, py_pack, py_unpack)
+
+    # Deep_3 tests exercise the new CPU MaxPool stage. INT8 was the
+    # original coverage; INT4 was added after a regression where the C
+    # runner's hardcoded "INT4 = always 2-per-byte" assumption broke for
+    # deep_3 (which has 1-per-byte output due to SIMD=1 folding).
+    if not args.skip_deep3:
+        if args.precision == 8:
+            ok &= test_deep3_e2e_mock(lib, args.deep3_deploy, args.e2e_trials,
+                                      mnist_imgs, rng)
+        else:
+            ok &= test_deep3_int4_e2e_mock(lib, args.deep3_int4_deploy,
+                                            args.e2e_trials, mnist_imgs, rng)
+
+    # QI partition mock — INT8 only (the only QI deploy we currently ship).
+    # Skipped when the deploy isn't built or --skip-qi is passed.
+    if not args.skip_qi and args.precision == 8:
+        ok &= test_qi_e2e_mock(lib, args.qi_deploy, args.e2e_trials,
+                                mnist_imgs, rng)
 
     print('\n===== HARNESS (INT{}):'.format(args.precision),
           'PASS' if ok else 'FAIL', '=====')

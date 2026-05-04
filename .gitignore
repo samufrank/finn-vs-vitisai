@@ -8,6 +8,11 @@
 data/
 MNIST/
 cifar-10-batches-py/
+mnist_data/
+cifar10_data/
+
+# build / train logs
+/logs/
 
 # Repos (cloned locally, not part of this project)
 finn-repo/
@@ -22,11 +27,13 @@ output_*/
 estimate_*/
 /tmp/finn_dev_*/
 finn/target_fps_sweep_runs/
+finn/size_sweep_runs/
 
 # VTA generated
 vta/transformer_export/
 vta/transformer_export_o32/
 vta/tiny_test/
+vta_exports/
 
 # Results — commit summaries and plots, skip raw power traces
 *.json
@@ -39,8 +46,9 @@ vta/tiny_test/
 !board/regression/*.json
 !vta/**/*.json
 
-# keep FINN target fps sweep resource summary
+# keep FINN sweep resource summary
 !results/finn/target_fps_sweep/resource_summary.csv
+!results/finn/size_sweep_qi/resource_summary.csv
 
 # KV260 archives (historical, kept locally)
 results/kv260_archive/
@@ -87,3 +95,5 @@ compile_*.log
 train_*.log
 *.c.int4
 board/*.so
+*.pid
+

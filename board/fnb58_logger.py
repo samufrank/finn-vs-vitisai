@@ -65,9 +65,14 @@ def find_and_setup():
     ep_in = usb.util.find_descriptor(
         intf, custom_match=lambda e: usb.util.endpoint_direction(e.bEndpointAddress) == usb.util.ENDPOINT_IN)
 
-    # FNB58 init sequence
-    ep_out.write(b'\xaa\x81' + b'\x00' * 61 + b'\x8e')
-    ep_out.write(b'\xaa\x82' + b'\x00' * 61 + b'\x96')
+    # FNB58 init sequence.
+    # The 0xaa 0x81 command (originally first in this sequence) wedges the
+    # firmware on at least one FNB58 firmware revision — display freezes,
+    # streaming stops. 0xaa 0x82 alone is sufficient to start the sample
+    # stream; verified end-to-end (127 valid sample packets in 5s on
+    # firmware that wedged with 0x81). The 0xaa 0x83 refresh in the main
+    # loop keeps it streaming.
+    # ep_out.write(b'\xaa\x81' + b'\x00' * 61 + b'\x8e')   # disabled — wedges firmware
     ep_out.write(b'\xaa\x82' + b'\x00' * 61 + b'\x96')
     time.sleep(0.2)
 

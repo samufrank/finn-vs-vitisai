@@ -359,14 +359,29 @@ def run_vitisai_benchmark(model_path, dataset, batch_size, num_runs,
 
     idle = measure_idle(idle_seconds)
 
+    # See run_dpu_benchmark for the rationale: load_cifar10 is NCHW, the DPU
+    # input slot is NHWC. Per-image transpose only fires when channel dim
+    # actually mismatches (single-channel MNIST + MLP topologies are no-ops).
+    def _per_image_to_nhwc(img):
+        img = img.astype(np.float32, copy=False)
+        if img.ndim == 3 and img.shape[0] in (1, 3) and tuple(input_shape[1:]) != img.shape:
+            img = np.transpose(img, (1, 2, 0))
+        return img
+
+    def _stage_batch(batch_imgs):
+        slot = np.empty(input_shape, dtype=np.float32, order='C')
+        for k in range(batch_imgs.shape[0]):
+            slot[k] = _per_image_to_nhwc(batch_imgs[k])
+        return slot
+
     print(f"Warmup ({warmup_batches} batches)...")
     for b in range(warmup_batches):
         if is_batched:
             batch_imgs = images[b*actual_batch:(b+1)*actual_batch]
-            input_data = [np.ascontiguousarray(batch_imgs.flatten().reshape(input_shape), dtype=np.float32)]
+            input_data = [_stage_batch(batch_imgs)]
         else:
             input_data = [np.empty(input_shape, dtype=np.float32, order='C')]
-            input_data[0][0] = images[b]
+            input_data[0][0] = _per_image_to_nhwc(images[b])
         output_data = [np.empty(output_shape, dtype=np.float32, order='C')]
         job_id = dpu.execute_async(input_data, output_data)
         dpu.wait(job_id)
@@ -387,7 +402,7 @@ def run_vitisai_benchmark(model_path, dataset, batch_size, num_runs,
             for b in range(num_batches):
                 batch_imgs   = images[b*actual_batch:(b+1)*actual_batch]
                 batch_labels = labels[b*actual_batch:(b+1)*actual_batch]
-                input_data   = [np.ascontiguousarray(batch_imgs.flatten().reshape(input_shape), dtype=np.float32)]
+                input_data   = [_stage_batch(batch_imgs)]
                 output_data  = [np.empty(output_shape, dtype=np.float32, order='C')]
                 job_id = dpu.execute_async(input_data, output_data)
                 dpu.wait(job_id)
@@ -398,7 +413,7 @@ def run_vitisai_benchmark(model_path, dataset, batch_size, num_runs,
             for i in range(len(images)):
                 input_data  = [np.empty(input_shape,  dtype=np.float32, order='C')]
                 output_data = [np.empty(output_shape, dtype=np.float32, order='C')]
-                input_data[0][0] = images[i]
+                input_data[0][0] = _per_image_to_nhwc(images[i])
                 job_id = dpu.execute_async(input_data, output_data)
                 dpu.wait(job_id)
                 pred = int(np.argmax(output_data[0][0]))
@@ -421,7 +436,8 @@ def run_vitisai_benchmark(model_path, dataset, batch_size, num_runs,
 def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                        warmup_batches, idle_seconds, stabilize_seconds,
                        results_dir, run_name,
-                       finn_runtime='python'):
+                       finn_runtime='python',
+                       finn_double_buffer=False):
 
     driver_dir = os.path.join(deploy_dir, 'driver')
     bitfile    = os.path.join(deploy_dir, 'bitfile', 'finn-accel.bit')
@@ -456,23 +472,96 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
     )
     print(f"  Input shape: {ishape_normal}, Output shape: {oshape_normal}")
 
-    # Load CPU-side weights if present
-    has_mlp_pre = os.path.exists(os.path.join(deploy_dir, 'mlp_MatMul_0_param0.npy'))
-    has_cnn_pre = os.path.exists(os.path.join(deploy_dir, 'cnn_MatMul_0_param0.npy'))
+    # Optional second ibuf/obuf for double-buffered batch in the C runners.
+    # Same shape + cacheable as ol's auto-allocated pair so the runner's
+    # cache-op pattern stays uniform. Allocated upfront so both the MLP
+    # and CNN init blocks can reach it.
+    ibuf_dev_b = obuf_dev_b = None
+    if finn_double_buffer:
+        if finn_runtime != 'c':
+            print("  --finn-double-buffer ignored: requires --finn-runtime=c")
+        else:
+            from pynq import allocate
+            ibuf_packed = ol.ishape_packed(0)
+            oshape_packed_t = ol.oshape_packed(0)
+            ibuf_dev_b = allocate(shape=ibuf_packed, dtype=np.uint8)
+            obuf_dev_b = allocate(shape=oshape_packed_t, dtype=np.uint8)
+            print(f"  double-buffer: allocated 2nd buffer pair "
+                  f"({int(np.prod(ibuf_packed[1:]))}+{int(np.prod(oshape_packed_t[1:]))} bytes/img)")
 
-    if has_mlp_pre:
-        print("  CPU pre-processing: MLP first layer (partial hardware mapping)")
+    # Load CPU-side weights if present.
+    #
+    # cpu_config.json (emitted by extract_finn_cpu_weights.py) is the
+    # source of truth for both model_kind ('cnn'|'mlp') and partition
+    # ('classic'|'qi'). When it's missing (legacy deploys), fall back to
+    # filename sniffing — only the classic CNN/MLP partitions ever
+    # shipped without a config.
+    cpu_cfg_path = os.path.join(deploy_dir, 'cpu_config.json')
+    cpu_cfg   = None
+    partition = 'classic'
+    if os.path.exists(cpu_cfg_path):
+        with open(cpu_cfg_path) as f:
+            cpu_cfg = json.load(f)
+        partition = cpu_cfg.get('partition', 'classic')
+        model_kind_cfg = cpu_cfg.get('model_kind')
+        has_mlp_pre = (model_kind_cfg == 'mlp')
+        has_cnn_pre = (model_kind_cfg == 'cnn')
+    else:
+        has_mlp_pre = os.path.exists(os.path.join(deploy_dir, 'mlp_MatMul_0_param0.npy'))
+        has_cnn_pre = os.path.exists(os.path.join(deploy_dir, 'cnn_MatMul_0_param0.npy'))
+
+    cpu_post_maxpool_k = 0
+    W0 = thres = W_conv = W_cls = mul_out = add_out = input_thres = None
+    if has_mlp_pre and partition == 'classic':
+        print("  CPU pre-processing: MLP first layer (classic partition)")
         W0      = np.load(os.path.join(deploy_dir, 'mlp_MatMul_0_param0.npy'))
         thres   = np.load(os.path.join(deploy_dir, 'mlp_MultiThreshold_0_param0.npy'))
         mul_out = np.load(os.path.join(deploy_dir, 'mlp_Mul_0_param0.npy'))
         add_out = np.load(os.path.join(deploy_dir, 'mlp_Add_0_param0.npy'))
-    elif has_cnn_pre:
-        print("  CPU pre/post processing: CNN first+last layers (partial hardware mapping)")
-        W_conv  = np.load(os.path.join(deploy_dir, 'cnn_MatMul_0_param0.npy'))   # (27, 8)
-        thres   = np.load(os.path.join(deploy_dir, 'cnn_MultiThreshold_0_param0.npy'))  # (8, 255)
-        W_cls   = np.load(os.path.join(deploy_dir, 'cnn_MatMul_2_param0.npy'))   # (16, 10)
-        mul_out = np.load(os.path.join(deploy_dir, 'cnn_Mul_0_param0.npy'))
-        add_out = np.load(os.path.join(deploy_dir, 'cnn_Add_0_param0.npy'))
+    elif has_mlp_pre and partition == 'qi':
+        # MLP QI: input QuantIdentity moved Linear1 onto FPGA. CPU only
+        # does input MultiThreshold (one threshold table) and final dequant.
+        print("  CPU pre-processing: MLP input quant only (QI partition)")
+        wf = cpu_cfg['weight_files']
+        input_thres = np.load(os.path.join(deploy_dir, wf['input_thres']))
+        mul_out     = np.load(os.path.join(deploy_dir, wf['mul']))
+        add_out     = np.load(os.path.join(deploy_dir, wf['add']))
+    elif has_cnn_pre and partition == 'classic':
+        # cpu_config.json carries weight filenames + cpu_post_maxpool_k.
+        # The classifier MatMul's initializer name varies by topology
+        # (MatMul_2_param0 for tiny 2-conv, MatMul_3_param0 for deep_3);
+        # the config maps it. Legacy deploys without config fall back to
+        # tiny 2-conv names.
+        if cpu_cfg is not None:
+            cnn_weight_files   = cpu_cfg['weight_files']
+            cpu_post_maxpool_k = int(cpu_cfg.get('cpu_post_maxpool_k', 0))
+        else:
+            cnn_weight_files = {
+                'W_conv': 'cnn_MatMul_0_param0.npy',
+                'thres':  'cnn_MultiThreshold_0_param0.npy',
+                'W_cls':  'cnn_MatMul_2_param0.npy',
+                'mul':    'cnn_Mul_0_param0.npy',
+                'add':    'cnn_Add_0_param0.npy',
+            }
+        print(f"  CPU pre/post processing: CNN first+last layers "
+              f"(classic partition; cpu_post_maxpool_k={cpu_post_maxpool_k})")
+        W_conv  = np.load(os.path.join(deploy_dir, cnn_weight_files['W_conv']))
+        thres   = np.load(os.path.join(deploy_dir, cnn_weight_files['thres']))
+        W_cls   = np.load(os.path.join(deploy_dir, cnn_weight_files['W_cls']))
+        mul_out = np.load(os.path.join(deploy_dir, cnn_weight_files['mul']))
+        add_out = np.load(os.path.join(deploy_dir, cnn_weight_files['add']))
+    elif has_cnn_pre and partition == 'qi':
+        # CNN QI: Conv1 moved to FPGA. CPU only does input quant + the
+        # original post-FPGA tail (optional MaxPool, GAP, classifier
+        # MatMul, dequant, argmax).
+        wf = cpu_cfg['weight_files']
+        cpu_post_maxpool_k = int(cpu_cfg.get('cpu_post_maxpool_k', 0))
+        print(f"  CPU pre/post processing: CNN input-quant + classifier "
+              f"(QI partition; cpu_post_maxpool_k={cpu_post_maxpool_k})")
+        input_thres = np.load(os.path.join(deploy_dir, wf['input_thres']))
+        W_cls       = np.load(os.path.join(deploy_dir, wf['W_cls']))
+        mul_out     = np.load(os.path.join(deploy_dir, wf['mul']))
+        add_out     = np.load(os.path.join(deploy_dir, wf['add']))
     else:
         print("  Full hardware mapping")
 
@@ -493,6 +582,8 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
         'power_method': 'ina260' if POWER_AVAILABLE else 'none',
         'cpu_pre_layer': has_mlp_pre or has_cnn_pre,
         'cpu_split_type': 'mlp' if has_mlp_pre else 'cnn' if has_cnn_pre else 'none',
+        'partition': partition,
+        'finn_double_buffer': bool(finn_double_buffer),
     }
 
     print(f"Thermal stabilization ({stabilize_seconds}s)...")
@@ -523,11 +614,40 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
         return np.sum(x[..., np.newaxis] >= thresholds, axis=-1).astype(np.uint8)
 
     def infer(img_flat):
+        if has_mlp_pre and partition == 'qi':
+            # MLP QI: input quant only on CPU. Apply 1-row threshold table to
+            # all 784 input pixels, send to FPGA, dequant + argmax.
+            img = img_flat.astype(np.float32) / 255.0
+            x = multithreshold(img, input_thres)         # (784,) uint8
+            hw_out = ol.execute([x.reshape(ishape_normal)])
+            out = hw_out.flatten().astype(np.float32) * mul_out + add_out
+            return int(np.argmax(out))
         if has_mlp_pre:
             x = img_flat.astype(np.float32) / 255.0 @ W0
             x = multithreshold(x, thres)
             hw_out = ol.execute([x.reshape(ishape_normal)])
             out = hw_out.flatten().astype(np.float32) * mul_out + add_out
+            return int(np.argmax(out))
+        elif has_cnn_pre and partition == 'qi':
+            # CNN QI: input MultiThreshold only on CPU pre-FPGA. Post-FPGA
+            # tail (optional MaxPool, GAP, classifier MatMul, dequant) is
+            # identical to classic.
+            n_inputs = len(img_flat)
+            if n_inputs == 784:
+                img = img_flat.reshape(28, 28, 1).astype(np.float32) / 255.0
+            else:
+                img = img_flat.reshape(3, 32, 32).astype(np.float32) / 255.0
+                img = img.transpose(1, 2, 0)
+            x = multithreshold(img, input_thres)        # (H, W, C_in) uint8
+            hw_out = ol.execute([x.reshape(ishape_normal)])
+            feat = hw_out.reshape(oshape_normal[1], oshape_normal[2], oshape_normal[3])
+            if cpu_post_maxpool_k == 2:
+                H, Wd, Cd = feat.shape
+                OH, OW = (H - 2) // 2 + 1, (Wd - 2) // 2 + 1
+                feat = feat[:OH * 2, :OW * 2].reshape(OH, 2, OW, 2, Cd).max(axis=(1, 3))
+            feat = feat.mean(axis=(0, 1))
+            out = feat @ W_cls
+            out = out.astype(np.float32) * mul_out + add_out
             return int(np.argmax(out))
         elif has_cnn_pre:
             # Auto-detect spatial dims from weight shape
@@ -547,6 +667,12 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             hw_out = ol.execute([x.reshape(ishape_normal)])
             # oshape_normal tells us the output spatial dims
             feat = hw_out.reshape(oshape_normal[1], oshape_normal[2], oshape_normal[3])
+            # CPU 2x2 valid-pad MaxPool when the FPGA partition didn't include
+            # the post-Conv-N MaxPool (deep_3 3-conv topology).
+            if cpu_post_maxpool_k == 2:
+                H, Wd, Cd = feat.shape
+                OH, OW = (H - 2) // 2 + 1, (Wd - 2) // 2 + 1
+                feat = feat[:OH * 2, :OW * 2].reshape(OH, 2, OW, 2, Cd).max(axis=(1, 3))
             feat = feat.mean(axis=(0, 1))       # (C,) global average pool
             out = feat @ W_cls
             out = out.astype(np.float32) * mul_out + add_out
@@ -578,6 +704,8 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                 ctypes.c_void_p, ctypes.c_uint64,
                 ctypes.c_void_p, ctypes.c_void_p,
                 ctypes.c_void_p, ctypes.c_void_p, ctypes.c_float, ctypes.c_void_p,
+                ctypes.c_int,                # partition (0=classic, 1=qi)
+                ctypes.c_int,                # idt_signed (0=unsigned, 1=signed)
             ]
             _lib.finn_mlp_runner_init.restype = ctypes.c_int
             _lib.finn_mlp_runner_destroy.argtypes = []
@@ -590,8 +718,15 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             _lib.finn_mlp_infer_one_profiled.restype  = ctypes.c_int
 
             precision = int(idt.bitwidth())
-            assert not idt.signed(), (
-                "C runner expects unsigned activation (UINTn); got signed idt")
+            # Classic deploys in this project always have UINT IDT (post-MT
+            # uint counts feed straight into the FPGA). QI may use either:
+            # QuantIdentity(Int8ActPerTensorFloat) is signed, while
+            # QuantIdentity(Uint8ActPerTensorFloat) is unsigned. The C
+            # runner shifts the multithreshold count by 2^(N-1) on signed
+            # input so the byte the FPGA reads matches the signed output.
+            idt_signed_int = 1 if idt.signed() else 0
+            assert not (partition == 'classic' and idt.signed()), (
+                "classic partition expects unsigned IDT; got signed idt")
             nthres = (1 << precision) - 1  # full threshold count for the dtype
 
             # Reuse ol's auto-allocated buffers: they're already cacheable=True,
@@ -601,8 +736,22 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             idma_mmio = ol.idma[0].mmio.array.ctypes.data
             odma_mmio = ol.odma[0].mmio.array.ctypes.data
 
-            W0_c    = np.ascontiguousarray(W0.astype(np.float32))
-            thres_c = np.ascontiguousarray(thres.astype(np.float32))
+            # QI partition: input MultiThreshold replaces the CPU MatMul.
+            # mid_dim collapses to in_dim (the FPGA accepts the post-MT
+            # raw image directly). thres array is the input threshold table
+            # (single row, applied to all input pixels in the C runner).
+            # W0 is unused in QI; pass NULL.
+            partition_int = 1 if partition == 'qi' else 0
+            if partition == 'qi':
+                thres_c = np.ascontiguousarray(input_thres.astype(np.float32))
+                W0_c    = None
+                w0_ptr  = 0
+                mid_dim = n_inputs   # FPGA input is the post-MT image
+            else:
+                W0_c    = np.ascontiguousarray(W0.astype(np.float32))
+                thres_c = np.ascontiguousarray(thres.astype(np.float32))
+                w0_ptr  = W0_c.ctypes.data
+                mid_dim = W0.shape[1]
             add_c   = np.ascontiguousarray(add_out.astype(np.float32))
             mul_v   = float(np.asarray(mul_out).flatten()[0])
 
@@ -612,20 +761,53 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             # convention, e.g. mlp_int4_fps500000 with SIMD=16).
             ibuf_bytes_per_image = int(np.prod(ol.ishape_packed(0)[1:]))
             rc = _lib.finn_mlp_runner_init(
-                precision, n_inputs, W0.shape[1], add_out.shape[0], nthres,
+                precision, n_inputs, mid_dim, add_out.shape[0], nthres,
                 ibuf_bytes_per_image,
                 1,  # use_cache_ops=1 (ol buffers are cacheable)
                 ibuf_dev.ctypes.data, int(ibuf_dev.device_address),
                 obuf_dev.ctypes.data, int(obuf_dev.device_address),
                 idma_mmio, odma_mmio,
-                W0_c.ctypes.data, thres_c.ctypes.data, mul_v, add_c.ctypes.data)
+                w0_ptr, thres_c.ctypes.data, mul_v, add_c.ctypes.data,
+                partition_int, idt_signed_int)
             if rc != 0:
                 print(f"  finn_mlp_runner_init returned {rc}; falling back to Python")
             else:
+                # Optionally register the second buffer pair for double-buffered
+                # batch inference. The setter is missing in older .so builds —
+                # fall back to single-buffered if so.
+                if ibuf_dev_b is not None and obuf_dev_b is not None:
+                    try:
+                        _lib.finn_mlp_set_second_buffers.argtypes = [
+                            ctypes.c_void_p, ctypes.c_uint64,
+                            ctypes.c_void_p, ctypes.c_uint64,
+                        ]
+                        _lib.finn_mlp_set_second_buffers.restype = ctypes.c_int
+                        rc2 = _lib.finn_mlp_set_second_buffers(
+                            ibuf_dev_b.ctypes.data, int(ibuf_dev_b.device_address),
+                            obuf_dev_b.ctypes.data, int(obuf_dev_b.device_address))
+                        if rc2 == 0:
+                            print("  MLP runner: double-buffered batch enabled")
+                        else:
+                            print(f"  finn_mlp_set_second_buffers rc={rc2}; "
+                                  f"single-buffered fallback")
+                    except AttributeError:
+                        print("  finn_mlp_set_second_buffers not in .so; "
+                              "single-buffered fallback (rebuild libfinn_mlp_infer.so)")
                 images_c = np.ascontiguousarray(images_flat.astype(np.uint8))
                 labels_c = np.ascontiguousarray(labels.astype(np.int32))
                 preds_c  = np.zeros(len(images_c), dtype=np.int32)
                 c_runner = _lib
+                # QI profile: stage 0 (MatMul) is a no-op; stage 1 carries
+                # the input multithreshold time. Keep slot count = 6 so the
+                # downstream profile-printer's index math is shared.
+                if partition == 'qi':
+                    stage_names = ['(qi: no MatMul)', 'InputMultiThreshold',
+                                   'Pack', 'DMA trig+wait', 'Unpack',
+                                   'Post dequant+argmax']
+                else:
+                    stage_names = ['MatMul', 'MultiThreshold', 'Pack',
+                                   'DMA trig+wait', 'Unpack',
+                                   'Post dequant+argmax']
                 c_state  = {
                     'precision': precision,
                     'W0_c':    W0_c,      'thres_c': thres_c,
@@ -635,12 +817,10 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                     'batch_fn':    _lib.finn_mlp_infer_batch,
                     'profile_fn':  _lib.finn_mlp_infer_one_profiled,
                     'destroy_fn':  _lib.finn_mlp_runner_destroy,
-                    'stage_names': ['MatMul', 'MultiThreshold', 'Pack',
-                                    'DMA trig+wait', 'Unpack',
-                                    'Post dequant+argmax'],
+                    'stage_names': stage_names,
                 }
                 print(f"  MLP C runner loaded: {_so_path} "
-                      f"(INT{precision}, nthres={nthres})")
+                      f"(INT{precision}, nthres={nthres}, partition={partition})")
         except OSError as e:
             print(f"  C runner not available ({e}); falling back to Python infer")
     elif finn_runtime == 'c' and has_cnn_pre:
@@ -655,7 +835,7 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                 import ctypes
                 _lib = ctypes.CDLL(_so_path)
                 _lib.finn_cnn_runner_init.argtypes = [
-                    ctypes.c_int,
+                    ctypes.c_int, ctypes.c_int,      # in_precision, out_precision
                     ctypes.c_int, ctypes.c_int, ctypes.c_int,
                     ctypes.c_int, ctypes.c_int,
                     ctypes.c_int,
@@ -667,6 +847,10 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                     ctypes.c_void_p, ctypes.c_void_p,
                     ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p,
                     ctypes.c_float, ctypes.c_void_p,
+                    ctypes.c_int,                    # cpu_post_maxpool_k
+                    ctypes.c_int, ctypes.c_int,      # ibuf_packed_bytes, obuf_packed_bytes
+                    ctypes.c_int,                    # partition (0=classic, 1=qi)
+                    ctypes.c_int,                    # idt_signed
                 ]
                 _lib.finn_cnn_runner_init.restype = ctypes.c_int
                 _lib.finn_cnn_runner_destroy.argtypes = []
@@ -679,18 +863,32 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                     ctypes.c_void_p, ctypes.c_void_p]
                 _lib.finn_cnn_infer_one_profiled.restype  = ctypes.c_int
 
-                precision = int(idt.bitwidth())
-                assert not idt.signed(), (
-                    "C runner expects unsigned activation (UINTn); got signed idt")
-                nthres = (1 << precision) - 1
+                # Per-side precision. QI INT4 deploys are mixed: input is
+                # INT8 (from QuantIdentity(bit_width=8)) but output is INT4
+                # (from the final QuantReLU). The C runner's select_dispatch
+                # picks pack/unpack independently from these.
+                in_precision = int(idt.bitwidth())
+                out_precision = int(odt.bitwidth())
+                # See MLP block above for the signed-IDT rationale.
+                idt_signed_int = 1 if idt.signed() else 0
+                assert not (partition == 'classic' and idt.signed()), (
+                    "classic partition expects unsigned IDT; got signed idt")
+                nthres = (1 << in_precision) - 1
 
-                # Geometry derived from weight + io_shape_dict.  W_conv shape
-                # is (kernel*kernel*img_c, fpga_in_c); for MNIST that's (9, 8).
+                # Geometry. Classic partition: derive kernel/fpga_in_c from
+                # W_conv (shape kernel*kernel*img_c x fpga_in_c). QI partition:
+                # W_conv is None — derive geometry from input_thres
+                # (shape (img_c, num_thresholds)) plus the kernel/pad
+                # convention used by all our Brevitas QAT trains.
                 img_h, img_w, img_c = 28, 28, 1
-                patch_dim = W_conv.shape[0]
-                kernel_size = int(round((patch_dim // img_c) ** 0.5))
-                pad = 1  # FINN MNIST-tiny convention; same=1 for 3x3
-                fpga_in_c = int(W_conv.shape[1])
+                pad = 1
+                if partition == 'qi':
+                    kernel_size = 3                       # convention; not used by cpu_pre_qi
+                    fpga_in_c   = int(input_thres.shape[0])
+                else:
+                    patch_dim = W_conv.shape[0]
+                    kernel_size = int(round((patch_dim // img_c) ** 0.5))
+                    fpga_in_c = int(W_conv.shape[1])
                 fpga_out_h = int(oshape_normal[1])
                 fpga_out_w = int(oshape_normal[2])
                 fpga_out_c = int(oshape_normal[3])
@@ -701,14 +899,33 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                 idma_mmio = ol.idma[0].mmio.array.ctypes.data
                 odma_mmio = ol.odma[0].mmio.array.ctypes.data
 
-                W_conv_c = np.ascontiguousarray(W_conv.astype(np.float32))
-                thres_c  = np.ascontiguousarray(thres.astype(np.float32))
+                # Actual packed buffer sizes from the deploy's io_shape_dict.
+                # FINN's PE/SIMD folding can produce asymmetric INT4 packing
+                # (e.g. deep_3 INT4: input 2-per-byte, output 1-per-byte due
+                # to SIMD=1 on the output). Pass these through to the C runner
+                # so it can pick the correct pack/unpack functions and size
+                # cache invalidations correctly.
+                ibuf_packed_bytes = int(np.prod(ol.ishape_packed(0)[1:]))
+                obuf_packed_bytes = int(np.prod(ol.oshape_packed(0)[1:]))
+
+                # QI: thres is the input MultiThreshold table (shape
+                # (img_c, num_thresholds)); W_conv is unused (Conv1 on FPGA).
+                # Classic: thres is Conv1's per-channel thresholds.
+                partition_int = 1 if partition == 'qi' else 0
+                if partition == 'qi':
+                    W_conv_c = None
+                    w_conv_ptr = 0
+                    thres_c  = np.ascontiguousarray(input_thres.astype(np.float32))
+                else:
+                    W_conv_c = np.ascontiguousarray(W_conv.astype(np.float32))
+                    w_conv_ptr = W_conv_c.ctypes.data
+                    thres_c  = np.ascontiguousarray(thres.astype(np.float32))
                 W_cls_c  = np.ascontiguousarray(W_cls.astype(np.float32))
                 add_c    = np.ascontiguousarray(add_out.astype(np.float32))
                 mul_v    = float(np.asarray(mul_out).flatten()[0])
 
                 rc = _lib.finn_cnn_runner_init(
-                    precision,
+                    in_precision, out_precision,
                     img_h, img_w, img_c,
                     kernel_size, pad,
                     fpga_in_c,
@@ -718,19 +935,55 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                     ibuf_dev.ctypes.data, int(ibuf_dev.device_address),
                     obuf_dev.ctypes.data, int(obuf_dev.device_address),
                     idma_mmio, odma_mmio,
-                    W_conv_c.ctypes.data, thres_c.ctypes.data, W_cls_c.ctypes.data,
-                    mul_v, add_c.ctypes.data)
+                    w_conv_ptr, thres_c.ctypes.data, W_cls_c.ctypes.data,
+                    mul_v, add_c.ctypes.data,
+                    cpu_post_maxpool_k,
+                    ibuf_packed_bytes, obuf_packed_bytes,
+                    partition_int, idt_signed_int)
                 if rc != 0:
                     print(f"  finn_cnn_runner_init returned {rc}; "
                           f"falling back to Python")
                 else:
+                    # Optionally register the second buffer pair for
+                    # double-buffered batch inference.
+                    if ibuf_dev_b is not None and obuf_dev_b is not None:
+                        try:
+                            _lib.finn_cnn_set_second_buffers.argtypes = [
+                                ctypes.c_void_p, ctypes.c_uint64,
+                                ctypes.c_void_p, ctypes.c_uint64,
+                            ]
+                            _lib.finn_cnn_set_second_buffers.restype = ctypes.c_int
+                            rc2 = _lib.finn_cnn_set_second_buffers(
+                                ibuf_dev_b.ctypes.data, int(ibuf_dev_b.device_address),
+                                obuf_dev_b.ctypes.data, int(obuf_dev_b.device_address))
+                            if rc2 == 0:
+                                print("  CNN runner: double-buffered batch enabled")
+                            else:
+                                print(f"  finn_cnn_set_second_buffers rc={rc2}; "
+                                      f"single-buffered fallback")
+                        except AttributeError:
+                            print("  finn_cnn_set_second_buffers not in .so; "
+                                  "single-buffered fallback (rebuild libfinn_cnn_infer.so)")
                     # Flatten MNIST to uint8 [N, 784] for the C batch call.
                     images_c = np.ascontiguousarray(images_flat.astype(np.uint8))
                     labels_c = np.ascontiguousarray(labels.astype(np.int32))
                     preds_c  = np.zeros(len(images_c), dtype=np.int32)
                     c_runner = _lib
+                    # QI: stages 0-2 (CastNorm/im2col/MatMul1) are no-ops,
+                    # stage 3 (MultiThreshold) carries the input quant work.
+                    if partition == 'qi':
+                        stage_names = ['(qi noop)', '(qi noop)', '(qi noop)',
+                                       'InputMultiThreshold', 'Pack',
+                                       'DMA trig+wait', 'CacheInv', 'MaxPool2x2',
+                                       'GAP', 'MatMul2', 'Post dequant+argmax']
+                    else:
+                        stage_names = ['CastNorm', 'im2col', 'MatMul1',
+                                       'MultiThreshold', 'Pack',
+                                       'DMA trig+wait', 'CacheInv', 'MaxPool2x2',
+                                       'GAP', 'MatMul2', 'Post dequant+argmax']
                     c_state  = {
-                        'precision': precision,
+                        'in_precision':  in_precision,
+                        'out_precision': out_precision,
                         'W_conv_c': W_conv_c, 'thres_c': thres_c,
                         'W_cls_c':  W_cls_c,  'add_c':   add_c,  'mul_v': mul_v,
                         'images':   images_c, 'labels':  labels_c,
@@ -738,13 +991,12 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                         'batch_fn':    _lib.finn_cnn_infer_batch,
                         'profile_fn':  _lib.finn_cnn_infer_one_profiled,
                         'destroy_fn':  _lib.finn_cnn_runner_destroy,
-                        'stage_names': ['CastNorm', 'im2col', 'MatMul1',
-                                        'MultiThreshold', 'Pack',
-                                        'DMA trig+wait', 'CacheInv', 'GAP',
-                                        'MatMul2', 'Post dequant+argmax'],
+                        'stage_names': stage_names,
                     }
+                    prec_str = (f"INT{in_precision}" if in_precision == out_precision
+                                else f"INT{in_precision}/INT{out_precision}")
                     print(f"  CNN C runner loaded: {_so_path} "
-                          f"(INT{precision}, geometry "
+                          f"({prec_str}, partition={partition}, geometry "
                           f"{img_h}x{img_w}x{img_c} k={kernel_size} pad={pad} "
                           f"-> {fpga_out_h}x{fpga_out_w}x{fpga_out_c})")
             except OSError as e:
@@ -1320,9 +1572,19 @@ def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
 
     idle = measure_idle(idle_seconds)
 
+    # load_cifar10 returns NCHW (PyTorch convention); vai_q_pytorch xmodels
+    # expect NHWC input. Plain reshape silently scrambles channels. MNIST
+    # single-channel and MLP topologies are no-ops because the channel-dim
+    # check below skips them.
+    def _to_dpu_layout(img):
+        img = img.astype(np.float32)
+        if img.ndim == 3 and img.shape[0] in (1, 3) and tuple(input_shape[1:]) != img.shape:
+            img = np.transpose(img, (1, 2, 0))
+        return np.ascontiguousarray(img.reshape(input_shape))
+
     print(f"Warmup ({warmup_batches} images)...")
     for i in range(warmup_batches):
-        inp = (images[i].astype(np.float32)).reshape(input_shape)
+        inp = _to_dpu_layout(images[i])
         out = np.empty(output_shape, dtype=np.float32)
         job_id = runner.execute_async([inp], [out])
         runner.wait(job_id)
@@ -1340,7 +1602,7 @@ def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
         start_time = time.time()
 
         for i in range(len(images)):
-            inp = (images[i].astype(np.float32)).reshape(input_shape)
+            inp = _to_dpu_layout(images[i])
             out = np.empty(output_shape, dtype=np.float32)
             job_id = runner.execute_async([inp], [out])
             runner.wait(job_id)
@@ -1983,6 +2245,12 @@ if __name__ == '__main__':
                         help='FINN MLP inference runtime: "c" uses libfinn_mlp_infer.so, '
                              '"python" uses the numpy infer loop (default). Only applies '
                              'to --toolchain finn with MLP (has_mlp_pre) deploys.')
+    parser.add_argument('--finn-double-buffer', action='store_true',
+                        help='Enable double-buffered DMA in the C runner: stage CPU '
+                             'pre[N+1] and run cpu_post[N-1] in parallel with FPGA '
+                             'accel[N]. Requires --finn-runtime=c. Allocates a second '
+                             'PYNQ buffer pair (~2x memory). No effect on single-image '
+                             'runs (warmup, batch=1).')
     args = parser.parse_args()
 
     if args.results_dir is None:
@@ -2013,7 +2281,8 @@ if __name__ == '__main__':
             deploy_dir=args.model, dataset=args.dataset, batch_size=args.batch,
             num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
             stabilize_seconds=args.stabilize, results_dir=args.results_dir,
-            run_name=run_name, finn_runtime=args.finn_runtime)
+            run_name=run_name, finn_runtime=args.finn_runtime,
+            finn_double_buffer=args.finn_double_buffer)
     elif args.toolchain == 'finn-t':
         if args.dataset != 'radioml2018':
             print("ERROR: finn-t requires --dataset radioml2018")

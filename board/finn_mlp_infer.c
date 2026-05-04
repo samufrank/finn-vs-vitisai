@@ -168,8 +168,13 @@ typedef void (*pack_fn_t)  (const uint8_t *act, uint8_t *ibuf, int n);
 typedef void (*unpack_fn_t)(const uint8_t *obuf, int32_t *out, int n);
 
 typedef struct {
-    void     *ibuf_virt;   uint64_t  ibuf_phys;
-    void     *obuf_virt;   uint64_t  obuf_phys;
+    /* Caller-owned buffers + MMIO. Slot 0 is set by runner_init; slot 1
+     * is optionally set by finn_mlp_set_second_buffers to enable batch
+     * overlap of CPU prep[N+1] with FPGA accel[N]. When unset, slot 1
+     * mirrors slot 0 and n_buffers stays 1 (single-buffer lockstep). */
+    void     *ibuf_virt[2]; uint64_t ibuf_phys[2];
+    void     *obuf_virt[2]; uint64_t obuf_phys[2];
+    int       n_buffers;       /* 1 = single-buffered, 2 = double */
     void     *idma_mmio;   void     *odma_mmio;
 
     int       in_dim;
@@ -187,6 +192,17 @@ typedef struct {
     float        mul;
     const float *add;
 
+    /* Partition layout. 0 = classic (Linear1 on CPU: MatMul + per-channel
+     * MultiThreshold). 1 = qi (input QuantIdentity moved Linear1 onto FPGA;
+     * CPU only does input MultiThreshold on raw image). For partition=1
+     * W0 may be NULL, mid_dim must equal in_dim, and `thres` is shape
+     * (1, num_thresholds) — one row reused across all input pixels. */
+    int       partition;
+    /* Signedness of FPGA-input dtype (see CNN runner for full rationale).
+     * 0 = UINT (classic MLP: post-MatMul+MT uint output). 1 = INT (QI with
+     * QuantIdentity(Int8...): signed int8). cpu_pre_qi shifts the count
+     * by 2^(precision-1) when signed. Classic must be 0. */
+    int       idt_signed;
     int       use_cache_ops;
     int       initialized;
 } mlp_runner_state_t;
@@ -253,13 +269,22 @@ int finn_mlp_runner_init(
     const float *W0,
     const float *thres,
     float        mul,
-    const float *add)
+    const float *add,
+    int          partition,         /* 0 = classic, 1 = qi */
+    int          idt_signed)        /* 0 = unsigned IDT, 1 = signed (QI only) */
 {
     if (in_dim <= 0 || mid_dim <= 0 || num_classes <= 0 || num_thresholds <= 0)
         return -2;
     if (ibuf_bytes <= 0)                         return -2;
     if (ibuf_virt == NULL || obuf_virt == NULL)  return -3;
-    if (W0 == NULL || thres == NULL || add == NULL) return -4;
+    if (partition != 0 && partition != 1)        return -7;
+    if (idt_signed != 0 && idt_signed != 1)      return -9;
+    if (partition == 0 && idt_signed != 0)       return -9;
+    /* W0 unused on the QI path; thres + add still required. */
+    if (thres == NULL || add == NULL)            return -4;
+    if (partition == 0 && W0 == NULL)            return -4;
+    /* QI: FPGA accepts the post-MT raw image, so mid_dim must match in_dim. */
+    if (partition == 1 && mid_dim != in_dim)     return -8;
 
     pack_fn_t   pack;
     unpack_fn_t unpack;
@@ -274,10 +299,15 @@ int finn_mlp_runner_init(
         if (thres[j] < thres[j - 1]) return -6;
     }
 
-    g_mlp.ibuf_virt      = ibuf_virt;
-    g_mlp.ibuf_phys      = ibuf_phys;
-    g_mlp.obuf_virt      = obuf_virt;
-    g_mlp.obuf_phys      = obuf_phys;
+    g_mlp.ibuf_virt[0]   = ibuf_virt;
+    g_mlp.ibuf_phys[0]   = ibuf_phys;
+    g_mlp.obuf_virt[0]   = obuf_virt;
+    g_mlp.obuf_phys[0]   = obuf_phys;
+    g_mlp.ibuf_virt[1]   = ibuf_virt;
+    g_mlp.ibuf_phys[1]   = ibuf_phys;
+    g_mlp.obuf_virt[1]   = obuf_virt;
+    g_mlp.obuf_phys[1]   = obuf_phys;
+    g_mlp.n_buffers      = 1;
     g_mlp.idma_mmio      = idma_mmio;
     g_mlp.odma_mmio      = odma_mmio;
     g_mlp.in_dim         = in_dim;
@@ -292,6 +322,8 @@ int finn_mlp_runner_init(
     g_mlp.thres          = thres;
     g_mlp.mul            = mul;
     g_mlp.add            = add;
+    g_mlp.partition      = partition;
+    g_mlp.idt_signed     = idt_signed;
     g_mlp.use_cache_ops  = use_cache_ops;
     g_mlp.initialized    = 1;
     return 0;
@@ -300,6 +332,24 @@ int finn_mlp_runner_init(
 int finn_mlp_runner_destroy(void)
 {
     memset(&g_mlp, 0, sizeof(g_mlp));
+    return 0;
+}
+
+/* Optional second-buffer setter for double-buffered batch inference.
+ * After this returns success, finn_mlp_infer_batch overlaps cpu_pre +
+ * pack[N+1] with accel[N] and unpack + cpu_post[N-1]. Single-image
+ * entries (finn_mlp_infer_one, _profiled) always use slot 0. */
+int finn_mlp_set_second_buffers(
+    void *ibuf_b_virt, uint64_t ibuf_b_phys,
+    void *obuf_b_virt, uint64_t obuf_b_phys)
+{
+    if (!g_mlp.initialized)                              return -1;
+    if (ibuf_b_virt == NULL || obuf_b_virt == NULL)      return -2;
+    g_mlp.ibuf_virt[1] = ibuf_b_virt;
+    g_mlp.ibuf_phys[1] = ibuf_b_phys;
+    g_mlp.obuf_virt[1] = obuf_b_virt;
+    g_mlp.obuf_phys[1] = obuf_b_phys;
+    g_mlp.n_buffers    = 2;
     return 0;
 }
 
@@ -343,6 +393,28 @@ static inline void cpu_pre(const uint8_t *img, uint8_t *act)
     }
 }
 
+/* QI partition: float-normalize the raw image and apply a single 255-row
+ * MultiThreshold (per-pixel, broadcasting one row across all `in_dim`
+ * elements). No first MatMul — Linear1 is on FPGA. For signed IDT the
+ * count is shifted down by (T+1)/2 = 2^(N-1) so the resulting byte,
+ * reinterpreted as int8, matches MultiThreshold's signed output. */
+static inline void cpu_pre_qi(const uint8_t *img, uint8_t *act)
+{
+    const int IN  = g_mlp.in_dim;
+    const int T   = g_mlp.num_thresholds;
+    const float *row = g_mlp.thres;          /* shape (1, T) */
+    const float inv255 = 1.0f / 255.0f;
+    const int bias = g_mlp.idt_signed ? ((T + 1) >> 1) : 0;
+    for (int k = 0; k < IN; k++) {
+        const float x = (float)img[k] * inv255;
+        int count = 0;
+        for (int j = 0; j < T; j++) {
+            if (row[j] <= x) count++;
+        }
+        act[k] = (uint8_t)(count - bias);
+    }
+}
+
 /* argmax( hw * mul + add ) over num_classes. */
 static inline int cpu_post_argmax(const int32_t *hw)
 {
@@ -362,12 +434,12 @@ static inline int cpu_post_argmax(const int32_t *hw)
  * Real inference: CPU pre -> pack -> DMA -> unpack -> CPU post.
  * ============================================================ */
 
-static inline void trigger_dma(void)
+static inline void trigger_dma(int slot)
 {
     volatile uint32_t *idma = (volatile uint32_t *)g_mlp.idma_mmio;
     volatile uint32_t *odma = (volatile uint32_t *)g_mlp.odma_mmio;
-    uint64_t ip = g_mlp.ibuf_phys;
-    uint64_t op = g_mlp.obuf_phys;
+    uint64_t ip = g_mlp.ibuf_phys[slot];
+    uint64_t op = g_mlp.obuf_phys[slot];
 
     /* Output DMA armed first (matches v1 finn_t and driver_base.execute_on_buffers). */
     mmio_write(odma, DMA_REG_ADDR_LO, (uint32_t)(op & 0xFFFFFFFFu));
@@ -394,17 +466,85 @@ int finn_mlp_infer_one(const uint8_t *img)
     uint8_t act[g_mlp.mid_dim];
     int32_t hw[g_mlp.num_classes];
 
-    cpu_pre(img, act);
-    g_mlp.pack(act, (uint8_t *)g_mlp.ibuf_virt, g_mlp.mid_dim);
-    if (g_mlp.use_cache_ops) dcache_clean(g_mlp.ibuf_virt, g_mlp.ibuf_bytes);
+    if (g_mlp.partition == 1) cpu_pre_qi(img, act);
+    else                      cpu_pre(img, act);
+    g_mlp.pack(act, (uint8_t *)g_mlp.ibuf_virt[0], g_mlp.mid_dim);
+    if (g_mlp.use_cache_ops) dcache_clean(g_mlp.ibuf_virt[0], g_mlp.ibuf_bytes);
 
-    trigger_dma();
+    trigger_dma(0);
     wait_dma();
 
-    if (g_mlp.use_cache_ops) dcache_invalidate(g_mlp.obuf_virt, g_mlp.obuf_bytes);
-    g_mlp.unpack((const uint8_t *)g_mlp.obuf_virt, hw, g_mlp.num_classes);
+    if (g_mlp.use_cache_ops) dcache_invalidate(g_mlp.obuf_virt[0], g_mlp.obuf_bytes);
+    g_mlp.unpack((const uint8_t *)g_mlp.obuf_virt[0], hw, g_mlp.num_classes);
 
     return cpu_post_argmax(hw);
+}
+
+/* Double-buffered batch loop. Same overlap structure as the CNN runner:
+ * cpu_pre + pack[N+1] runs while accel[N] computes; unpack + post[N-1]
+ * runs while accel[N] computes. Single act/hw scratch is fine
+ * (sequentially used per iteration); only the FPGA-touched ibuf/obuf
+ * pair need to be doubled. */
+static int infer_batch_double(
+    const uint8_t *images, const int32_t *labels,
+    int n_samples, int32_t *predictions_out)
+{
+    if (n_samples == 0) return 0;
+    const int IN = g_mlp.in_dim;
+    int correct = 0;
+
+    if (n_samples == 1) {
+        int pred = finn_mlp_infer_one(images);
+        predictions_out[0] = (int32_t)pred;
+        return (labels && pred == labels[0]) ? 1 : 0;
+    }
+
+    uint8_t act[g_mlp.mid_dim];
+    int32_t hw[g_mlp.num_classes];
+
+    /* Helper: cpu_pre + pack into slot's ibuf + dcache clean. */
+    #define STAGE_INTO(slot_, img_ptr_) do { \
+        if (g_mlp.partition == 1) cpu_pre_qi(img_ptr_, act); \
+        else                      cpu_pre(img_ptr_, act); \
+        g_mlp.pack(act, (uint8_t *)g_mlp.ibuf_virt[(slot_)], g_mlp.mid_dim); \
+        if (g_mlp.use_cache_ops) \
+            dcache_clean(g_mlp.ibuf_virt[(slot_)], g_mlp.ibuf_bytes); \
+    } while (0)
+
+    /* Helper: cache invalidate + unpack(slot's obuf) + cpu_post -> pred. */
+    #define TAIL_FROM(slot_, pred_lvalue_) do { \
+        if (g_mlp.use_cache_ops) \
+            dcache_invalidate(g_mlp.obuf_virt[(slot_)], g_mlp.obuf_bytes); \
+        g_mlp.unpack((const uint8_t *)g_mlp.obuf_virt[(slot_)], \
+                      hw, g_mlp.num_classes); \
+        (pred_lvalue_) = cpu_post_argmax(hw); \
+    } while (0)
+
+    int slot = 0;
+    STAGE_INTO(slot, images);
+    trigger_dma(slot);
+
+    for (int i = 1; i < n_samples; i++) {
+        int nslot = 1 - slot;
+        STAGE_INTO(nslot, images + (size_t)i * IN);
+        wait_dma();
+        trigger_dma(nslot);
+        int pred;
+        TAIL_FROM(slot, pred);
+        predictions_out[i - 1] = (int32_t)pred;
+        if (labels && pred == labels[i - 1]) correct++;
+        slot = nslot;
+    }
+
+    wait_dma();
+    int pred;
+    TAIL_FROM(slot, pred);
+    predictions_out[n_samples - 1] = (int32_t)pred;
+    if (labels && pred == labels[n_samples - 1]) correct++;
+
+    #undef STAGE_INTO
+    #undef TAIL_FROM
+    return correct;
 }
 
 int finn_mlp_infer_batch(
@@ -416,6 +556,9 @@ int finn_mlp_infer_batch(
     if (!g_mlp.initialized) return -1;
     if (n_samples < 0) return -2;
 
+    if (g_mlp.n_buffers == 2) {
+        return infer_batch_double(images, labels, n_samples, predictions_out);
+    }
     int correct = 0;
     const int IN = g_mlp.in_dim;
     for (int i = 0; i < n_samples; i++) {
@@ -447,7 +590,8 @@ int finn_mlp_infer_one_mock(
     uint8_t act[g_mlp.mid_dim];
     int32_t hw[g_mlp.num_classes];
 
-    cpu_pre(img, act);
+    if (g_mlp.partition == 1) cpu_pre_qi(img, act);
+    else                      cpu_pre(img, act);
     if (pack_scratch_out) {
         g_mlp.pack(act, pack_scratch_out, g_mlp.mid_dim);
     }
@@ -494,35 +638,51 @@ int finn_mlp_infer_one_profiled(const uint8_t *img, uint64_t *ns_out)
     int32_t hw[g_mlp.num_classes];
 
     uint64_t t0 = mono_ns();
-    for (int c = 0; c < MID; c++) acc[c] = 0.0f;
-    for (int k = 0; k < IN; k++) {
-        const float v = (float)img[k];
-        const float *Wk = W + (size_t)k * MID;
-        for (int c = 0; c < MID; c++) acc[c] += v * Wk[c];
-    }
-    const float inv255 = 1.0f / 255.0f;
-    for (int c = 0; c < MID; c++) acc[c] *= inv255;
+    uint64_t t1;
+    if (g_mlp.partition == 1) {
+        /* QI: stage 0 (MatMul) is a no-op — Linear1 is on FPGA. */
+        (void)acc; (void)W;
+        t1 = t0;
+        const float inv255 = 1.0f / 255.0f;
+        const float *row = TH;                 /* shape (1, T) */
+        const int bias = g_mlp.idt_signed ? ((T + 1) >> 1) : 0;
+        for (int k = 0; k < IN; k++) {
+            const float x = (float)img[k] * inv255;
+            int count = 0;
+            for (int j = 0; j < T; j++) if (row[j] <= x) count++;
+            act[k] = (uint8_t)(count - bias);
+        }
+    } else {
+        for (int c = 0; c < MID; c++) acc[c] = 0.0f;
+        for (int k = 0; k < IN; k++) {
+            const float v = (float)img[k];
+            const float *Wk = W + (size_t)k * MID;
+            for (int c = 0; c < MID; c++) acc[c] += v * Wk[c];
+        }
+        const float inv255 = 1.0f / 255.0f;
+        for (int c = 0; c < MID; c++) acc[c] *= inv255;
 
-    uint64_t t1 = mono_ns();
-    for (int c = 0; c < MID; c++) {
-        const float x = acc[c];
-        const float *row = TH + (size_t)c * T;
-        int count = 0;
-        for (int j = 0; j < T; j++) if (row[j] <= x) count++;
-        act[c] = (uint8_t)count;
+        t1 = mono_ns();
+        for (int c = 0; c < MID; c++) {
+            const float x = acc[c];
+            const float *row = TH + (size_t)c * T;
+            int count = 0;
+            for (int j = 0; j < T; j++) if (row[j] <= x) count++;
+            act[c] = (uint8_t)count;
+        }
     }
 
     uint64_t t2 = mono_ns();
-    g_mlp.pack(act, (uint8_t *)g_mlp.ibuf_virt, g_mlp.mid_dim);
-    if (g_mlp.use_cache_ops) dcache_clean(g_mlp.ibuf_virt, g_mlp.ibuf_bytes);
+    g_mlp.pack(act, (uint8_t *)g_mlp.ibuf_virt[0], g_mlp.mid_dim);
+    if (g_mlp.use_cache_ops) dcache_clean(g_mlp.ibuf_virt[0], g_mlp.ibuf_bytes);
 
     uint64_t t3 = mono_ns();
-    trigger_dma();
+    trigger_dma(0);
     wait_dma();
 
     uint64_t t4 = mono_ns();
-    if (g_mlp.use_cache_ops) dcache_invalidate(g_mlp.obuf_virt, g_mlp.obuf_bytes);
-    g_mlp.unpack((const uint8_t *)g_mlp.obuf_virt, hw, g_mlp.num_classes);
+    if (g_mlp.use_cache_ops) dcache_invalidate(g_mlp.obuf_virt[0], g_mlp.obuf_bytes);
+    g_mlp.unpack((const uint8_t *)g_mlp.obuf_virt[0], hw, g_mlp.num_classes);
 
     uint64_t t5 = mono_ns();
     int pred = cpu_post_argmax(hw);

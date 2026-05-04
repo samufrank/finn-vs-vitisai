@@ -13,12 +13,16 @@ def get_mlp_config(size='tiny'):
     """Return hidden layer sizes for a given configuration."""
     configs = {
         'tiny':         [64, 32],       # Fits FINN at INT8 and INT4
-        'tiny_plus':    [96, 48],                 
-        'small':        [128, 64],      
-        'small_plus':   [192, 96],      
+        'tiny_plus':    [96, 48],
+        'small':        [128, 64],
+        'small_plus':   [192, 96],
         'medium':       [256, 128],
         'large':        [512, 256],
-        'original':     [256, 256, 128], 
+        'original':     [256, 256, 128],
+        # Recognized FINN benchmark — TFC (Tiny Fully Connected) from
+        # Umuroglu et al. 2017 / Brevitas bnn_pynq (tfc_*.ini configs).
+        # 784→64→64→64→10. ~59K params.
+        'tfc':          [64, 64, 64],
     }
     if size not in configs:
         raise ValueError(f"Unknown config '{size}'. Options: {list(configs.keys())}")
@@ -47,18 +51,28 @@ class MLP(nn.Module):
 
 try:
     import brevitas.nn as qnn
-    from brevitas.quant import Int8WeightPerTensorFloat, Uint8ActPerTensorFloat
-    
+    from brevitas.quant import Int8ActPerTensorFloat, Int8WeightPerTensorFloat, Uint8ActPerTensorFloat
+
     class MLP_Brevitas(nn.Module):
         """Brevitas MLP for FINN quantization-aware training.
         Weights: INT8 signed. Activations after ReLU: UINT8 unsigned (FINN requirement).
+
+        quantize_input=True prepends QuantIdentity(8b) so the first
+        QuantLinear's input edge is INT8 in QONNX, moving Linear1 onto the
+        FPGA streaming partition. See CNN_Brevitas for rationale.
         """
-        def __init__(self, input_size=784, num_classes=10, hidden_sizes=None):
+        def __init__(self, input_size=784, num_classes=10, hidden_sizes=None,
+                     quantize_input=False):
             super().__init__()
             if hidden_sizes is None:
                 hidden_sizes = get_mlp_config('tiny')
-            
-            layers = [nn.Flatten()]
+
+            layers = []
+            if quantize_input:
+                layers.append(qnn.QuantIdentity(
+                    bit_width=8, act_quant=Int8ActPerTensorFloat,
+                    return_quant_tensor=True))
+            layers.append(nn.Flatten())
             prev = input_size
             for h in hidden_sizes:
                 layers.append(qnn.QuantLinear(prev, h, bias=True,
@@ -68,21 +82,32 @@ try:
             layers.append(qnn.QuantLinear(prev, num_classes, bias=True,
                          weight_quant=Int8WeightPerTensorFloat))
             self.layers = nn.Sequential(*layers)
-        
+
         def forward(self, x):
             return self.layers(x)
 
     class MLP_Brevitas_INT4(nn.Module):
-        """Brevitas MLP at INT4 for QAT retrain."""
-        def __init__(self, input_size=784, num_classes=10, hidden_sizes=None):
+        """Brevitas MLP at INT4 for QAT retrain.
+
+        quantize_input=True prepends QuantIdentity(bit_width=8). The QI
+        bit-width is fixed at 8 regardless of weight/act precision so the
+        FPGA partition's input edge matches the INT8 QI variant.
+        """
+        def __init__(self, input_size=784, num_classes=10, hidden_sizes=None,
+                     quantize_input=False):
             super().__init__()
             if hidden_sizes is None:
                 hidden_sizes = get_mlp_config('tiny')
-            
+
             Int4W = Int8WeightPerTensorFloat.let(bit_width=4)
             Uint4A = Uint8ActPerTensorFloat.let(bit_width=4)
-            
-            layers = [nn.Flatten()]
+
+            layers = []
+            if quantize_input:
+                layers.append(qnn.QuantIdentity(
+                    bit_width=8, act_quant=Int8ActPerTensorFloat,
+                    return_quant_tensor=True))
+            layers.append(nn.Flatten())
             prev = input_size
             for h in hidden_sizes:
                 layers.append(qnn.QuantLinear(prev, h, bias=True, weight_quant=Int4W))
@@ -90,7 +115,7 @@ try:
                 prev = h
             layers.append(qnn.QuantLinear(prev, num_classes, bias=True, weight_quant=Int4W))
             self.layers = nn.Sequential(*layers)
-        
+
         def forward(self, x):
             return self.layers(x)
 
