@@ -13,6 +13,10 @@ cifar10_data/
 
 # build / train logs
 /logs/
+finn/phase_a_*_logs/
+finn/phase_a_train_driver.log
+results/finn/*/compile_logs/
+results/finn/*/phase_a_training/logs/
 
 # Repos (cloned locally, not part of this project)
 finn-repo/
@@ -96,4 +100,3 @@ train_*.log
 *.c.int4
 board/*.so
 *.pid
-

@@ -1,0 +1,217 @@
+[2026-05-02T02:28:29Z] === QI overnight sweep START === state: trained_int8=0 trained_int4=0 compiled=0
+[2026-05-02T02:28:29Z] --- Phase A.1: INT8 training ---
+[2026-05-02T02:28:29Z]   [train INT8] cnn_mnist_tiny_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T02:32:45Z]   [OK INT8] cnn_mnist_tiny_qi val=91.47% elapsed=256s
+[2026-05-02T02:32:45Z]   [train INT8] cnn_mnist_medium_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T02:43:01Z]   [OK INT8] cnn_mnist_medium_qi val=96.7% elapsed=617s
+[2026-05-02T02:43:01Z]   [train INT8] cnn_mnist_deep_3_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T02:47:59Z]   [OK INT8] cnn_mnist_deep_3_qi val=99.06% elapsed=298s
+[2026-05-02T02:47:59Z]   [train INT8] cnn_mnist_large_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T02:57:09Z]   [OK INT8] cnn_mnist_large_qi val=99.01% elapsed=549s
+[2026-05-02T02:57:09Z]   [train INT8] mlp_mnist_tiny_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T02:59:20Z]   [OK INT8] mlp_mnist_tiny_qi val=97.35% elapsed=131s
+[2026-05-02T02:59:20Z]   [train INT8] mlp_mnist_tiny_plus_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T03:01:31Z]   [OK INT8] mlp_mnist_tiny_plus_qi val=97.71% elapsed=131s
+[2026-05-02T03:01:31Z]   [train INT8] mlp_mnist_small_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T03:03:48Z]   [OK INT8] mlp_mnist_small_qi val=97.86% elapsed=137s
+[2026-05-02T03:03:48Z]   [train INT8] mlp_mnist_small_plus_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T03:06:03Z]   [OK INT8] mlp_mnist_small_plus_qi val=98.08% elapsed=136s
+[2026-05-02T03:06:03Z]   [train INT8] mlp_mnist_medium_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T03:08:22Z]   [OK INT8] mlp_mnist_medium_qi val=98.15% elapsed=138s
+[2026-05-02T03:08:22Z]   [train INT8] mlp_mnist_large_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T03:11:30Z]   [OK INT8] mlp_mnist_large_qi val=98.14% elapsed=188s
+[2026-05-02T03:11:30Z]   [train INT8] mlp_mnist_original_qi  lr=1e-3, 10ep, batch=64
+[2026-05-02T03:14:27Z]   [OK INT8] mlp_mnist_original_qi val=97.85% elapsed=177s
+[2026-05-02T03:14:27Z] --- Phase A.2: INT4 training (warm-start) ---
+[2026-05-02T03:14:27Z]   [train INT4] cnn_tiny_qi_int4  warm-start from cnn_mnist_tiny_qi.pth
+[2026-05-02T03:14:30Z]   [FAIL INT4] cnn_tiny rc=1 elapsed=3s
+[2026-05-02T03:14:30Z]   [train INT4] cnn_small_qi_int4  warm-start from cnn_mnist_small_qi.pth
+[2026-05-02T03:14:32Z]   [FAIL INT4] cnn_small rc=1 elapsed=3s
+[2026-05-02T03:14:32Z]   [train INT4] cnn_medium_qi_int4  warm-start from cnn_mnist_medium_qi.pth
+[2026-05-02T03:14:35Z]   [FAIL INT4] cnn_medium rc=1 elapsed=3s
+[2026-05-02T03:14:35Z]   [train INT4] cnn_deep_3_qi_int4  warm-start from cnn_mnist_deep_3_qi.pth
+[2026-05-02T03:14:38Z]   [FAIL INT4] cnn_deep_3 rc=1 elapsed=3s
+[2026-05-02T03:14:38Z]   [train INT4] cnn_large_qi_int4  warm-start from cnn_mnist_large_qi.pth
+[2026-05-02T03:14:41Z]   [FAIL INT4] cnn_large rc=1 elapsed=3s
+[2026-05-02T03:14:41Z]   [train INT4] mlp_tiny_qi_int4  warm-start from mlp_mnist_tiny_qi.pth
+[2026-05-02T03:14:43Z]   [FAIL INT4] mlp_tiny rc=1 elapsed=3s
+[2026-05-02T03:14:43Z]   [train INT4] mlp_tiny_plus_qi_int4  warm-start from mlp_mnist_tiny_plus_qi.pth
+[2026-05-02T03:14:46Z]   [FAIL INT4] mlp_tiny_plus rc=1 elapsed=3s
+[2026-05-02T03:14:46Z]   [train INT4] mlp_small_qi_int4  warm-start from mlp_mnist_small_qi.pth
+[2026-05-02T03:14:49Z]   [FAIL INT4] mlp_small rc=1 elapsed=3s
+[2026-05-02T03:14:49Z]   [train INT4] mlp_small_plus_qi_int4  warm-start from mlp_mnist_small_plus_qi.pth
+[2026-05-02T03:14:51Z]   [FAIL INT4] mlp_small_plus rc=1 elapsed=3s
+[2026-05-02T03:14:51Z]   [train INT4] mlp_medium_qi_int4  warm-start from mlp_mnist_medium_qi.pth
+[2026-05-02T03:14:54Z]   [FAIL INT4] mlp_medium rc=1 elapsed=3s
+[2026-05-02T03:14:54Z]   [train INT4] mlp_large_qi_int4  warm-start from mlp_mnist_large_qi.pth
+[2026-05-02T03:14:57Z]   [FAIL INT4] mlp_large rc=1 elapsed=3s
+[2026-05-02T03:14:57Z]   [train INT4] mlp_original_qi_int4  warm-start from mlp_mnist_original_qi.pth
+[2026-05-02T03:14:59Z]   [FAIL INT4] mlp_original rc=1 elapsed=3s
+[2026-05-02T03:14:59Z] --- Phases B + C: 37 compile jobs ---
+[2026-05-02T03:14:59Z]   [compile] cnn_int8_medium_qi from cnn_mnist_medium_qi.onnx
+[2026-05-02T04:08:33Z]   [FAIL compile] cnn_int8_medium_qi: status=tool_fail last_step=step_synthesize_bitfile elapsed=3213s
+[2026-05-02T04:08:33Z]   [compile] cnn_int8_large_qi from cnn_mnist_large_qi.onnx
+[2026-05-02T05:23:33Z]   [FAIL compile] cnn_int8_large_qi: status=tool_fail last_step=None elapsed=4500s
+[2026-05-02T05:23:33Z]   [compile] cnn_int8_deep_3_qi from cnn_mnist_deep_3_qi.onnx
+[2026-05-02T05:49:45Z]   [FAIL compile] cnn_int8_deep_3_qi: status=tool_fail last_step=None elapsed=1571s
+[2026-05-02T05:49:45Z]   [compile] cnn_int8_tiny_qi from cnn_mnist_tiny_qi.onnx
+[2026-05-02T06:01:01Z] [startup] cleared 12 stale INT4 failure records; Phase A.2 will retry them
+[2026-05-02T06:01:01Z] === QI overnight sweep START === state: trained_int8=11 trained_int4=0 compiled=0
+[2026-05-02T06:01:01Z] --- Phase A.1: INT8 training ---
+[2026-05-02T06:01:01Z]   [train INT8] cnn_cifar10_small_qi  lr=1e-3, 30ep, batch=64
+[2026-05-02T06:12:46Z]   [OK INT8] cnn_cifar10_small_qi val=60.93% elapsed=705s (low-acc)
+[2026-05-02T06:12:46Z] --- Phase A.2: INT4 training (warm-start) ---
+[2026-05-02T06:12:46Z]   [train INT4] cnn_mnist_tiny_qi_int4  warm-start from cnn_mnist_tiny_qi.pth
+[2026-05-02T06:24:26Z]   [OK INT4] cnn_mnist_tiny_qi_int4 val=91.35% elapsed=700s
+[2026-05-02T06:24:26Z]   [train INT4] cnn_mnist_small_qi_int4  warm-start from cnn_mnist_small_qi.pth
+[2026-05-02T06:44:02Z]   [OK INT4] cnn_mnist_small_qi_int4 val=95.56% elapsed=1177s
+[2026-05-02T06:44:02Z]   [train INT4] cnn_mnist_medium_qi_int4  warm-start from cnn_mnist_medium_qi.pth
+[2026-05-02T07:20:47Z]   [OK INT4] cnn_mnist_medium_qi_int4 val=96.6% elapsed=2205s
+[2026-05-02T07:20:47Z]   [train INT4] cnn_mnist_deep_3_qi_int4  warm-start from cnn_mnist_deep_3_qi.pth
+[2026-05-02T07:42:24Z]   [OK INT4] cnn_mnist_deep_3_qi_int4 val=99.26% elapsed=1298s
+[2026-05-02T07:42:24Z]   [train INT4] cnn_mnist_large_qi_int4  warm-start from cnn_mnist_large_qi.pth
+[2026-05-02T08:24:52Z]   [OK INT4] cnn_mnist_large_qi_int4 val=99.45% elapsed=2548s
+[2026-05-02T08:24:52Z]   [train INT4] mlp_mnist_tiny_qi_int4  warm-start from mlp_mnist_tiny_qi.pth
+[2026-05-02T08:30:44Z]   [OK INT4] mlp_mnist_tiny_qi_int4 val=97.66% elapsed=351s
+[2026-05-02T08:30:44Z]   [train INT4] mlp_mnist_tiny_plus_qi_int4  warm-start from mlp_mnist_tiny_plus_qi.pth
+[2026-05-02T08:36:39Z]   [OK INT4] mlp_mnist_tiny_plus_qi_int4 val=97.96% elapsed=355s
+[2026-05-02T08:36:39Z]   [train INT4] mlp_mnist_small_qi_int4  warm-start from mlp_mnist_small_qi.pth
+[2026-05-02T08:42:41Z]   [OK INT4] mlp_mnist_small_qi_int4 val=98.17% elapsed=362s
+[2026-05-02T08:42:41Z]   [train INT4] mlp_mnist_small_plus_qi_int4  warm-start from mlp_mnist_small_plus_qi.pth
+[2026-05-02T08:48:49Z]   [OK INT4] mlp_mnist_small_plus_qi_int4 val=98.38% elapsed=368s
+[2026-05-02T08:48:49Z]   [train INT4] mlp_mnist_medium_qi_int4  warm-start from mlp_mnist_medium_qi.pth
+[2026-05-02T08:55:10Z]   [OK INT4] mlp_mnist_medium_qi_int4 val=98.46% elapsed=381s
+[2026-05-02T08:55:10Z]   [train INT4] mlp_mnist_large_qi_int4  warm-start from mlp_mnist_large_qi.pth
+[2026-05-02T09:02:15Z]   [OK INT4] mlp_mnist_large_qi_int4 val=98.62% elapsed=424s
+[2026-05-02T09:02:15Z]   [train INT4] mlp_mnist_original_qi_int4  warm-start from mlp_mnist_original_qi.pth
+[2026-05-02T09:09:08Z]   [OK INT4] mlp_mnist_original_qi_int4 val=98.39% elapsed=413s
+[2026-05-02T09:09:08Z] --- Phases B + C: 29 compile jobs ---
+[2026-05-02T09:09:08Z]   [compile] cnn_int8_cifar10_small_qi from cnn_cifar10_small_qi.onnx
+[2026-05-02T09:41:41Z]   [OK compile] cnn_int8_cifar10_small_qi: LUT=55.55% BRAM=11.34% DSP=7.22% Fmax=133.76MHz elapsed=1953s
+[2026-05-02T09:41:41Z]   [extract] cnn_int8_cifar10_small_qi
+[2026-05-02T09:41:42Z]   [OK pkg] cnn_int8_cifar10_small_qi.deploy.tar.gz (1379 KB)
+[2026-05-02T09:41:42Z]   [compile] cnn_int8_tiny_qi from cnn_mnist_tiny_qi.onnx
+[2026-05-02T10:06:30Z]   [OK compile] cnn_int8_tiny_qi: LUT=29.61% BRAM=4.86% DSP=1.11% Fmax=163.05MHz elapsed=1488s
+[2026-05-02T10:06:30Z]   [extract] cnn_int8_tiny_qi
+[2026-05-02T10:06:30Z]   [OK pkg] cnn_int8_tiny_qi.deploy.tar.gz (819 KB)
+[2026-05-02T10:06:30Z]   [compile] mlp_int8_tiny_qi from mlp_mnist_tiny_qi.onnx
+[2026-05-02T10:32:27Z]   [OK compile] mlp_int8_tiny_qi: LUT=29.77% BRAM=40.51% DSP=0.83% Fmax=143.29MHz elapsed=1556s
+[2026-05-02T10:32:27Z]   [extract] mlp_int8_tiny_qi
+[2026-05-02T10:32:27Z]   [OK pkg] mlp_int8_tiny_qi.deploy.tar.gz (1027 KB)
+[2026-05-02T10:32:27Z]   [compile] mlp_int8_tiny_plus_qi from mlp_mnist_tiny_plus_qi.onnx
+[2026-05-02T10:59:12Z]   [OK compile] mlp_int8_tiny_plus_qi: LUT=30.93% BRAM=66.67% DSP=0.83% Fmax=134.79MHz elapsed=1605s
+[2026-05-02T10:59:12Z]   [extract] mlp_int8_tiny_plus_qi
+[2026-05-02T10:59:13Z]   [OK pkg] mlp_int8_tiny_plus_qi.deploy.tar.gz (1137 KB)
+[2026-05-02T10:59:13Z]   [compile] mlp_int8_small_qi from mlp_mnist_small_qi.onnx
+[2026-05-02T11:23:10Z]   [OK compile] mlp_int8_small_qi: LUT=29.82% BRAM=73.38% DSP=1.11% Fmax=132.82MHz elapsed=1437s
+[2026-05-02T11:23:10Z]   [extract] mlp_int8_small_qi
+[2026-05-02T11:23:10Z]   [OK pkg] mlp_int8_small_qi.deploy.tar.gz (1176 KB)
+[2026-05-02T11:23:10Z]   [compile] mlp_int8_small_plus_qi from mlp_mnist_small_plus_qi.onnx
+[2026-05-02T11:48:03Z]   [FAIL compile] mlp_int8_small_plus_qi: status=tool_fail last_step=step_synthesize_bitfile elapsed=1493s
+[2026-05-02T11:48:03Z]   [compile] mlp_int8_medium_qi from mlp_mnist_medium_qi.onnx
+[2026-05-02T12:17:46Z]   [OK compile] mlp_int8_medium_qi: LUT=41.84% BRAM=99.54% DSP=1.67% Fmax=104.96MHz elapsed=1782s
+[2026-05-02T12:17:46Z]   [extract] mlp_int8_medium_qi
+[2026-05-02T12:17:46Z]   [OK pkg] mlp_int8_medium_qi.deploy.tar.gz (1726 KB)
+[2026-05-02T12:17:46Z]   [compile] mlp_int8_large_qi from mlp_mnist_large_qi.onnx
+[2026-05-02T12:57:56Z]   [FAIL compile] mlp_int8_large_qi: status=tool_fail last_step=step_synthesize_bitfile elapsed=2409s
+[2026-05-02T12:57:56Z]   [compile] mlp_int8_original_qi from mlp_mnist_original_qi.onnx
+[2026-05-02T13:38:22Z]   [OK compile] mlp_int8_original_qi: LUT=70.73% BRAM=99.31% DSP=1.94% Fmax=107.1MHz elapsed=2426s
+[2026-05-02T13:38:22Z]   [extract] mlp_int8_original_qi
+[2026-05-02T13:38:23Z]   [OK pkg] mlp_int8_original_qi.deploy.tar.gz (2336 KB)
+[2026-05-02T13:38:23Z]   [compile] cnn_int8_medium_qi_fps200 from cnn_mnist_medium_qi.onnx
+[2026-05-02T14:06:29Z]   [OK compile] cnn_int8_medium_qi_fps200: LUT=48.37% BRAM=13.43% DSP=2.5% Fmax=113.55MHz elapsed=1686s
+[2026-05-02T14:06:29Z]   [extract] cnn_int8_medium_qi_fps200
+[2026-05-02T14:06:30Z]   [OK pkg] cnn_int8_medium_qi_fps200.deploy.tar.gz (1356 KB)
+[2026-05-02T14:06:30Z]   [compile] cnn_int8_large_qi_fps200 from cnn_mnist_large_qi.onnx
+[2026-05-02T14:32:43Z]   [FAIL compile] cnn_int8_large_qi_fps200: status=tool_fail last_step=step_synthesize_bitfile elapsed=1573s
+[2026-05-02T14:32:43Z]   [compile] cnn_int8_deep_3_qi_fps200 from cnn_mnist_deep_3_qi.onnx
+[2026-05-02T15:02:10Z]   [OK compile] cnn_int8_deep_3_qi_fps200: LUT=42.4% BRAM=72.22% DSP=1.39% Fmax=129.58MHz elapsed=1766s
+[2026-05-02T15:02:10Z]   [extract] cnn_int8_deep_3_qi_fps200
+[2026-05-02T15:02:10Z]   [OK pkg] cnn_int8_deep_3_qi_fps200.deploy.tar.gz (1320 KB)
+[2026-05-02T15:02:10Z]   [compile] cnn_int4_tiny_qi from cnn_mnist_tiny_qi_int4.onnx
+[2026-05-02T15:23:47Z]   [OK compile] cnn_int4_tiny_qi: LUT=15.22% BRAM=3.7% DSP=1.11% Fmax=234.08MHz elapsed=1296s
+[2026-05-02T15:23:47Z]   [extract] cnn_int4_tiny_qi
+[2026-05-02T15:23:47Z]   [OK pkg] cnn_int4_tiny_qi.deploy.tar.gz (486 KB)
+[2026-05-02T15:23:47Z]   [compile] cnn_int4_small_qi from cnn_mnist_small_qi_int4.onnx
+[2026-05-02T15:45:50Z]   [OK compile] cnn_int4_small_qi: LUT=17.27% BRAM=7.87% DSP=4.17% Fmax=214.78MHz elapsed=1323s
+[2026-05-02T15:45:50Z]   [extract] cnn_int4_small_qi
+[2026-05-02T15:45:50Z]   [OK pkg] cnn_int4_small_qi.deploy.tar.gz (550 KB)
+[2026-05-02T15:45:50Z]   [compile] cnn_int4_medium_qi from cnn_mnist_medium_qi_int4.onnx
+[2026-05-02T16:10:23Z]   [OK compile] cnn_int4_medium_qi: LUT=22.15% BRAM=6.48% DSP=23.06% Fmax=156.27MHz elapsed=1472s
+[2026-05-02T16:10:23Z]   [extract] cnn_int4_medium_qi
+[2026-05-02T16:10:23Z]   [OK pkg] cnn_int4_medium_qi.deploy.tar.gz (737 KB)
+[2026-05-02T16:10:23Z]   [compile] cnn_int4_deep_3_qi from cnn_mnist_deep_3_qi_int4.onnx
+[2026-05-02T16:35:30Z]   [OK compile] cnn_int4_deep_3_qi: LUT=20.31% BRAM=9.95% DSP=7.5% Fmax=194.74MHz elapsed=1506s
+[2026-05-02T16:35:30Z]   [extract] cnn_int4_deep_3_qi
+[2026-05-02T16:35:30Z]   [OK pkg] cnn_int4_deep_3_qi.deploy.tar.gz (663 KB)
+[2026-05-02T16:35:30Z]   [compile] cnn_int4_large_qi from cnn_mnist_large_qi_int4.onnx
+[2026-05-02T17:04:33Z]   [OK compile] cnn_int4_large_qi: LUT=28.07% BRAM=10.65% DSP=45.28% Fmax=153.99MHz elapsed=1743s
+[2026-05-02T17:04:33Z]   [extract] cnn_int4_large_qi
+[2026-05-02T17:04:34Z]   [OK pkg] cnn_int4_large_qi.deploy.tar.gz (988 KB)
+[2026-05-02T17:04:34Z]   [compile] mlp_int4_tiny_qi from mlp_mnist_tiny_qi_int4.onnx
+[2026-05-02T17:32:49Z]   [OK compile] mlp_int4_tiny_qi: LUT=17.03% BRAM=7.41% DSP=0.83% Fmax=180.18MHz elapsed=1695s
+[2026-05-02T17:32:49Z]   [extract] mlp_int4_tiny_qi
+[2026-05-02T17:32:49Z]   [OK pkg] mlp_int4_tiny_qi.deploy.tar.gz (668 KB)
+[2026-05-02T17:32:49Z]   [compile] mlp_int4_tiny_plus_qi from mlp_mnist_tiny_plus_qi_int4.onnx
+[2026-05-02T17:56:33Z]   [OK compile] mlp_int4_tiny_plus_qi: LUT=17.08% BRAM=14.35% DSP=0.83% Fmax=193.72MHz elapsed=1425s
+[2026-05-02T17:56:33Z]   [extract] mlp_int4_tiny_plus_qi
+[2026-05-02T17:56:34Z]   [OK pkg] mlp_int4_tiny_plus_qi.deploy.tar.gz (714 KB)
+[2026-05-02T17:56:34Z]   [compile] mlp_int4_small_qi from mlp_mnist_small_qi_int4.onnx
+[2026-05-02T18:17:21Z]   [OK compile] mlp_int4_small_qi: LUT=16.54% BRAM=11.81% DSP=1.11% Fmax=179.18MHz elapsed=1247s
+[2026-05-02T18:17:21Z]   [extract] mlp_int4_small_qi
+[2026-05-02T18:17:21Z]   [OK pkg] mlp_int4_small_qi.deploy.tar.gz (695 KB)
+[2026-05-02T18:17:21Z]   [compile] mlp_int4_small_plus_qi from mlp_mnist_small_plus_qi_int4.onnx
+[2026-05-02T18:38:12Z]   [OK compile] mlp_int4_small_plus_qi: LUT=16.81% BRAM=15.97% DSP=1.11% Fmax=189.9MHz elapsed=1251s
+[2026-05-02T18:38:12Z]   [extract] mlp_int4_small_plus_qi
+[2026-05-02T18:38:12Z]   [OK pkg] mlp_int4_small_plus_qi.deploy.tar.gz (757 KB)
+[2026-05-02T18:38:12Z]   [compile] mlp_int4_medium_qi from mlp_mnist_medium_qi_int4.onnx
+[2026-05-02T18:59:54Z]   [OK compile] mlp_int4_medium_qi: LUT=16.8% BRAM=20.6% DSP=1.67% Fmax=195.69MHz elapsed=1302s
+[2026-05-02T18:59:54Z]   [extract] mlp_int4_medium_qi
+[2026-05-02T18:59:55Z]   [OK pkg] mlp_int4_medium_qi.deploy.tar.gz (813 KB)
+[2026-05-02T18:59:55Z]   [compile] mlp_int4_large_qi from mlp_mnist_large_qi_int4.onnx
+[2026-05-02T19:03:57Z] === QI overnight sweep START === state: trained_int8=12 trained_int4=12 compiled=19
+[2026-05-02T19:03:57Z] --- Phase A.1: INT8 training ---
+[2026-05-02T19:03:57Z] --- Phase A.2: INT4 training (warm-start) ---
+[2026-05-02T19:03:57Z] --- Phases B + C: 23 compile jobs ---
+[2026-05-02T19:03:57Z]   [compile] cnn_int8_tiny_qi_fps10000 from cnn_mnist_tiny_qi.onnx
+[2026-05-02T19:40:49Z]   [OK compile] cnn_int8_tiny_qi_fps10000: LUT=56.14% BRAM=2.08% DSP=11.94% Fmax=109.57MHz elapsed=2211s
+[2026-05-02T19:40:49Z]   [extract] cnn_int8_tiny_qi_fps10000
+[2026-05-02T19:40:49Z]   [OK pkg] cnn_int8_tiny_qi_fps10000.deploy.tar.gz (1234 KB)
+[2026-05-02T19:40:49Z]   [compile] cnn_int8_tiny_qi_fps100000 from cnn_mnist_tiny_qi.onnx
+[2026-05-02T20:17:33Z]   [FAIL compile] cnn_int8_tiny_qi_fps100000: status=tool_fail last_step=step_synthesize_bitfile elapsed=2203s
+[2026-05-02T20:17:33Z]   [compile] cnn_int8_tiny_qi_fps500000 from cnn_mnist_tiny_qi.onnx
+[2026-05-02T20:47:39Z] === QI overnight sweep START === state: trained_int8=12 trained_int4=12 compiled=20
+[2026-05-02T20:47:39Z] --- Phase A.1: INT8 training ---
+[2026-05-02T20:47:39Z] --- Phase A.2: INT4 training (warm-start) ---
+[2026-05-02T20:47:39Z] --- Phases B + C: 24 compile jobs ---
+[2026-05-02T20:47:39Z]   [compile] cnn_int4_tiny_qi_fps10000 from cnn_mnist_tiny_qi_int4.onnx
+[2026-05-02T21:11:51Z]   [OK compile] cnn_int4_tiny_qi_fps10000: LUT=16.24% BRAM=1.62% DSP=14.17% Fmax=172.71MHz elapsed=1452s
+[2026-05-02T21:11:51Z]   [extract] cnn_int4_tiny_qi_fps10000
+[2026-05-02T21:11:51Z]   [OK pkg] cnn_int4_tiny_qi_fps10000.deploy.tar.gz (542 KB)
+[2026-05-02T21:11:51Z]   [compile] cnn_int8_tiny_qi_fps100000 from cnn_mnist_tiny_qi.onnx
+[2026-05-02T21:16:37Z] === QI overnight sweep START === state: trained_int8=12 trained_int4=12 compiled=21
+[2026-05-02T21:16:37Z] --- Phase A.1: INT8 training ---
+[2026-05-02T21:16:37Z] --- Phase A.2: INT4 training (warm-start) ---
+[2026-05-02T21:16:37Z] --- Phases B + C: 26 compile jobs ---
+[2026-05-02T21:16:37Z]   [compile] cnn_int4_tiny_qi_fps100000 from cnn_mnist_tiny_qi_int4.onnx
+[2026-05-02T21:41:38Z]   [OK compile] cnn_int4_tiny_qi_fps100000: LUT=20.24% BRAM=1.85% DSP=68.89% Fmax=150.2MHz elapsed=1500s
+[2026-05-02T21:41:38Z]   [extract] cnn_int4_tiny_qi_fps100000
+[2026-05-02T21:41:38Z]   [OK pkg] cnn_int4_tiny_qi_fps100000.deploy.tar.gz (718 KB)
+[2026-05-02T21:41:38Z]   [compile] cnn_int4_tiny_qi_fps500000 from cnn_mnist_tiny_qi_int4.onnx
+[2026-05-02T22:06:40Z]   [OK compile] cnn_int4_tiny_qi_fps500000: LUT=20.24% BRAM=1.85% DSP=68.89% Fmax=150.2MHz elapsed=1502s
+[2026-05-02T22:06:40Z]   [extract] cnn_int4_tiny_qi_fps500000
+[2026-05-02T22:06:40Z]   [OK pkg] cnn_int4_tiny_qi_fps500000.deploy.tar.gz (718 KB)
+[2026-05-02T22:06:40Z]   [compile] cnn_int8_tiny_qi_fps100000 from cnn_mnist_tiny_qi.onnx
+[2026-05-02T22:43:18Z]   [FAIL compile] cnn_int8_tiny_qi_fps100000: status=tool_fail last_step=step_synthesize_bitfile elapsed=2198s
+[2026-05-02T22:43:18Z]   [compile] cnn_int8_tiny_qi_fps500000 from cnn_mnist_tiny_qi.onnx
+[2026-05-02T23:20:14Z]   [FAIL compile] cnn_int8_tiny_qi_fps500000: status=tool_fail last_step=step_synthesize_bitfile elapsed=2216s
+[2026-05-02T23:20:14Z]   [compile] cnn_int8_small_qi_fps10000 from cnn_mnist_small_qi.onnx
+[2026-05-03T00:35:14Z]   [FAIL compile] cnn_int8_small_qi_fps10000: status=tool_fail last_step=None elapsed=4500s
+[2026-05-03T00:35:14Z]   [compile] cnn_int8_small_qi_fps100000 from cnn_mnist_small_qi.onnx
+[2026-05-03T01:50:14Z]   [FAIL compile] cnn_int8_small_qi_fps100000: status=tool_fail last_step=None elapsed=4500s
+[2026-05-03T01:50:14Z]   [compile] mlp_int4_original_qi from mlp_mnist_original_qi_int4.onnx
+[2026-05-03T02:11:23Z]   [OK compile] mlp_int4_original_qi: LUT=18.41% BRAM=29.86% DSP=1.94% Fmax=177.18MHz elapsed=1268s
+[2026-05-03T02:11:23Z]   [extract] mlp_int4_original_qi
+[2026-05-03T02:11:23Z]   [OK pkg] mlp_int4_original_qi.deploy.tar.gz (920 KB)
+[2026-05-03T02:11:23Z] === QI overnight sweep COMPLETE ===
+[2026-05-03T02:11:23Z] final state: trained_int8=12 trained_int4=12 compiled=24 tarred=24

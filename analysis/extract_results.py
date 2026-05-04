@@ -27,6 +27,81 @@ SKIP_DIRS = {"kv260_archive"}
 #      dpu_mlp-64x32_mnist_int8_300mhz.json
 #      finn_t_radioml_int4_merged.json
 
+# (model, size_label) -> channel-string used in JSON filenames.
+# Single source of truth: models/{cnn,mlp}.py get_*_config() dicts.
+SIZE_TO_CHANNELS = {
+    ('cnn', 'tiny'):        '8x16',
+    ('cnn', 'small'):       '16x32',
+    ('cnn', 'medium'):      '32x64',
+    ('cnn', 'deep_3'):      '16x32x64',
+    ('cnn', 'large'):       '32x64x128',
+    ('mlp', 'tiny'):        '64x32',
+    ('mlp', 'tiny_plus'):   '96x48',
+    ('mlp', 'small'):       '128x64',
+    ('mlp', 'small_plus'):  '192x96',
+    ('mlp', 'medium'):      '256x128',
+    ('mlp', 'large'):       '512x256',
+    ('mlp', 'original'):    '256x256x128',
+    ('mlp', 'tfc'):         '64x64x64',
+}
+# Reverse: per-model {channels -> size_label}.
+CHANNELS_TO_SIZE = {}
+for (_m, _s), _c in SIZE_TO_CHANNELS.items():
+    CHANNELS_TO_SIZE.setdefault(_m, {})[_c] = _s
+
+# Trainable parameter counts — verified from Brevitas checkpoints.
+# Precision-independent (INT4/INT8/W1A1 share weights, only quantization differs).
+PARAMS = {
+    ('mlp', 'tiny'):         52650,
+    ('mlp', 'tiny_plus'):    80506,
+    ('mlp', 'small'):       109386,
+    ('mlp', 'small_plus'):  170218,
+    ('mlp', 'medium'):      235146,
+    ('mlp', 'large'):       535818,
+    ('mlp', 'original'):    300938,
+    ('mlp', 'tfc'):          59210,
+    ('cnn', 'tiny'):          1442,
+    ('cnn', 'small'):         5178,
+    ('cnn', 'medium'):       19562,
+    ('cnn', 'deep_3'):       24058,
+    ('cnn', 'large'):        94186,
+    # CIFAR-10 variants: extra weights in Conv1 from 3-channel input.
+    ('cnn_cifar10', 'tiny'):  1610,  # plain torch CNN with bias
+    ('cnn_cifar10', 'small'): 5466,  # CNN_Brevitas_qi (verified at train time)
+    # Special: Transformer (FINN-T) and ResNet8 don't use the same size scheme.
+    ('transformer', 'finn_t_radioml'): 122768,
+}
+
+
+def parse_channels_from_filename(fname):
+    """Detect the FINN/VTA channel-string token, e.g. 'cnn-8x16' or
+    'mlp-256x128' or 'mlp-256x256x128'. Returns (model, channels) or None."""
+    m = re.search(r"(cnn|mlp)-(\d+(?:x\d+)*)", fname.lower())
+    if m:
+        return m.group(1), m.group(2)
+    return None
+
+
+def parse_vitis_b1_naming(fname):
+    """Parse the Vitis AI per-model timestamp naming: <model>_<size>_<dataset>_b1_<ts>.json.
+    e.g. 'mlp_large_mnist_b1_20260502_032731' -> ('mlp', 'large', 'mnist').
+    Also handles 'cnn_mnist_tiny_b512' (legacy DPU) and resnet8_cifar10_*.
+    Returns (model_lower, size_label, dataset) or None."""
+    s = fname.lower()
+    # New per-model b1 timestamp naming
+    m = re.match(r"(cnn|mlp)_([a-z0-9_]+?)_(mnist|cifar10)_b1_\d+", s)
+    if m:
+        return m.group(1), m.group(2), m.group(3)
+    # Legacy DPU: cnn_mnist_tiny_b512
+    m = re.match(r"(cnn|mlp)_(mnist|cifar10)_([a-z_]+?)_b512", s)
+    if m:
+        return m.group(1), m.group(3), m.group(2)
+    # ResNet8 special case
+    if s.startswith("resnet8"):
+        ds = "cifar10" if "cifar10" in s else "mnist"
+        return "resnet8", "resnet8", ds
+    return None
+
 def parse_filename(filepath, data=None):
     """Parse framework, model, precision, clock, runtime from filename, parent dir, and JSON config."""
     fname = filepath.stem
@@ -38,7 +113,10 @@ def parse_filename(filepath, data=None):
     if parent in ("archive", "python_reference"):
         framework_dir = filepath.parent.parent.name
 
-    if framework_dir == "finn-t" or fname.startswith("finn_t"):
+    # FINN-T prefix needs the trailing underscore — without it, "finn_tfc_*"
+    # (the recognized TFC MLP benchmark, which is plain FINN) gets mis-routed
+    # to FINN-T because "finn_tfc" starts with "finn_t".
+    if framework_dir == "finn-t" or fname.startswith("finn_t_"):
         framework = "FINN-T"
     elif framework_dir == "finn" or fname.startswith("finn_"):
         framework = "FINN"
@@ -110,40 +188,92 @@ def parse_filename(filepath, data=None):
     if framework == "FINN-T":
         runtime = "C"
 
-    # Parse model from filename
-    model = "?"
-    if "mlp" in fname:
-        model = "MLP [64,32]"
-    elif "cnn" in fname:
-        model = "CNN [8,16]"
-    elif "radioml" in fname or "transformer" in fname or framework == "FINN-T":
-        model = "Transformer (122k)"
-
-    # Parse dataset
+    # Per-row model/size/channels — three fallback paths:
+    #   1. <model>-<channels> token in fname (FINN/VTA standard naming)
+    #   2. <model>_<size>_<dataset>_b1_<ts> (Vitis AI per-model naming)
+    #   3. transformer / radioml / autoencoder special cases
+    model_class = "?"           # 'MLP'|'CNN'|'Transformer'|'AE'|'ResNet8'
+    size_label = None
+    channels = None
     dataset = "MNIST"
     if "radioml" in fname:
         dataset = "RadioML"
-    elif "cifar" in fname:
+    elif "cifar10" in fname:
         dataset = "CIFAR-10"
 
-    # Model parameter counts (trainable only, verified from Brevitas checkpoints)
-    params = {
-        "MLP [64,32]": 52650,
-        "CNN [8,16]": 1442,
-        "Transformer (122k)": 122768,  # from finn-transformers config
-    }.get(model)
+    chan_hit = parse_channels_from_filename(fname)
+    if chan_hit:
+        model_lower, channels = chan_hit
+        model_class = model_lower.upper()
+        size_label = CHANNELS_TO_SIZE.get(model_lower, {}).get(channels)
+    else:
+        b1_hit = parse_vitis_b1_naming(fname)
+        if b1_hit:
+            model_lower, size_label, ds_lower = b1_hit
+            if model_lower == "resnet8":
+                model_class = "ResNet8"
+            else:
+                model_class = model_lower.upper()
+                channels = SIZE_TO_CHANNELS.get((model_lower, size_label))
+            dataset = "CIFAR-10" if ds_lower == "cifar10" else "MNIST"
+
+    # Special-case names without channels in filename.
+    if model_class == "?":
+        if "tfc" in fname:
+            model_class, size_label = "MLP", "tfc"
+            channels = SIZE_TO_CHANNELS.get(("mlp", "tfc"))
+        elif "radioml" in fname or "transformer" in fname or framework == "FINN-T":
+            model_class = "Transformer"
+            size_label = "finn_t_radioml"
+        elif "autoencoder" in fname:
+            model_class = "AE"
+        elif "mlp" in fname:
+            model_class = "MLP"
+        elif "cnn" in fname:
+            model_class = "CNN"
+
+    # Look up params. CIFAR-10 CNN has its own entries (different first-conv
+    # weight count); other datasets share the model_class-based key.
+    params = None
+    if size_label:
+        if model_class == "CNN" and dataset == "CIFAR-10":
+            params = PARAMS.get(("cnn_cifar10", size_label))
+        elif model_class == "Transformer":
+            params = PARAMS.get(("transformer", size_label))
+        else:
+            params = PARAMS.get((model_class.lower(), size_label))
+
+    # Display string for the Model column. Use channel-string when available
+    # since that's what the JSON name encodes (no ambiguity with size labels).
+    if channels:
+        # Compact bracket form, e.g. '8x16' -> '[8,16]'
+        bracket = "[" + ",".join(channels.split("x")) + "]"
+        model_disp = f"{model_class} {bracket}"
+    elif size_label and model_class != "?":
+        model_disp = f"{model_class} ({size_label})"
+    elif model_class == "Transformer":
+        model_disp = "Transformer (122k)"
+    else:
+        model_disp = model_class
+
+    # Vitis AI/DPU is always INT8 — DPU has no INT4/W1A1 path in this project.
+    if framework == "Vitis AI" and precision == "?":
+        precision = "INT8"
 
     return {
-        "framework": framework,
-        "model": model,
-        "dataset": dataset,
-        "precision": precision,
-        "runtime": runtime,
-        "clock": clock,
-        "subdir": subdir,
-        "params": params,
-        "filename": filepath.name,
-        "relpath": str(filepath.relative_to(RESULTS_DIR)),
+        "framework":   framework,
+        "model":       model_disp,    # display column
+        "model_class": model_class,   # MLP|CNN|Transformer|AE|ResNet8
+        "size_label":  size_label,
+        "channels":    channels,
+        "dataset":     dataset,
+        "precision":   precision,
+        "runtime":     runtime,
+        "clock":       clock,
+        "subdir":      subdir,
+        "params":      params,
+        "filename":    filepath.name,
+        "relpath":     str(filepath.relative_to(RESULTS_DIR)),
     }
 
 
@@ -246,8 +376,12 @@ def main():
             if "summary" not in data:
                 continue
 
-            # Skip CIFAR-10 results (model too small, ~10% accuracy, not a real result)
-            if "cifar" in fname.lower():
+            # MLP QI was empirically slower than classic (715 vs 1575 FPS for
+            # tiny @ 1000), so QI is treated as a CNN-only optimization in
+            # this project — drop MLP QI rows from the cross-framework view.
+            cfg_local = data.get("config", {})
+            if (cfg_local.get("partition") == "qi"
+                    and "mlp" in fname.lower()):
                 continue
 
             # Skip FINN-T raw files when merged version exists
@@ -292,10 +426,11 @@ def main():
         print("ERROR: No benchmark JSONs found.")
         sys.exit(1)
 
-    # Sort: C runners first, then Python; within each group sort by model then energy
+    # Sort: C runners first, then Python; within each group sort by model class then energy
     def sort_key(r):
         runtime_order = 0 if r["runtime"] in ("C", "C++ (VART)") else 1
-        model_order = {"MLP [64,32]": 0, "CNN [8,16]": 1, "Transformer (122k)": 2}.get(r["model"], 3)
+        model_order = {"MLP": 0, "CNN": 1, "Transformer": 2, "AE": 3, "ResNet8": 4}.get(
+            r.get("model_class"), 9)
         energy = r["energy_mj"] if r["energy_mj"] is not None else 9999
         return (runtime_order, model_order, energy)
 
@@ -337,7 +472,88 @@ def main():
     lines.append(f"Source: `{RESULTS_DIR}/` ({len(rows)} benchmark files found, {len(SKIP_DIRS)} directories skipped)")
     lines.append("")
 
-    lines.append("## C/C++ Runner Results (primary comparison)")
+    # ── Cross-framework comparison (grouped by model + dataset + precision) ──
+    # Pulls C-runner rows that have a known model_class + size_label, groups
+    # them by (model, size, dataset, precision), and writes one small table
+    # per group so FINN/VTA/Vitis AI/FINN-T appear side by side at the same
+    # operating point. Variants (FINN classic / QI / fps10K / db) get their
+    # own row within a group.
+
+    def derive_variant(r):
+        fname = r["filename"].lower()
+        fw = r["framework"]
+        if fw == "FINN":
+            parts = []
+            if "_qi" in fname:
+                parts.append("QI")
+            if "_db" in fname:
+                parts.append("DB")
+            m = re.search(r"fps(\d+k?)", fname)
+            if m:
+                parts.append(f"fps{m.group(1)}")
+            return " ".join(parts) if parts else "classic"
+        if fw == "VTA":
+            return r["precision"]
+        if fw == "Vitis AI":
+            return "DPU B512"
+        if fw == "FINN-T":
+            return "C runner"
+        return ""
+
+    cnn_size_order = {s: i for i, s in enumerate(
+        ['tiny', 'small', 'medium', 'deep_3', 'large'])}
+    mlp_size_order = {s: i for i, s in enumerate(
+        ['tiny', 'tiny_plus', 'small', 'small_plus',
+         'medium', 'large', 'original', 'tfc'])}
+
+    def group_sort_key(g):
+        mc, sz, ds, prec = g
+        order_dict = mlp_size_order if mc == "MLP" else cnn_size_order
+        return (
+            {"CNN": 0, "MLP": 1, "Transformer": 2, "AE": 3, "ResNet8": 4}.get(mc, 9),
+            order_dict.get(sz, 999),
+            ds,
+            prec,
+        )
+
+    groups = {}
+    for r in c_rows:
+        if r.get("model_class") in (None, "?", "AE") or r.get("size_label") is None:
+            continue
+        key = (r["model_class"], r["size_label"], r["dataset"], r["precision"])
+        groups.setdefault(key, []).append(r)
+
+    lines.append("## Cross-framework comparison")
+    lines.append("")
+    lines.append(
+        "Each section pins a (model, size, dataset, precision) tuple and "
+        "lists every framework that produced a benchmark for it. Variant "
+        "column distinguishes FINN classic / QI / DB / fps suffix from the "
+        "filename. AE and unmatched-channel rows are excluded — see the "
+        "C/C++ runner master table below for those.")
+    lines.append("")
+    for key in sorted(groups, key=group_sort_key):
+        mc, sz, ds, prec = key
+        lines.append(f"### {mc} {sz} | {ds} | {prec}")
+        lines.append("")
+        lines.append(
+            "| Framework | Variant | Clock | Params | FPS | Acc (%) "
+            "| E/inf (mJ) | Dyn W | Source |")
+        lines.append(
+            "|---|---|---|---:|---:|---:|---:|---:|---|")
+        # Within a group, sort by framework then by FPS desc
+        for r in sorted(groups[key],
+                        key=lambda x: (x["framework"], -(x["fps"] or 0))):
+            params_str = f"{r['params']:,}" if r.get("params") else "-"
+            lines.append(
+                f"| {r['framework']} | {derive_variant(r)} "
+                f"| {r['clock'] or '-'} | {params_str} "
+                f"| {fmt(r['fps'], 1)} | {fmt(r['accuracy'])} "
+                f"| {fmt(r['energy_mj'])} | {fmt(r['dynamic_w'])} "
+                f"| `{r['relpath']}` |")
+        lines.append("")
+
+    lines.append("## C/C++ Runner Results (master table)")
     lines.append("")
     lines.append(header)
     lines.append(sep)
@@ -386,9 +602,10 @@ def main():
     # Also write CSV for easy diffing with sweep results later
     csv_path = out_dir / "verified_results.csv"
     fieldnames = [
-        "framework", "model", "dataset", "precision", "runtime", "clock", "subdir", "params",
-        "accuracy", "fps", "latency_ms", "idle_w", "active_w", "dynamic_w", "energy_mj",
-        "n_runs", "power_method", "board", "relpath",
+        "framework", "model", "model_class", "size_label", "channels",
+        "dataset", "precision", "runtime", "clock", "subdir", "params",
+        "accuracy", "fps", "latency_ms", "idle_w", "active_w", "dynamic_w",
+        "energy_mj", "n_runs", "power_method", "board", "relpath",
     ]
     with open(csv_path, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction="ignore")

@@ -1,0 +1,43 @@
+[2026-04-27T01:29:06Z] init: state + CSV written; 4 tiny rows pre-populated from target_fps sweep
+[2026-04-27T01:29:43Z] size_sweep start (only=None, size=None)
+[2026-04-27T01:29:43Z] BEGIN mlp_int8 size=tiny_plus onnx=mlp_mnist_tiny_plus.onnx
+[2026-04-27T01:51:09Z] END   mlp_int8 size=tiny_plus status=success elapsed=1286s last_step=step_deployment_package
+[2026-04-27T01:51:10Z] BEGIN mlp_int8 size=small onnx=mlp_mnist_small.onnx
+[2026-04-27T02:12:35Z] END   mlp_int8 size=small status=success elapsed=1286s last_step=step_deployment_package
+[2026-04-27T02:12:35Z] BEGIN mlp_int8 size=small_plus onnx=mlp_mnist_small_plus.onnx
+[2026-04-27T02:33:33Z] END   mlp_int8 size=small_plus status=success elapsed=1257s last_step=step_deployment_package
+[2026-04-27T02:33:33Z] BEGIN mlp_int8 size=medium onnx=mlp_mnist_medium.onnx
+[2026-04-27T02:55:21Z] END   mlp_int8 size=medium status=success elapsed=1308s last_step=step_deployment_package
+[2026-04-27T02:55:21Z] BEGIN mlp_int8 size=large onnx=mlp_mnist_large.onnx
+[2026-04-27T03:18:29Z] END   mlp_int8 size=large status=success elapsed=1388s last_step=step_deployment_package
+[2026-04-27T03:18:29Z] BEGIN mlp_int8 size=original onnx=mlp_mnist_original.onnx
+[2026-04-27T03:46:01Z] END   mlp_int8 size=original status=success elapsed=1652s last_step=step_deployment_package
+[2026-04-27T03:46:01Z] BEGIN mlp_int4 size=tiny_plus onnx=mlp_mnist_tiny_plus_int4.onnx
+[2026-04-27T04:06:11Z] END   mlp_int4 size=tiny_plus status=success elapsed=1210s last_step=step_deployment_package
+[2026-04-27T04:06:11Z] BEGIN mlp_int4 size=small onnx=mlp_mnist_small_int4.onnx
+[2026-04-27T04:26:23Z] END   mlp_int4 size=small status=success elapsed=1211s last_step=step_deployment_package
+[2026-04-27T04:26:23Z] BEGIN mlp_int4 size=small_plus onnx=mlp_mnist_small_plus_int4.onnx
+[2026-04-27T04:46:47Z] END   mlp_int4 size=small_plus status=success elapsed=1224s last_step=step_deployment_package
+[2026-04-27T04:46:47Z] BEGIN mlp_int4 size=medium onnx=mlp_mnist_medium_int4.onnx
+[2026-04-27T05:07:38Z] END   mlp_int4 size=medium status=success elapsed=1251s last_step=step_deployment_package
+[2026-04-27T05:07:38Z] BEGIN mlp_int4 size=large onnx=mlp_mnist_large_int4.onnx
+[2026-04-27T05:28:00Z] END   mlp_int4 size=large status=success elapsed=1222s last_step=step_deployment_package
+[2026-04-27T05:28:00Z] BEGIN mlp_int4 size=original onnx=mlp_mnist_original_int4.onnx
+[2026-04-27T05:49:04Z] END   mlp_int4 size=original status=success elapsed=1264s last_step=step_deployment_package
+[2026-04-27T05:49:04Z] BEGIN cnn_int8 size=small onnx=cnn_mnist_small.onnx
+[2026-04-27T06:19:18Z] END   cnn_int8 size=small status=success elapsed=1814s last_step=step_deployment_package
+[2026-04-27T06:19:18Z] BEGIN cnn_int8 size=medium onnx=cnn_mnist_medium.onnx
+[2026-04-27T07:10:14Z] END   cnn_int8 size=medium status=tool_fail elapsed=3055s last_step=step_synthesize_bitfile
+[2026-04-27T07:10:14Z] BEGIN cnn_int8 size=deep_3 onnx=cnn_mnist_deep_3.onnx
+[2026-04-27T07:47:08Z] END   cnn_int8 size=deep_3 status=success elapsed=2214s last_step=step_deployment_package
+[2026-04-27T07:47:08Z] BEGIN cnn_int8 size=large onnx=cnn_mnist_large.onnx
+[2026-04-27T09:18:09Z] END   cnn_int8 size=large status=tool_fail elapsed=5460s last_step=step_synthesize_bitfile
+[2026-04-27T09:18:10Z] BEGIN cnn_int4 size=small onnx=cnn_mnist_small_int4.onnx
+[2026-04-27T09:40:22Z] END   cnn_int4 size=small status=success elapsed=1332s last_step=step_deployment_package
+[2026-04-27T09:40:22Z] BEGIN cnn_int4 size=medium onnx=cnn_mnist_medium_int4.onnx
+[2026-04-27T10:04:18Z] END   cnn_int4 size=medium status=success elapsed=1436s last_step=step_deployment_package
+[2026-04-27T10:04:18Z] BEGIN cnn_int4 size=deep_3 onnx=cnn_mnist_deep_3_int4.onnx
+[2026-04-27T10:27:07Z] END   cnn_int4 size=deep_3 status=success elapsed=1369s last_step=step_deployment_package
+[2026-04-27T10:27:07Z] BEGIN cnn_int4 size=large onnx=cnn_mnist_large_int4.onnx
+[2026-04-27T10:54:13Z] END   cnn_int4 size=large status=success elapsed=1626s last_step=step_deployment_package
+[2026-04-27T10:54:13Z] size_sweep end (all sweeps complete)

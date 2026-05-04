@@ -1,0 +1,182 @@
+{
+  "config": {
+    "toolchain": "finn",
+    "deploy_dir": "/home/xilinx/models/finn/size_sweep/mlp_int8_small_plus/deploy",
+    "dataset": "mnist",
+    "batch_size": 1,
+    "num_runs": 3,
+    "num_images": 10000,
+    "image_shape": [
+      1,
+      28,
+      28
+    ],
+    "finn_input_shape": [
+      1,
+      192
+    ],
+    "finn_output_shape": [
+      1,
+      10
+    ],
+    "timestamp": "2026-05-01T21:17:03.068759",
+    "board": "AUP-ZU3",
+    "fpga_part": "xczu3eg-sbva484-1-e",
+    "power_method": "none",
+    "cpu_pre_layer": true,
+    "cpu_split_type": "mlp",
+    "finn_runtime": "c"
+  },
+  "idle": {
+    "t_start": 1777670233.0790372,
+    "t_end": 1777670244.0694273,
+    "power": {
+      "mean": null,
+      "std": null,
+      "n_samples": 0
+    },
+    "sysmon": {
+      "temp_ps_c": 42.9066269769107,
+      "temp_pl_c": 42.13911216617678,
+      "vccint_v": 0.8427787135889939,
+      "n_samples": 500
+    }
+  },
+  "runs": [
+    {
+      "run": 1,
+      "t_start": 1777670244.104873,
+      "t_end": 1777670264.073885,
+      "accuracy": 98.09,
+      "time_s": 19.969008922576904,
+      "throughput_fps": 500.7759793573946,
+      "latency_ms": 1.9969008922576905,
+      "avg_power_w": 3.53156753006012,
+      "energy_total_j": 70.52190351845341,
+      "energy_per_image_mj": 7.052190351845342,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 43.177824551590376,
+        "temp_pl_c_mean": 42.34107059585644,
+        "temp_pl_c_max": 44.950442135328,
+        "vccint_v_mean": 0.8423399710624013,
+        "vccbram_v_mean": 0.8421145756008631,
+        "n_samples": 1615
+      },
+      "fnb58_power": {
+        "power_w_mean": 3.53156753006012,
+        "power_w_std": 0.10430263483742709,
+        "power_w_min": 3.30044,
+        "power_w_max": 4.31726,
+        "voltage_v_mean": 9.160252580160321,
+        "current_a_mean": 0.3855331763527054,
+        "n_samples": 1996,
+        "dynamic_power_w": 0.22003272096921078,
+        "energy_total_j": 70.52190351845341,
+        "energy_per_image_mj": 7.052190351845342
+      }
+    },
+    {
+      "run": 2,
+      "t_start": 1777670264.1001637,
+      "t_end": 1777670284.0508306,
+      "accuracy": 98.09,
+      "time_s": 19.95066261291504,
+      "throughput_fps": 501.23648492388975,
+      "latency_ms": 1.995066261291504,
+      "avg_power_w": 3.5499818222891566,
+      "energy_total_j": 70.82448961847227,
+      "energy_per_image_mj": 7.082448961847227,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 43.38738415007697,
+        "temp_pl_c_mean": 42.55756763067833,
+        "temp_pl_c_max": 45.432276058632,
+        "vccint_v_mean": 0.8424344655404999,
+        "vccbram_v_mean": 0.8421379982505,
+        "n_samples": 1612
+      },
+      "fnb58_power": {
+        "power_w_mean": 3.5499818222891566,
+        "power_w_std": 0.08371525027590598,
+        "power_w_min": 3.28219,
+        "power_w_max": 3.79435,
+        "voltage_v_mean": 9.159435863453815,
+        "current_a_mean": 0.38757649598393573,
+        "n_samples": 1992,
+        "dynamic_power_w": 0.23844701319824724,
+        "energy_total_j": 70.82448961847227,
+        "energy_per_image_mj": 7.082448961847227
+      }
+    },
+    {
+      "run": 3,
+      "t_start": 1777670284.0687437,
+      "t_end": 1777670304.0316389,
+      "accuracy": 98.09,
+      "time_s": 19.96289086341858,
+      "throughput_fps": 500.92945297440417,
+      "latency_ms": 1.9962890863418579,
+      "avg_power_w": 3.5523491432865733,
+      "energy_total_j": 70.91515825618835,
+      "energy_per_image_mj": 7.091515825618836,
+      "power_samples": 0,
+      "sysmon": {
+        "temp_ps_c_mean": 43.52446063888079,
+        "temp_pl_c_mean": 42.66127356846007,
+        "temp_pl_c_max": 45.043700314032,
+        "vccint_v_mean": 0.8424278706926542,
+        "vccbram_v_mean": 0.8421755901570501,
+        "n_samples": 1614
+      },
+      "fnb58_power": {
+        "power_w_mean": 3.5523491432865733,
+        "power_w_std": 0.08365967551474231,
+        "power_w_min": 3.27758,
+        "power_w_max": 3.81706,
+        "voltage_v_mean": 9.159747740480961,
+        "current_a_mean": 0.3878217885771543,
+        "n_samples": 1996,
+        "dynamic_power_w": 0.2408143341956639,
+        "energy_total_j": 70.91515825618835,
+        "energy_per_image_mj": 7.091515825618836
+      }
+    }
+  ],
+  "summary": {
+    "accuracy": 98.08999999999999,
+    "throughput_fps_mean": 500.98063908522954,
+    "throughput_fps_std": 0.19145296663379915,
+    "latency_ms_mean": 1.9960854132970176,
+    "latency_ms_std": 0.0007627055908271752,
+    "idle_power_w": 3.3115348090909094,
+    "idle_power_std": 0.055001140000250824,
+    "idle_temp_pl_c": 42.13911216617678,
+    "avg_power_w_mean": 3.544632831878617,
+    "avg_power_w_std": 0.009288976832156449,
+    "dynamic_power_w": 0.23309802278770775,
+    "energy_per_image_mj_mean": 7.075385046437135,
+    "energy_per_image_mj_std": 0.016813633308878556,
+    "sysmon": {
+      "temp_ps_c_mean": 43.36322311351605,
+      "temp_pl_c_mean": 42.51997059833161,
+      "temp_pl_c_max": 45.432276058632,
+      "vccint_v_mean": 0.8424007690985186
+    }
+  },
+  "power_measurement": {
+    "method": "fnb58_external",
+    "power_log": "power_finn_mlp-192x96_mnist_int8_c.csv",
+    "clock_offset_applied": 0.0,
+    "total_power_samples": 9236,
+    "idle": {
+      "power_w_mean": 3.3115348090909094,
+      "power_w_std": 0.055001140000250824,
+      "power_w_min": 3.2756,
+      "power_w_max": 3.55233,
+      "voltage_v_mean": 9.166625336363637,
+      "current_a_mean": 0.36126002727272727,
+      "n_samples": 1100
+    }
+  }
+}
