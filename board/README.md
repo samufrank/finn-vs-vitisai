@@ -1,151 +1,122 @@
-# `board/` — On-board runtime, benchmark orchestration, and deploy artifacts
+# `board/` — on-board runtime, benchmark orchestration, and host-side tooling
 
-This directory holds everything that runs **on the AUP-ZU3 (Ultra96-class) board**
-or coordinates board-side benchmarks from the host: FINN/VTA/DPU C runners,
-Python wrappers, the cross-framework benchmark driver, host-side power
-logging, and the playbooks that describe how to stage a session.
+Everything that runs on the AUP-ZU3 (PYNQ or PetaLinux SD card) or coordinates
+board-side benchmarks from the host: cross-framework benchmark driver, FINN/VTA
+C inference runners, host-side power logging, model-export utilities, and
+debug/probe scripts used during bring-up.
 
-**Convention:** the host pushes deploys + sources to `xilinx@192.168.3.1`
-(or `petalinux@…` for DPU). The board has matching copies of `.c` runners,
-their built `.so` files, and `benchmark.py`. Each session typically scp's
-the latest sources, rebuilds the `.so`, then runs `benchmark.py` per deploy.
-
----
-
-## Documented in this README
-
-The entries below cover what's been touched in tracked work. Other scripts
-in this directory exist from parallel investigations (DPU experiments, VTA
-debugging) — those are listed in [§ Not yet documented](#not-yet-documented)
-for a future session to expand.
-
-### Cross-framework benchmark orchestration
-
-- **`benchmark.py`** — the host-or-board entry point for every benchmark
-  in this project (FINN, FINN-T, VTA, DPU). One Python script with
-  toolchain-specific code paths gated on `--toolchain`. Outputs a JSON
-  per run with throughput, latency, accuracy, idle/active power,
-  per-stage breakdowns (when `--finn-runtime c` is used), and the
-  config that produced the run.
-  - **Key flags:** `--toolchain {finn,finn-t,vta,dpu,vitis_ai}`,
-    `--model <deploy_dir>`, `--dataset {mnist,cifar10,radioml2018}`,
-    `--runs N`, `--stabilize/--idle <sec>`, `--finn-runtime {python,c}`,
-    `--finn-double-buffer`, `--name <run_id>`.
-  - **FINN code path:** auto-detects partition (`classic` vs `qi`) from
-    the deploy's `cpu_config.json` and wires the runner accordingly.
-    Works with QI builds for both CNN and MLP. Mixed-precision QI
-    (e.g. CNN INT4 with INT8 input from QuantIdentity) is supported via
-    separate `in_precision`/`out_precision` arguments to the C runner.
-  - **DPU code path:** uses Vitis AI VART. Per-precision benchmark
-    JSONs follow the `<model>_<size>_<dataset>_b1_<timestamp>.json`
-    naming convention.
-  - **VTA code path:** uses TVM runtime + the VTA overlay at the clock
-    encoded by precision (250 MHz INT8 / 200 MHz INT4 / 166 MHz INT4-o8).
-
-### FINN C runners
-
-These produce the `.so` files that `benchmark.py` loads via `ctypes` when
-`--finn-runtime c` is set. The C path is the production path; the Python
-fallback exists for correctness diffing.
-
-- **`finn_cnn_infer.c`** — CNN runner. Handles classic and QI partitions,
-  both INT8 and INT4, with double-buffered DMA. Public API:
-  `finn_cnn_runner_init` (now takes `in_precision` + `out_precision` so
-  QI INT4 deploys with INT8 input + INT4 output work), `…_set_second_buffers`
-  (optional, enables double-buffered batch), `…_infer_batch`,
-  `…_infer_one_profiled`, `…_destroy`. State is module-global
-  (`g_cnn`); only one model loaded at a time.
-- **`finn_mlp_infer.c`** — MLP runner. Mirror of the CNN runner with the
-  classic + QI partitions and double-buffered DMA, but only one
-  monolithic `precision` argument (the QI partition is treated as a
-  CNN-only optimization in this project — see project memory
-  `finn_qi_cnn_only.md` — so MLP QI deploys are not in the result set
-  and the mixed-precision plumbing isn't wired here).
-- **`test_finn_cnn_infer.py`** — host-side correctness harness for
-  `libfinn_cnn_infer.so`. Builds the `.so` with `gcc -Werror`, then
-  exercises pack/unpack byte-exactness, GAP integer accumulator
-  exactness, end-to-end mock inference against MNIST images, and a QI
-  partition mock against a real deploy. Run from the repo root:
-  ```bash
-  python3 board/test_finn_cnn_infer.py --skip-deep3 --pack-trials 5
-  ```
-
-### Documentation / playbooks
-
-- **`size_sweep_deploy_playbook.md`** — full step-by-step recipe for the
-  size-sweep board sessions: how to bundle deploy tarballs, scp to the
-  board, rebuild `.so`s, run benchmarks per (model, size, precision)
-  pair, capture power via the FNB58 logger, and pull JSONs back.
-- **`benchmark_inventory.md`** — cross-framework inventory of which
-  models have been benchmarked at which precisions on which clocks.
-  Updated by hand after each session.
-- **`recognized_benchmarks_board_playbook.md`** — playbook for the
-  "recognized FINN benchmark" set (TFC MLP, etc.).
-
-### Power measurement
-
-- **`fnb58_logger.py`** — host-side USB-attached FNB58 power-meter logger.
-  Streams power readings to a CSV with timestamps. Run it on the host
-  alongside the board-side benchmark to capture idle/active windows;
-  `benchmark.py` then matches its run-window timestamps against the CSV
-  to compute `dynamic_power_w` and `energy_per_image_mj`. The udev rule
-  `/etc/udev/rules.d/90-fnirsi.rules` (vendor `0x2e3c`) lets it run
-  without sudo.
-
-### Local archive (not committed; `**/archive/` is in `.gitignore`)
-
-These directories exist on the original dev machine but a fresh clone
-won't have them. Mentioned here for forensic context — the abandoned
-approaches and one-off diagnostics behind them are referenced in commit
-messages and project memory.
-
-- **`archive/vta_gemm_investigation/`** — one-off diagnostic scripts
-  from the VTA GEMM tile-size investigation. Probe scripts (GEMM
-  sanity, isolated layers, tile-size sweeps) and a recompile test that
-  bracketed the failure. Conclusion is captured in user memory
-  (`vta_gemm_tile_limit.md`): with the standard schedule, `n_tiles > ~12`
-  or `m_tiles > 4` produces zeros/garbage, which is why the FINN-vs-VTA
-  comparison caps at the small CNNs.
-- **`archive/exploratory/`** — superseded approaches:
-  - `validate_qi.py` — predecessor to wiring QI support directly into
-    `benchmark.py` and the C runners. Replaced once the partition
-    auto-detect (`config.partition == 'qi'`) was added to the production
-    runner path.
-  - `test_relay_vta_compile.py` — direct TVM-Relay-on-VTA compile attempt
-    for the CIFAR-10 ONNX path. Abandoned because TVM v0.12 needs an
-    `onnx.mapping` shim (modern onnx removed it) and Brevitas's
-    `Quant` op isn't supported by the TVM frontend.
+The host pushes deploys + sources to `xilinx@192.168.3.1` (PYNQ) or
+`petalinux@…` (PetaLinux DPU). The board has matching copies of `.c` runners,
+their built `.so` files, and `benchmark.py`. Each session typically scp's the
+latest sources, rebuilds the `.so`, then runs `benchmark.py` per deploy. Usage
+recipes are in the top-level [README](../README.md) §Reproducing results.
 
 ---
 
-## Not yet documented
+## Cross-framework benchmark driver
 
-The scripts below exist but haven't been described in this README yet —
-add details here as future sessions touch them. Suggested categorization:
+| File | Description |
+|------|-------------|
+| `benchmark.py` | Single entry point for every benchmark. `--toolchain {finn,finn-t,vta,dpu,vitis_ai}` selects the code path. Auto-detects FINN partition (classic vs QI) from `cpu_config.json` and dispatches accordingly. Writes a JSON with throughput, latency, accuracy, idle/active power, and the run config. |
+| `benchmark_vta_transformer.py` | Python VTA-transformer driver (M-chunking, retry-on-zero, per-stage timing). Used for accuracy validation; `vta_transformer_infer.c` covers throughput/energy. |
 
-### VTA-side helpers (host)
-- `export_vta_cnn.py`, `export_vta_cnn_int4_o8.py` — TVM/VTA model export
-- `calibrate_int4_shifts.py` — INT4 shift calibration
-- `vta_compile_all_sizes.py` — bulk VTA compile across model sizes
-- `load_vta_bitstream.py` — bitstream loader
-- `prepare_cifar10_for_board.py` — CIFAR-10 preprocess for VTA path
-- `verify_cifar10_data_path.py`, `verify_m_loop_math.py` — VTA diagnostics
-- `vta_infer.c` — VTA C runner (analog of `finn_cnn_infer.c`)
-- `rebuild_libvta.sh` — rebuild the VTA `.so`
+## C inference runners
 
-### DPU / Vitis AI (board side runs as `petalinux@…`)
-- `run_dpu_transformer.py` — DPU transformer runner
-- `probe_dpu_transformer.py`, `dpu_layout_probe.py`, `profile_dpu_subgraphs.py`
-  — DPU subgraph and layout investigations
+Loaded by `benchmark.py` via ctypes (FINN) or built as standalone executables
+(VTA, VTA transformer). Build with `gcc -O2 -shared -fPIC -Wall` on the board
+(aarch64, gcc 11.4) for the FINN `.so` files, or per-runner instructions for VTA.
 
-### INT8/precision probes (toolchain-agnostic)
-- `probe_dump_int8.py`, `probe_full_int8.py`, `probe_l0_int8.py`
-- `probe_subgraph_1.py`, `probe_subgraph_2.py`
-- `probe_gemm_isolated.py`
+| File | Description |
+|------|-------------|
+| `finn_mlp_infer.c` | FINN MLP runner. INT8 + INT4 (1-per-byte and 2-per-byte input layouts), classic + QI partitions, single + double-buffer DMA. Public API: `finn_mlp_runner_init`, `…_infer_batch`, `…_infer_one_profiled`, `…_destroy`. |
+| `finn_cnn_infer.c` | FINN CNN runner. INT8 + INT4 (mixed in/out precision for QI INT4), classic + QI partitions, double-buffer DMA, binary-search MultiThreshold. |
+| `finn_t_infer.c` | FINN-T transformer runner. Single streaming DMA per inference, double-buffered with CPU classifier tail. `FINN_T_OPT` and `FINN_T_TIMING` env-var gates. |
+| `vta_infer.c` | VTA C runner. MLP (INT8 + INT4), CNN (INT8 + INT4-o8 with per-channel dequant + zero-point offset), CIFAR-10 input via `cnn_input_c==3` auto-dispatch. Outputs merge-power-compatible JSON. |
+| `vta_transformer_infer.c` | VTA transformer C runner. 12 GEMMs + CPU softmax/BN/residual orchestration, `--timing` flag for per-stage breakdown, retry-on-zero logic for intermittent DMA failures. |
+| `pynq_driver_xrt.cc` | VTA XRT driver source. Built into `libvta.so` on the board. Adds done_vld polling after fetch idle, COR-clearing read before module start, optional `VTA_DUMP_INSN_DIR` instruction-stream dump. |
 
-### Brevitas / weight extraction
-- `extract_brevitas_weights.py`
+### Correctness harnesses (host-side, no board required)
 
-### Network setup (one-time host config)
-- `board_net_setup.sh` — board-side static IP + USB-Ethernet bringup
-- `host_nat_setup.sh` — host-side NAT to give the board internet
+| File | Description |
+|------|-------------|
+| `test_finn_mlp_infer.py` | Builds `libfinn_mlp_infer.so` with `gcc -Werror`, exercises pack/unpack byte-exactness and end-to-end mock inference against MNIST. |
+| `test_finn_cnn_infer.py` | Same for `libfinn_cnn_infer.so`, plus QI-partition mock against a real deploy. Runs from repo root. |
+
+## Power measurement
+
+| File | Description |
+|------|-------------|
+| `fnb58_logger.py` | Host-side FNIRSI FNB58 USB-C inline meter logger. Streams V/I/P/T to CSV at 100 Hz over HID interface 3. Requires udev rule (see `fnb58_guide.md`). |
+| `merge_power.py` | Post-hoc merge of FNB58 CSV with benchmark JSON by timestamp. Computes idle/active means, dynamic power, energy per inference. `--clock-offset` for board-host clock skew, `--plot` for power-timeline PNG. |
+| `fnb58_guide.md` | Power measurement workflow: meter setup, udev rule, board clock sync, common failure modes. |
+
+## Model export and weight extraction (host-side)
+
+Compile and pack models for board-side execution. VTA exports cross-compile TVM
+TE modules for aarch64 and write a self-contained directory with `.o` modules
+plus weight/config/scale arrays.
+
+| File | Description |
+|------|-------------|
+| `export_vta_model.py` | VTA MLP INT8 export (TE GEMM + ALU shift + clip schedule). |
+| `export_vta_model_int4_v2.py` | VTA MLP INT4 export. Reads Brevitas `quant_weight().scale` per layer, `scaling_impl.value` per quantizer. Fully parameterized by `meta.json`. |
+| `export_vta_cnn.py` | VTA CNN INT8 export. Generic per-layer config, `--force-m1` flag for single-tile module compilation, skip-add residual support, m-chunk loop. |
+| `export_vta_cnn_int4_o8.py` | VTA CNN INT4-o8 export. Per-channel BN-fold, zero-point activation offset, INT8 output modules. |
+| `extract_brevitas_weights.py` | Generic Brevitas → numpy extractor for MLP/CNN at INT8/INT4. |
+| `extract_int4_brevitas.py` | INT4-specific Brevitas extractor with per-channel scale handling. |
+| `prepare_cifar10_for_board.py` | CIFAR-10 host-side preprocessor. Emits uint8 HWC images + uint8 labels in board-ready binary format. |
+| `vta_compile_all_sizes.py` | Bulk VTA compile across the model size sweep. |
+| `load_vta_bitstream.py` | Bitstream loader helper (PYNQ Overlay wrapper). |
+
+## DPU runtime + profiling (PetaLinux board side)
+
+| File | Description |
+|------|-------------|
+| `run_dpu_transformer.py` | Custom Python orchestrator for the multi-subgraph transformer (VART for DPU subgraphs, numpy for CPU subgraphs — `libvart-cpu-runner.so` is missing from the PetaLinux 2024.1 BSP). |
+| `probe_dpu_transformer.py` | VART API probe (subgraph attributes, runner availability). |
+| `probe_subgraph_1.py`, `probe_subgraph_2.py` | xir attribute probes for individual subgraphs. |
+| `profile_dpu_subgraphs.py` | Per-DPU-subgraph throughput via `xdputil benchmark -i`. |
+
+## Debug, simulation, and diagnostics
+
+These are kept in the tree as record of what was needed during bring-up; they
+are not part of the production benchmark loop.
+
+| File | Description |
+|------|-------------|
+| `debug_full_pipeline.py` | 31-stage VTA-transformer per-stage diagnostic against host-side reference. |
+| `debug_vta_transformer.py` | Single-sample Q-projection diagnostic. |
+| `vta_numpy_sim_int4.py` | Numpy reference simulator for VTA INT4 MLP (Modes A–D for sim-to-hardware gap analysis). |
+| `vta_numpy_sim_int4_cnn_int8out.py` | Same for VTA INT4-o8 CNN (Modes E–G). |
+| `calibrate_int4_shifts.py` | INT4 SHR calibration helper. |
+| `diagnose_int4_v2.py` | Per-layer INT4 sim-vs-board divergence diagnostic. |
+| `fingerprint_mlp_mt.py` | sha1 fingerprint of MLP MultiThreshold pred vectors (regression check for the `>` vs `>=` semantic fix). |
+| `test_tiny_module.py` | Minimal VTA module smoke test. |
+| `test_vta_cnn.py` | VTA CNN INT8 board test (im2col + GEMM + post-processing pipeline). |
+| `test_vta_cnn_int4_o8.py` | VTA CNN INT4-o8 board test. |
+| `test_vta_int4_minimal.py` | VTA INT4 cold-start probe (T1a/T1b/T1c discriminators for the first-GEMM-call artifact). |
+| `verify_cifar10_data_path.py` | One-off check on CIFAR-10 binary path layout for the C runner. |
+
+## Network setup (one-time host config)
+
+| File | Description |
+|------|-------------|
+| `host_nat_setup.sh` | Host-side USB-Ethernet bringup + NAT for PYNQ board internet (auto-detects `enx*` interface, includes NetworkManager fix and MTU 900 setting). |
+| `board_net_setup.sh` | Board-side static IP + USB-Ethernet bringup. |
+| `rebuild_libvta.sh` | One-command rebuild of the VTA driver `.so` on board (driver only — runtime.cc changes need full cmake; see `docs/vta_build_guide.md`). |
+
+## Documentation
+
+| File | Description |
+|------|-------------|
+| `setup.md` | Board setup, credentials, SD-card layout, USB networking gotchas. |
+| `fnb58_guide.md` | Power measurement workflow (meter, udev rule, merge). |
+| `README.md` | This file. |
+
+## Regression baselines
+
+| File | Description |
+|------|-------------|
+| `regression/int8_baseline_pre_change.json` | INT8 MLP pred-vector + accuracy baseline before benchmark.py refactor. |
+| `regression/int8_baseline_post_change.json` | After the `>=` MultiThreshold semantic fix. |
+| `regression/int8_baseline_post_benchmark_refactor.json` | After the dual-closure refactor for INT8/INT4 dispatch. |

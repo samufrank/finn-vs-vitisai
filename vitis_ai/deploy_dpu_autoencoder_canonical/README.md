@@ -6,9 +6,8 @@ MLPerf Tiny v0.5 anomaly_detection canonical autoencoder:
 
 ## Why DPU-only
 
-`context/fc_autoencoder_compile_attempts.md` records the architectural reasoning:
 * FINN — 4-layer simplification already at 97.9 % BRAM on ZU3; canonical projects to ~125 %.
-* VTA — first/last layers exceed the manual-schedule tile limits (n=40 / m=40 vs ~12 / 4).
+* VTA — first/last layers exceed our manual-TE schedule tile limits (n=40 / m=40 vs ~12 / 4 ceiling).
 * DPU — DRAM weight streaming has no per-layer capacity constraint.
 
 ## AUC numbers (host)
