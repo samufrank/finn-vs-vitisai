@@ -16,9 +16,9 @@
  * qonnx.custom_op.general.multithreshold and the patched
  * benchmark.py:multithreshold.
  *
- * MNIST-only scope: init rejects img_c != 1, kernel_size != 3, or pad != 1
- * (those would be CIFAR-10 / a different conv shape; Python fallback is
- * expected for those cases). Rejects any precision != 8.
+ * Supports MNIST (img_c=1) and CIFAR-10 (img_c=3); init still requires
+ * kernel_size=3, pad=1 (matches every Brevitas QAT train in this project).
+ * INT8 + INT4 (per-side) via select_dispatch.
  *
  * Build on board (ARM64):
  *   gcc -O2 -shared -fPIC -Wall -o libfinn_cnn_infer.so finn_cnn_infer.c
@@ -401,8 +401,9 @@ int finn_cnn_runner_init(
     int          partition,         /* 0 = classic, 1 = qi */
     int          idt_signed)        /* 0 = unsigned IDT, 1 = signed (QI only) */
 {
-    /* Scope validation: this runner is MNIST CNN, INT8 or INT4. */
-    if (img_c != 1)                            return -2;
+    /* Scope validation: img_c ∈ {1, 3} (MNIST, CIFAR-10), 3x3 kernel,
+     * pad=1. cpu_pre / cpu_pre_qi loops are generic over img_c. */
+    if (img_c != 1 && img_c != 3)              return -2;
     if (kernel_size != 3 || pad != 1)          return -3;
     if (img_h <= 0 || img_w <= 0)              return -4;
     if (fpga_in_c <= 0 || fpga_out_h <= 0 ||

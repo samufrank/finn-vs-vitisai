@@ -1,0 +1,192 @@
+{
+  "config": {
+    "toolchain": "dpu",
+    "model_path": "/home/petalinux/models/dpu/transformer_radioml/transformer_radioml.xmodel",
+    "dataset": "radioml2018",
+    "num_samples": 100,
+    "timestamp": "2035-10-16T16:01:26.056471",
+    "board": "AUP-ZU3",
+    "dpu": "DPUCZDX8G_ISA1_B512"
+  },
+  "summary": {
+    "accuracy": 31.0,
+    "throughput_fps": 5.87506858222387,
+    "latency_ms_mean": 170.21077899000002,
+    "wall_seconds": 17.021077899000005,
+    "correct": 31,
+    "dpu_seconds_per_inf": 0.006392459535354853,
+    "cpu_seconds_per_inf": 0.16166771629292512,
+    "dpu_fraction": 0.03803673002155205,
+    "cpu_fraction": 0.9619632699784479
+  },
+  "per_subgraph": [
+    {
+      "index": 0,
+      "device": "USER",
+      "name": "subgraph_DecomposedRadioMLTransformer__input_0",
+      "n_ops": 1,
+      "description": "input quantization (data-fix)",
+      "mean_seconds": null
+    },
+    {
+      "index": 1,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_BatchNorm2d_patch_bn__1147",
+      "n_ops": 3,
+      "description": "BN counter increment (no data path)",
+      "mean_seconds": null
+    },
+    {
+      "index": 2,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1596",
+      "n_ops": 10,
+      "description": "fake-quant chain (4 fq ops)",
+      "mean_seconds": 0.0032529484141417524
+    },
+    {
+      "index": 3,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1598",
+      "n_ops": 4,
+      "description": "eltwise residual / scale",
+      "mean_seconds": 0.0005179909898991107
+    },
+    {
+      "index": 4,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1600",
+      "n_ops": 11,
+      "description": "1\u00d7 conv2d (linear projection or patch_conv)",
+      "mean_seconds": 0.010537562565656746
+    },
+    {
+      "index": 5,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1602",
+      "n_ops": 5,
+      "description": "eltwise residual / scale",
+      "mean_seconds": 0.0006887864747478383
+    },
+    {
+      "index": 6,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1604",
+      "n_ops": 45,
+      "description": "fake-quant chain (11 fq ops)",
+      "mean_seconds": 0.02565032566666737
+    },
+    {
+      "index": 7,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_Linear_k_proj__ret_71(TransferMatMulToConv2d)",
+      "n_ops": 17,
+      "description": "3\u00d7 conv2d (q/k/v projections)",
+      "mean_seconds": 0.0013306141616160885
+    },
+    {
+      "index": 8,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1620",
+      "n_ops": 120,
+      "description": "attention (6 matmul + 3 softmax + 9 slice)",
+      "mean_seconds": 0.07497515598989887
+    },
+    {
+      "index": 9,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_ret_121_inserted_fix_1_reshaped",
+      "n_ops": 5,
+      "description": "head concat (1) + 4 reshape",
+      "mean_seconds": 0.001637221818181258
+    },
+    {
+      "index": 10,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1662",
+      "n_ops": 8,
+      "description": "fake-quant chain (2 fq ops)",
+      "mean_seconds": 0.004226011282826812
+    },
+    {
+      "index": 11,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_Linear_o_proj__ret_197(TransferMatMulToConv2d)",
+      "n_ops": 7,
+      "description": "1\u00d7 conv2d (linear projection or patch_conv)",
+      "mean_seconds": 0.0007443549393945597
+    },
+    {
+      "index": 12,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1666",
+      "n_ops": 32,
+      "description": "fake-quant chain (8 fq ops)",
+      "mean_seconds": 0.01836513748484789
+    },
+    {
+      "index": 13,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_Linear_fc1__ret_229(TransferMatMulToConv2d)",
+      "n_ops": 7,
+      "description": "1\u00d7 conv2d (linear projection or patch_conv)",
+      "mean_seconds": 0.0012956854141425147
+    },
+    {
+      "index": 14,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1678",
+      "n_ops": 8,
+      "description": "fake-quant chain (2 fq ops)",
+      "mean_seconds": 0.010298543434342349
+    },
+    {
+      "index": 15,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_Linear_fc2__ret_241(TransferMatMulToConv2d)",
+      "n_ops": 7,
+      "description": "1\u00d7 conv2d (linear projection or patch_conv)",
+      "mean_seconds": 0.001043949545453042
+    },
+    {
+      "index": 16,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1682",
+      "n_ops": 20,
+      "description": "GAP (aten::mean) + residual",
+      "mean_seconds": 0.010736531424241478
+    },
+    {
+      "index": 17,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_1574_fix_reshaped",
+      "n_ops": 7,
+      "description": "1\u00d7 conv2d (linear projection or patch_conv)",
+      "mean_seconds": 0.0004534049292940358
+    },
+    {
+      "index": 18,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1690(MergeDataReshape)",
+      "n_ops": 7,
+      "description": "fake-quant chain (2 fq ops)",
+      "mean_seconds": 0.0018524633434349876
+    },
+    {
+      "index": 19,
+      "device": "DPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__1692(MergeDataReshape)",
+      "n_ops": 6,
+      "description": "eltwise residual / scale",
+      "mean_seconds": 0.0003176730808076634
+    },
+    {
+      "index": 20,
+      "device": "CPU",
+      "name": "subgraph_DecomposedRadioMLTransformer__DecomposedRadioMLTransformer_ret_fix_",
+      "n_ops": 1,
+      "description": "fake-quant chain (1 fq ops)",
+      "mean_seconds": 0.0001358148686856084
+    }
+  ]
+}

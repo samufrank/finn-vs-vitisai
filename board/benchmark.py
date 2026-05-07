@@ -453,6 +453,10 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
 
     images_uint8 = (images * 255).clip(0, 255).astype(np.uint8)
     n_inputs     = int(np.prod(images_uint8[0].shape))
+    # images_flat is kept in NCHW-flatten order at this top level to match
+    # what the Python `infer()` MLP path and CNN fallback expect. The C
+    # runner block below does its own CHW→HWC transpose for CIFAR-10
+    # before calling `finn_cnn_infer_batch`.
     images_flat  = images_uint8.reshape(len(images_uint8), n_inputs)
 
     ishape_normal = io_shape_dict['ishape_normal'][0]
@@ -824,11 +828,11 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
         except OSError as e:
             print(f"  C runner not available ({e}); falling back to Python infer")
     elif finn_runtime == 'c' and has_cnn_pre:
-        if n_inputs != 784:
-            # CIFAR-10 (n_inputs = 3072) falls here. Shapes would differ and
-            # no CNN CIFAR-10 deploy has been validated against C yet.
-            print("  CNN C runner is MNIST-only (28x28x1); CIFAR-10 uses Python")
-        else:
+        # MNIST (img_c=1) and CIFAR-10 (img_c=3) both supported as of the
+        # CIFAR-10 enablement edit. Geometry is read from cpu_config.json's
+        # ishape_normal below; the runner's init guard rejects anything
+        # outside img_c ∈ {1, 3}.
+        if True:
             _so_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     'libfinn_cnn_infer.so')
             try:
@@ -880,7 +884,17 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                 # W_conv is None — derive geometry from input_thres
                 # (shape (img_c, num_thresholds)) plus the kernel/pad
                 # convention used by all our Brevitas QAT trains.
-                img_h, img_w, img_c = 28, 28, 1
+                # ishape_normal is FINN's (1, H, W, C) HWC for CNNs.
+                img_h = int(ishape_normal[1])
+                img_w = int(ishape_normal[2])
+                img_c = int(ishape_normal[3]) if partition == 'qi' else 1
+                # Classic-partition CNN: ishape_normal[3] is fpga_in_c
+                # (post-Conv1 channels), NOT image channels. img_c must come
+                # from W_conv: patch_dim = K*K*img_c, with K=3 → img_c =
+                # patch_dim / 9. (For QI, the FPGA receives the raw image so
+                # ishape_normal[3] == img_c.)
+                if partition != 'qi':
+                    img_c = int(W_conv.shape[0]) // 9
                 pad = 1
                 if partition == 'qi':
                     kernel_size = 3                       # convention; not used by cpu_pre_qi
@@ -964,8 +978,19 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
                         except AttributeError:
                             print("  finn_cnn_set_second_buffers not in .so; "
                                   "single-buffered fallback (rebuild libfinn_cnn_infer.so)")
-                    # Flatten MNIST to uint8 [N, 784] for the C batch call.
-                    images_c = np.ascontiguousarray(images_flat.astype(np.uint8))
+                    # CHW→HWC if the dataset is CIFAR-10 (img_c=3). The C
+                    # runner reads img[iy*W + ix*C + c] (HWC byte order); the
+                    # raw dataset arrives NCHW from load_cifar10. MNIST has
+                    # img_c=1, so transposing the (N,1,28,28) array to
+                    # (N,28,28,1) is a no-op in flat-byte order — but skip it
+                    # to keep the MNIST byte stream literally identical to
+                    # pre-edit (Gate 2C regression target).
+                    if img_c == 3:
+                        images_for_c = images_uint8.transpose(0, 2, 3, 1)
+                        images_c = np.ascontiguousarray(
+                            images_for_c.reshape(len(images_for_c), -1).astype(np.uint8))
+                    else:
+                        images_c = np.ascontiguousarray(images_flat.astype(np.uint8))
                     labels_c = np.ascontiguousarray(labels.astype(np.int32))
                     preds_c  = np.zeros(len(images_c), dtype=np.int32)
                     c_runner = _lib

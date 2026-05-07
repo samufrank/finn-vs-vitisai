@@ -1,0 +1,3 @@
+transformer_radioml vai_c_xir: 2.41 seconds
+input: ./quantize_result_transformer/DecomposedRadioMLTransformer_int.xmodel
+output: ./compiled_transformer_radioml/transformer_radioml.xmodel
