@@ -25,6 +25,11 @@ Vitis-AI/
 # Vitis AI generated
 quantize_result/
 compiled*/
+# compile logs (regenerable)
+vitis_ai/*.log
+vitis_ai/compile_logs/
+# quantize artifacts (large, regeneraable)
+vitis_ai/quantize_result_transformer/
 
 # FINN generated
 output_*/

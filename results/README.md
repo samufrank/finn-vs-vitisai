@@ -14,6 +14,13 @@ Examples:
 Clock is included for VTA and DPU (user-controlled). FINN auto-selects clock.
 Runtime suffix (`_c`) is added when non-default (e.g., C runner vs Python). Python is the default for FINN and VTA; C runner results append `_c`. DPU is always C++ (VART).
 
+QI (QuantIdentity) partition results use `_qi` suffix. Higher target_fps use `_fps10k`, `_fps100k` suffixes. Double-buffer flag recorded in JSON config as `finn_double_buffer: true` but not in filename.
+
+Additional examples:
+- `finn_cnn-8x16_mnist_int8_qi_c.json` — CNN tiny INT8, QI partition, C runner
+- `finn_cnn-8x16_mnist_int8_qi_fps10k_c.json` — same at target_fps=10K
+- `finn_cnn-32x64x128_mnist_int4_qi_c.json` — CNN large INT4, QI partition
+
 Power CSVs use the same base name with `_power.csv`. Timeline plots use `_power.png`.
 
 ## JSON Structure
@@ -32,16 +39,59 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 
 ### finn/
 
-**Baseline models (C runner):**
-- MLP tiny [64,32] MNIST INT8 — 96.58%, 1575 FPS, 2.21 mJ
-- MLP tiny [64,32] MNIST INT4 — 97.29%, 1811 FPS, 1.90 mJ
-- CNN tiny [8,16] MNIST INT8 — 91.99%, 454 FPS, 7.59 mJ (binary-search MultiThreshold)
-- CNN tiny [8,16] MNIST INT4 — 88.27%, 525 FPS, 6.57 mJ
+**Baseline models — optimized (C runner):**
+- CNN tiny [8,16] MNIST INT8 QI fps=10K — 91.47%, 10,740 FPS, 0.34 mJ (**beats DPU 3.7×**)
+- CNN tiny [8,16] MNIST INT4 QI fps=10K — 91.35%, 8,934 FPS, 0.39 mJ
+- MLP tiny [64,32] MNIST INT8 classic+DB — 96.58%, 1638 FPS, 2.11 mJ
+- MLP tiny [64,32] MNIST INT4 classic+DB — 97.18%, 1895 FPS, 1.81 mJ
 - TFC [256,256,256,256] MNIST INT8 — see JSON for details
+
+**Baseline models — classic partition (C runner, superseded):**
+- MLP tiny INT8 — 96.58%, 1575 FPS, 2.21 mJ
+- MLP tiny INT4 — 97.29%, 1811 FPS, 1.90 mJ
+- CNN tiny INT8 — 91.99%, 454 FPS, 7.59 mJ
+- CNN tiny INT4 — 88.27%, 525 FPS, 6.57 mJ
 
 **Target_fps sweep:** 15 successful builds across 4 sweeps (mlp_int8, mlp_int4, cnn_int8, cnn_int4) at target_fps 1K-500K. Selected builds benchmarked on board. Results in `target_fps_sweep/`. Headline: CNN INT8 hits ZU3 CLB capacity between 10K-100K; CNN INT4 fits at all targets up to 500K.
 
+**Model size sweep — classic partition:** 24 FINN compiles (7 MLP × 2 precisions + 5 CNN × 2 precisions) at target_fps=1000. CNN INT8 fails at medium (114% LUT) and large (224% LUT). All CNN INT4 fit. Board benchmarks for all deployable models with FNB58 power. Results in `size_sweep/`.
+
+- CNN small INT8: 95.38%, 308 FPS, 11.58 mJ
+- CNN small INT4: 95.46%, 346 FPS, 9.88 mJ
+- CNN medium INT4: 97.30%, 227 FPS, 15.61 mJ (INT8 failed compile)
+- CNN deep_3 INT8: 98.88%, 291 FPS, 12.64 mJ
+- CNN deep_3 INT4: 99.18%, 323 FPS, 10.80 mJ
+- CNN large INT4: 99.42%, 217 FPS, 16.66 mJ (INT8 failed compile)
+- MLP 12 runs across 6 sizes × 2 precisions (see JSONs)
+
+**QuantIdentity sweep:** Adding `QuantIdentity(bit_width=8)` moves Conv1 to FPGA, yielding 2.3-4.5× CNN throughput. 24 QI builds across models/precisions/fps targets. Results in `size_sweep_qi/`.
+
+Headline results (all QI + double-buffer):
+
+| Model | Precision | target_fps | FPS | Energy | LUT% | Accuracy |
+|-------|-----------|-----------|-------|--------|------|----------|
+| CNN tiny | INT8 | 10,000 | 10,740 | 0.34 mJ | 56.1% | 91.47% |
+| CNN tiny | INT4 | 10,000 | 8,934 | 0.39 mJ | 16.2% | 91.35% |
+| CNN tiny | INT8 | 1,000 | 1,196 | 2.93 mJ | 29.6% | 91.47% |
+| CNN tiny | INT4 | 1,000 | 1,196 | 2.86 mJ | 15.2% | 91.35% |
+| CNN tiny | INT4 | 100,000 | 8,930 | 0.39 mJ | 20.2% | 91.35% |
+| CNN small | INT8 | 1,000 | 1,394 | 2.64 mJ | 54.0% | 95.72% |
+| CNN small | INT4 | 1,000 | 1,235 | — | 17.3% | 95.56% |
+| CNN medium | INT4 | 1,000 | 1,196 | 2.95 mJ | 22.1% | 96.60% |
+| CNN deep_3 | INT4 | 1,000 | 975 | 3.57 mJ | 20.3% | 99.26% |
+| CNN large | INT4 | 1,000 | 1,020 | — | 28.1% | 99.45% |
+
+CNN tiny INT4 at fps=100K hits architectural ceiling (PE=16/SIMD=9, fully unrolled, ~64K estimated FPS, 20% LUT). QI does not help MLP — classic partition is faster.
+
+Resource summary: `size_sweep_qi/resource_summary.csv`
+
 **Historical Python runner results** in `python_reference/`.
+
+**Subdirectories:**
+- `finn/` — baseline merged results (tiny models)
+- `finn/target_fps_sweep/` — target_fps sweep results
+- `finn/size_sweep/` — classic partition model size sweep: 6 CNN + 12 MLP merged benchmarks, resource_summary.csv, phase_a_training/ (accuracy logs)
+- `finn/size_sweep_qi/` — QI partition sweep: CNN QI benchmarks, resource_summary.csv, sweep_state.json, compile_logs/
 
 ### finn-t/
 
@@ -56,6 +106,13 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 - CNN tiny [8,16] MNIST INT4-o8 166MHz — 81.57%, 481 FPS, 8.28 mJ
 - TFC [256,256,256,256] MNIST INT8 — see JSON for details
 
+**Size sweep (C runner, FNB58 power):**
+- CNN small [16,32] MNIST INT8 250MHz — 94.21%, 264 FPS, 16.62 mJ
+- CNN small [16,32] MNIST INT4-o8 166MHz — 77.15%, 382 FPS, 10.48 mJ
+- MLP small [128,64] MNIST INT8 250MHz — 97.00%, 1209 FPS, 3.69 mJ
+
+VTA scaling limited to tiny + small by GEMM tile dimension ceiling (n ≥ 10 input tiles produces incorrect results). Root cause: manual TE compilation path does not implement TVM's native auto-tiling. Results in `size_sweep/`.
+
 **Transformer (C runner):**
 - RadioML 2018 INT4-o8 166MHz — 71.80%, 26.9 FPS, 149.3 mJ. 12 VTA GEMMs, CPU handles softmax/BN/residual. Per-stage: 84.9% VTA, 15.1% CPU.
 
@@ -67,7 +124,9 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 - MLP tiny [64,32] MNIST INT8 — 97.14%, 2905 FPS, 1.57 mJ
 - CNN tiny [8,16] MNIST INT8 — 86.74%, 2910 FPS, 1.58 mJ
 
-**Size sweep (session 25, all INT8 PTQ, VART C++ runtime):**
+Note: DPU CNN tiny at 2,910 FPS was the throughput benchmark before the FINN QI discovery. FINN QI at fps=10K now exceeds DPU by 3.7× on CNN tiny.
+
+**Size sweep (all INT8 PTQ, VART C++ runtime):**
 
 | Model | Accuracy | FPS | Energy/img (mJ) |
 |-------|----------|------|-----------------|
@@ -88,7 +147,7 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 
 DPU shows flat throughput profile (2,000-2,900 FPS) scaling with model size. Dynamic power 0.25-0.58 W.
 
-**Transformer runtime profiling (session 25):**
+**Transformer runtime profiling:**
 - Trained RadioML 2018, decomposed architecture, vai_q_pytorch INT8 PTQ
 - 8 DPU + 12 CPU = 21 subgraphs. DPU: 6.4 ms (3.8%). CPU: 161 ms (96.2%)
 - Attention subgraph alone: 75 ms (44% of total)
