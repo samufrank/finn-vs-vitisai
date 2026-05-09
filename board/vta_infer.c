@@ -1248,6 +1248,7 @@ int main(int argc, char **argv) {
 
     /* MLP inference: returns predicted class */
     #define MLP_INFER(img_ptr, prediction) do { \
+        prof_init(); \
         float *_img = (img_ptr); \
         float x_max = 0; \
         for (int _k = 0; _k < 784; _k++) { \
@@ -1259,6 +1260,7 @@ int main(int argc, char **argv) {
             float v = roundf(_img[_k] / x_s); \
             h_int8[_k] = (int8_t)(v < -128 ? -128 : (v > 127 ? 127 : v)); \
         } \
+        prof_mark("input_quant"); \
         float current_scale = x_s; \
         for (int _li = 0; _li < num_layers; _li++) { \
             Layer *_l = &layers[_li]; \
@@ -1266,10 +1268,12 @@ int main(int argc, char **argv) {
             int _c_bytes = _l->m_tiles * BLOCK_OUT; \
             int8_t _c_out[MAX_FLAT]; \
             VTA_CALL(_l, h_int8, _a_bytes, _c_out, _c_bytes); \
+            prof_mark_layer(_li, "gemm"); \
             float combined = current_scale * _l->w_scale * (float)(1 << _l->shift); \
             for (int _j = 0; _j < _l->out_f; _j++) { \
                 h_float_mlp[_j] = (float)_c_out[_j] * combined + _l->bias_float[_j]; \
             } \
+            prof_mark_layer(_li, "dequant"); \
             if (_li < num_layers - 1) { \
                 float y_max = 0; \
                 for (int _j = 0; _j < _l->out_f; _j++) { \
@@ -1283,12 +1287,14 @@ int main(int argc, char **argv) {
                     h_int8[_j] = (int8_t)(v < -128 ? -128 : (v > 127 ? 127 : v)); \
                 } \
                 current_scale = ns; \
+                prof_mark_layer(_li, "relu_requant"); \
             } else { \
                 float best = h_float_mlp[0]; int best_idx = 0; \
                 for (int _j = 1; _j < _l->real_out; _j++) { \
                     if (h_float_mlp[_j] > best) { best = h_float_mlp[_j]; best_idx = _j; } \
                 } \
                 (prediction) = best_idx; \
+                prof_mark("argmax"); \
             } \
         } \
     } while(0)
@@ -1298,28 +1304,34 @@ int main(int argc, char **argv) {
     int8_t _unpacked_buf[MAX_FLAT];
 
     #define MLP_INFER_VTA_NATIVE(img_ptr, prediction) do { \
+        prof_init(); \
         float *_img = (img_ptr); \
         /* Input quantize: fixed scale, clip [0, input_clip_max] */ \
         for (int _k = 0; _k < 784; _k++) { \
             float v = roundf(_img[_k] / input_scale); \
             h_int8[_k] = (int8_t)(v < 0 ? 0 : (v > input_clip_max ? input_clip_max : (int)v)); \
         } \
+        prof_mark("input_quant"); \
         for (int _li = 0; _li < num_layers; _li++) { \
             Layer *_ln = &layers[_li]; \
             int _a_elems = _ln->n_tiles * BLOCK_IN; \
             int _c_elems = _ln->m_tiles * BLOCK_OUT; \
             /* Pack int4 input into nibble format */ \
             pack_int4(h_int8, _packed_buf, _a_elems); \
+            prof_mark_layer(_li, "pack"); \
             int8_t _c_packed[MAX_FLAT]; \
             if (_ln->has_vta_bias) { \
                 /* Hidden layer: 4-arg call. VTA does GEMM+bias+SHR+CLIP. */ \
                 /* Output is packed int4 — unpack for next layer. */ \
                 VTA_CALL_BIAS(_ln, _packed_buf, _a_elems, _c_packed, _c_elems); \
+                prof_mark_layer(_li, "gemm"); \
                 unpack_int4(_c_packed, _unpacked_buf, _c_elems); \
                 memcpy(h_int8, _unpacked_buf, _ln->real_out); \
+                prof_mark_layer(_li, "unpack"); \
             } else { \
                 /* Last layer: 3-arg call. CPU dequant + float bias + argmax. */ \
                 VTA_CALL(_ln, _packed_buf, _a_elems, _c_packed, _c_elems); \
+                prof_mark_layer(_li, "gemm"); \
                 unpack_int4(_c_packed, _unpacked_buf, _c_elems); \
                 float combined = _ln->in_scale * _ln->w_scale \
                                  * (float)(1 << _ln->shift); \
@@ -1330,6 +1342,7 @@ int main(int argc, char **argv) {
                     if (val > best) { best = val; best_idx = _j; } \
                 } \
                 (prediction) = best_idx; \
+                prof_mark("argmax"); \
             } \
         } \
     } while(0)
@@ -2018,15 +2031,15 @@ int main(int argc, char **argv) {
         printf("  WARNING: suspiciously low accuracy\n");
 
     /* ---- Stabilization ---- */
-    printf("Thermal stabilization (10s)...\n");
-    sleep(10);
+    printf("Thermal stabilization (5s)...\n");
+    sleep(5);
 
     /* ---- Idle measurement ---- */
-    printf("Idle measurement (10s)...\n");
+    printf("Idle measurement (5s)...\n");
     struct timespec ts_tmp;
     clock_gettime(CLOCK_REALTIME, &ts_tmp);
     double idle_t_start = ts_tmp.tv_sec + ts_tmp.tv_nsec / 1e9;
-    sleep(10);
+    sleep(5);
     clock_gettime(CLOCK_REALTIME, &ts_tmp);
     double idle_t_end = ts_tmp.tv_sec + ts_tmp.tv_nsec / 1e9;
 

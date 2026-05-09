@@ -295,11 +295,14 @@ def build_run_result(run_num, correct, total, elapsed, power_log, sysmon_log,
         'sysmon': sysmon_summary,
     }
 
-    pwr_str  = f"{avg_power:.3f} W"       if avg_power      is not None else "N/A"
-    enrg_str = f"{energy_per_img:.4f} mJ/img" if energy_per_img is not None else "N/A"
-    temp_str = f"{sysmon_summary['temp_pl_c_mean']:.1f}C" if sysmon_summary else "N/A"
-    print(f"  Run {run_num}: {result['throughput_fps']:.1f} FPS, "
-          f"pwr={pwr_str}, {enrg_str}, temp={temp_str}")
+    parts = [f"Run {run_num}: {result['throughput_fps']:.1f} FPS"]
+    if avg_power is not None:
+        parts.append(f"pwr={avg_power:.3f} W")
+    if energy_per_img is not None:
+        parts.append(f"{energy_per_img:.4f} mJ/img")
+    if sysmon_summary:
+        parts.append(f"temp={sysmon_summary['temp_pl_c_mean']:.1f}C")
+    print(f"  {', '.join(parts)}")
     return result
 
 # ============================================================
