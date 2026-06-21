@@ -40,7 +40,7 @@ All results from AUP-ZU3 (ZU3EG) with FNB58 external power measurement.
 ### finn/
 
 **Baseline models — optimized (C runner):**
-- CNN tiny [8,16] MNIST INT8 QI fps=10K — 91.47%, 10,740 FPS, 0.34 mJ (**beats DPU 3.7×**)
+- CNN tiny [8,16] MNIST INT8 QI fps=10K — 91.47%, 10,740 FPS, 0.34 mJ (**beats DPU 4.1×**)
 - CNN tiny [8,16] MNIST INT4 QI fps=10K — 91.35%, 8,934 FPS, 0.39 mJ
 - MLP tiny [64,32] MNIST INT8 classic+DB — 96.58%, 1638 FPS, 2.11 mJ
 - MLP tiny [64,32] MNIST INT4 classic+DB — 97.18%, 1895 FPS, 1.81 mJ
@@ -121,31 +121,31 @@ VTA scaling limited to tiny + small by GEMM tile dimension ceiling (n ≥ 10 inp
 ### vitis_ai/
 
 **Baseline models (VART C++ runtime):**
-- MLP tiny [64,32] MNIST INT8 — 97.14%, 2905 FPS, 1.57 mJ
-- CNN tiny [8,16] MNIST INT8 — 86.74%, 2910 FPS, 1.58 mJ
+- MLP tiny [64,32] MNIST INT8 — 97.14%, 2816 FPS, 1.66 mJ
+- CNN tiny [8,16] MNIST INT8 — 86.74%, 2650 FPS, 1.75 mJ
 
-Note: DPU CNN tiny at 2,910 FPS was the throughput benchmark before the FINN QI discovery. FINN QI at fps=10K now exceeds DPU by 3.7× on CNN tiny.
+Note: DPU CNN tiny at 2,650 FPS was the throughput benchmark before the FINN QI discovery. FINN QI at fps=10K now exceeds DPU by 4.1× on CNN tiny.
 
 **Size sweep (all INT8 PTQ, VART C++ runtime):**
 
 | Model | Accuracy | FPS | Energy/img (mJ) |
 |-------|----------|------|-----------------|
-| cnn_tiny | 78.00% | 2902 | 1.58 |
-| cnn_small | 94.39% | 2831 | 1.63 |
-| cnn_medium | 96.00% | 2475 | 1.90 |
-| cnn_deep_3 | 98.00% | 2749 | 1.70 |
-| cnn_large | 99.00% | 2230 | 2.14 |
-| mlp_tiny | 97.00% | 2922 | 1.58 |
-| mlp_tiny_plus | 97.65% | 2849 | 1.62 |
-| mlp_small | 97.63% | 2799 | 1.66 |
-| mlp_small_plus | 97.63% | 2649 | 1.78 |
-| mlp_medium | 97.95% | 2477 | 1.91 |
-| mlp_large | 97.85% | 2034 | 2.39 |
-| mlp_original | 97.85% | 2226 | 2.12 |
-| mlp_tfc | 97.39% | 2800 | 1.64 |
-| resnet8_cifar10 | 25.21% | 1863 | 2.62 |
+| cnn_tiny | 78.70% | 2659 | 1.76 |
+| cnn_small | 94.39% | 2588 | 1.81 |
+| cnn_medium | 96.48% | 2293 | 2.08 |
+| cnn_deep_3 | 98.67% | 2539 | 1.86 |
+| cnn_large | 99.15% | 2082 | 2.32 |
+| mlp_tiny | 97.37% | 2807 | 1.67 |
+| mlp_tiny_plus | 97.65% | 2739 | 1.71 |
+| mlp_small | 97.63% | 2684 | 1.75 |
+| mlp_small_plus | 97.63% | 2557 | 1.86 |
+| mlp_medium | 97.95% | 2381 | 2.01 |
+| mlp_large | 97.85% | 1978 | 2.48 |
+| mlp_original | 97.84% | 2158 | 2.22 |
+| mlp_tfc | 97.39% | 2702 | 1.73 |
+| resnet8_cifar10 | 86.33% | 1565 | 3.13 |
 
-DPU shows flat throughput profile (2,000-2,900 FPS) scaling with model size. Dynamic power 0.25-0.58 W.
+DPU shows flat throughput profile (2,000-2,900 FPS) scaling with model size. Dynamic power ~0.29-0.55 W (steady state, runs 2-3).
 
 **Transformer runtime profiling:**
 - Trained RadioML 2018, decomposed architecture, vai_q_pytorch INT8 PTQ

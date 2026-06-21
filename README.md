@@ -33,11 +33,11 @@ latency.
 
 | Toolchain | Precision | Clock | Accuracy | FPS | Latency (ms) | Dynamic W | Energy (mJ) |
 |---|---|---|---|---|---|---|---|
-| FINN (classic+DB) | INT8 | auto | 96.58% | 1638 | 0.61 | 0.13 | 2.11 |
-| FINN (classic+DB) | INT4 | auto | 97.18% | 1895 | 0.53 | 0.16 | 1.81 |
+| FINN (classic+DB) | INT8 | auto | 96.58% | 1638 | 0.61 | 0.18 | 2.11 |
+| FINN (classic+DB) | INT4 | auto | 97.18% | 1895 | 0.53 | 0.18 | 1.81 |
 | VTA | INT8 | 250 MHz | 96.45% | 1270 | 0.79 | 0.12 | 3.49 |
-| VTA | INT4 | 200 MHz | 93.08% | 1266 | 0.79 | 0.09 | 3.15 |
-| DPU (B512) | INT8 PTQ | 300/600 MHz | 97.14% | 2905 | 0.34 | 0.23 | 1.57 |
+| VTA | INT4 | 200 MHz | 93.08% | 1266 | 0.79 | 0.10 | 3.15 |
+| DPU (B512) | INT8 PTQ | 300/600 MHz | 97.14% | 2816 | 0.36 | 0.32 | 1.66 |
 
 FINN MLPs use the classic CPU/FPGA partition (input MultiThreshold + 784×64 MatMul on the
 CPU, remainder on FPGA). QI is counterproductive for MLPs: TFC INT8 drops 1434 → 503 FPS
@@ -48,12 +48,12 @@ MatMul.
 
 | Toolchain | Precision | Partition | Accuracy | FPS | Latency (ms) | Dynamic W | Energy (mJ) |
 |---|---|---|---|---|---|---|---|
-| FINN | INT8 | classic | 91.99% | 454 | 2.21 | 0.18 | 7.59 |
-| FINN | INT8 | QI+DB, fps=10K | 91.47% | 10,740 | 0.093 | 0.35 | 0.34 |
-| FINN | INT4 | QI+DB, fps=10K | 91.35% | 8,934 | 0.112 | 0.17 | 0.39 |
+| FINN | INT8 | classic | 91.99% | 454 | 2.21 | 0.19 | 7.59 |
+| FINN | INT8 | QI+DB, fps=10K | 91.47% | 10,740 | 0.093 | 0.47 | 0.34 |
+| FINN | INT4 | QI+DB, fps=10K | 91.35% | 8,934 | 0.112 | 0.22 | 0.39 |
 | VTA | INT8 | — | 90.32% | 356 | 2.81 | 0.16 | 12.54 |
 | VTA | INT4-o8 | — | 81.57% | 481 | 2.08 | 0.16 | 8.28 |
-| DPU (B512) | INT8 PTQ | — | 86.74% | 2,910 | 0.34 | 0.23 | 1.58 |
+| DPU (B512) | INT8 PTQ | — | 86.74% | 2,650 | 0.38 | 0.33 | 1.75 |
 
 The tiny CNN is intentionally undersized (float baseline 91.2%) to keep all weights in BRAM
 at INT8 on the ZU3. FINN's classic vs QI partition difference comes from the input quantizer:
@@ -62,6 +62,13 @@ with it, all convs map to streaming hardware. The DPU's 5-point accuracy gap ref
 vs Brevitas QAT on a 1466-parameter model and closes at larger sizes.
 
 ### Model size sweep (MNIST)
+
+> **Two DPU compilations — do not merge.** The comparison tables above use **matched
+> checkpoints** (CNN 86.74% `cnn_mnist_tiny.xmodel`, MLP 97.14% `mlp_mnist_tiny.xmodel`)
+> — the same float models FINN/VTA run. The size sweep below uses separate
+> **sweep-series** compilations (CNN 78.70% `dpu/cnn_tiny`, MLP 97.37% `dpu/mlp_tiny`).
+> **OPEN:** the CNN 78.70-vs-86.74 gap (same [8,16] architecture) is not root-caused —
+> likely PTQ calibration or input preprocessing in the sweep-series compile.
 
 | Size | Params | FINN INT8 (FPS / mJ) | FINN INT4 QI+DB | DPU INT8 (FPS / mJ) | VTA INT8 (FPS / mJ) |
 |------|---|---|---|---|---|
@@ -113,7 +120,7 @@ TFC (Umuroglu et al. 2017): 784-64-64-64-10, 59,210 params, MNIST, INT8.
 |-----------|---------|--------------|----------|-----|-------------|
 | FINN | C | Brevitas QAT INT8 | 97.78% | 1434 | 2.47 |
 | VTA | C | Brevitas INT8 | 97.68% | 1051 | 4.22 |
-| DPU (B512) | C++ (VART) | vai_q PTQ INT8 | 97.39% | 2800 | 1.64 |
+| DPU (B512) | C++ (VART) | vai_q PTQ INT8 | 97.39% | 2702 | 1.73 |
 
 Same ranking as the custom 64×32 MLP: DPU > FINN > VTA on both throughput and energy.
 
@@ -299,7 +306,7 @@ driver overhead more than architecture.
 
 **Power measurement.** FNIRSI FNB58 inline USB-C meter at 100 Hz. Idle and active windows
 are sliced post-hoc by `merge_power.py` against benchmark `t_start`/`t_end` timestamps;
-idle is subtracted to report dynamic power. Each cell averages three runs.
+idle is subtracted to report dynamic power. Dynamic power = steady state, mean of runs 2-3 (run 1 discarded as cold-start warmup).
 
 **FINN partition.** FINN moves a layer to streaming hardware only if its input is
 integer-typed. Without `QuantIdentity(bit_width=8)` prepended at training, FINN leaves

@@ -6,6 +6,10 @@ ZU3EG budget: 70,560 LUT | 141,120 FF | 432 BRAM_18K | 360 DSP
 
 | Source | Build | Model | Prec | target_fps | Compile (min) |
 |--------|-------|-------|------|------------|--------------|
+| default | output_resnet8_finn | ? | INT8 | 1,000 | 0.1 |
+| default | output_resnet8_finn_synth_fps10 | ? | INT8 | 1,000 | 27.3 |
+| default | output_resnet8_finn_synth_fps250 | ? | INT8 | 1,000 | 29.2 |
+| default | output_resnet8_finn_synth_fps100 | ? | INT8 | 1,000 | 30.1 |
 | default | output_autoencoder_toycar_brevitas | AE | INT8 | 1,000 | 25.8 |
 | default | output_cnn_mnist_tiny_int4 | CNN | INT4 | 1,000 | 21.4 |
 | default | output_cnn_tiny | CNN | INT8 | 1,000 | 22.3 |
@@ -43,13 +47,25 @@ ZU3EG budget: 70,560 LUT | 141,120 FF | 432 BRAM_18K | 360 DSP
 | size_sweep_qi | cnn_int4_tiny_qi_fps100000 | CNN | INT4 | 100,000 | 24.8 |
 | size_sweep_qi | cnn_int4_tiny_qi_fps500000 | CNN | INT4 | 500,000 | 24.8 |
 | size_sweep_qi | cnn_int4_deep_3_qi | CNN | INT4 | 1,000 | 24.9 |
+| size_sweep_qi | cnn_int4_small_qi_fps10000 | CNN | INT4 | 10,000 | 25.6 |
 | size_sweep_qi | cnn_int4_large_qi | CNN | INT4 | 1,000 | 28.9 |
+| size_sweep_qi | cnn_int4_medium_qi_fps10000 | CNN | INT4 | 10,000 | 36.5 |
 | size_sweep_qi | cnn_int8_tiny_qi | CNN | INT8 | 1,000 | 24.6 |
+| size_sweep_qi | cnn_int8_small_qi_fps500 | CNN | INT8 | 500 | 25.3 |
+| size_sweep_qi | cnn_int8_small_qi_fps200 | CNN | INT8 | 200 | 25.4 |
+| size_sweep_qi | cnn_int8_tiny_qi_fps500 | CNN | INT8 | 500 | 25.5 |
+| size_sweep_qi | cnn_int8_tiny_qi_fps200 | CNN | INT8 | 200 | 25.7 |
+| size_sweep_qi | cnn_int8_tiny_qi_fps3000 | CNN | INT8 | 3,000 | 27.2 |
+| size_sweep_qi | cnn_int8_tiny_qi_fps5000 | CNN | INT8 | 5,000 | 27.5 |
+| size_sweep_qi | cnn_int8_deep_3_qi_fps500 | CNN | INT8 | 500 | 27.5 |
 | size_sweep_qi | cnn_int8_medium_qi_fps200 | CNN | INT8 | 200 | 27.9 |
 | size_sweep_qi | cnn_int8_deep_3_qi_fps200 | CNN | INT8 | 200 | 29.2 |
 | size_sweep_qi | cnn_int8_cifar10_small_qi | CNN | INT8 | 1,000 | 32.4 |
 | size_sweep_qi | cnn_int8_small_qi | CNN | INT8 | 1,000 | 33.7 |
 | size_sweep_qi | cnn_int8_tiny_qi_fps10000 | CNN | INT8 | 10,000 | 36.6 |
+| size_sweep_qi | cnn_int8_deep_3_qi_fps1000 | CNN | INT8 | 1,000 | 38.0 |
+| size_sweep_qi | cnn_int8_small_qi_fps3000 | CNN | INT8 | 3,000 | 38.2 |
+| size_sweep_qi | cnn_int8_medium_qi_fps500 | CNN | INT8 | 500 | 45.0 |
 | target_fps_sweep | cnn_int4_fps1000 | CNN | INT4 | 1,000 | 21.4 |
 | target_fps_sweep | cnn_int4_fps10000 | CNN | INT4 | 10,000 | 22.6 |
 | target_fps_sweep | cnn_int4_fps500000 | CNN | INT4 | 500,000 | 23.5 |
@@ -82,6 +98,8 @@ ZU3EG budget: 70,560 LUT | 141,120 FF | 432 BRAM_18K | 360 DSP
 | default | output_cnn_mnist_tiny_int4 | CNN | INT4 | 1,442 | 1,000 | 10,966 | 15.5% | 13,986 | 22 | 5.1% | 3 | +5.900 | OK |
 | target_fps_sweep | cnn_int4_fps1000 | CNN | INT4 | 1,442 | 1,000 | 10,966 | 15.5% | 13,986 | 22 | 5.1% | 3 | +5.900 | OK |
 | size_sweep_qi | cnn_int4_tiny_qi | CNN | INT4 | 1,443 | 1,000 | 10,740 | 15.2% | 14,599 | 16 | 3.7% | 4 | +5.728 | OK |
+| size_sweep_qi | cnn_int4_medium_qi_fps10000 | CNN | INT4 | 19,563 | 10,000 | 30,357 | 43.0% | 33,541 | 73 | 16.9% | 360 | +2.686 | OK |
+| size_sweep_qi | cnn_int4_small_qi_fps10000 | CNN | INT4 | 5,179 | 10,000 | 15,252 | 21.6% | 20,689 | 9 | 2.1% | 178 | +3.663 | OK |
 | target_fps_sweep | cnn_int4_fps10000 | CNN | INT4 | 1,442 | 10,000 | 11,532 | 16.3% | 14,929 | 7 | 1.6% | 40 | +4.739 | OK |
 | size_sweep_qi | cnn_int4_tiny_qi_fps10000 | CNN | INT4 | 1,443 | 10,000 | 11,457 | 16.2% | 15,907 | 7 | 1.6% | 51 | +4.210 | OK |
 | target_fps_sweep | cnn_int4_fps100000 | CNN | INT4 | 1,442 | 100,000 | 13,224 | 18.7% | 16,897 | 6 | 1.4% | 160 | +3.912 | OK |
@@ -93,6 +111,13 @@ ZU3EG budget: 70,560 LUT | 141,120 FF | 432 BRAM_18K | 360 DSP
 | size_sweep | cnn_int8_tiny | CNN | INT8 | 1,442 | - | 17,930 | 25.4% | 19,889 | 29 | 6.7% | 3 | +4.006 | OK |
 | size_sweep_qi | cnn_int8_deep_3_qi_fps200 | CNN | INT8 | 24,059 | 200 | 29,916 | 42.4% | 32,967 | 312 | 72.2% | 5 | +2.283 | OK |
 | size_sweep_qi | cnn_int8_medium_qi_fps200 | CNN | INT8 | 19,563 | 200 | 34,132 | 48.4% | 41,122 | 58 | 13.4% | 9 | +1.193 | OK |
+| size_sweep_qi | cnn_int8_small_qi_fps200 | CNN | INT8 | 5,179 | 200 | 24,031 | 34.1% | 29,055 | 41 | 9.5% | 3 | +3.566 | OK |
+| size_sweep_qi | cnn_int8_tiny_qi_fps200 | CNN | INT8 | 1,443 | 200 | 20,786 | 29.5% | 23,896 | 23 | 5.3% | 2 | +3.126 | OK |
+| size_sweep_qi | cnn_int8_deep_3_qi_fps500 | CNN | INT8 | 24,059 | 500 | 29,894 | 42.4% | 33,324 | 296 | 68.5% | 13 | +2.378 | OK |
+| size_sweep_qi | cnn_int8_medium_qi_fps500 | CNN | INT8 | 19,563 | 500 | 62,046 | 87.9% | 60,307 | 64 | 14.8% | 35 | +1.952 | OK |
+| size_sweep_qi | cnn_int8_small_qi_fps500 | CNN | INT8 | 5,179 | 500 | 23,983 | 34.0% | 29,216 | 28 | 6.5% | 7 | +3.588 | OK |
+| size_sweep_qi | cnn_int8_tiny_qi_fps500 | CNN | INT8 | 1,443 | 500 | 20,892 | 29.6% | 24,120 | 24 | 5.6% | 3 | +3.436 | OK |
+| size_sweep_qi | cnn_int8_deep_3_qi_fps1000 | CNN | INT8 | 24,059 | 1,000 | 61,831 | 87.6% | 60,021 | 57 | 13.2% | 35 | +0.551 | OK |
 | size_sweep_qi | cnn_int8_cifar10_small_qi | CNN | INT8 | 5,467 | 1,000 | 39,199 | 55.6% | 40,710 | 49 | 11.3% | 26 | +2.524 | OK |
 | size_sweep_qi | cnn_int8_small_qi | CNN | INT8 | 5,179 | 1,000 | 38,140 | 54.1% | 38,957 | 39 | 9.0% | 19 | +2.261 | OK |
 | default | output_cnn_cifar10_tiny | CNN | INT8 | - | 1,000 | 18,554 | 26.3% | 20,361 | 30 | 6.9% | 3 | +3.769 | OK |
@@ -100,6 +125,9 @@ ZU3EG budget: 70,560 LUT | 141,120 FF | 432 BRAM_18K | 360 DSP
 | default | output_cnn_tiny | CNN | INT8 | 1,442 | 1,000 | 16,567 | 23.5% | 16,066 | 30 | 6.9% | 3 | +4.438 | OK |
 | target_fps_sweep | cnn_int8_fps1000 | CNN | INT8 | 1,442 | 1,000 | 17,930 | 25.4% | 19,889 | 29 | 6.7% | 3 | +4.006 | OK |
 | size_sweep_qi | cnn_int8_tiny_qi | CNN | INT8 | 1,443 | 1,000 | 20,894 | 29.6% | 24,327 | 21 | 4.9% | 4 | +3.867 | OK |
+| size_sweep_qi | cnn_int8_small_qi_fps3000 | CNN | INT8 | 5,179 | 3,000 | 45,508 | 64.5% | 26,766 | 23 | 5.3% | 40 | +0.964 | OK |
+| size_sweep_qi | cnn_int8_tiny_qi_fps3000 | CNN | INT8 | 1,443 | 3,000 | 25,153 | 35.6% | 27,144 | 27 | 6.2% | 11 | +3.126 | OK |
+| size_sweep_qi | cnn_int8_tiny_qi_fps5000 | CNN | INT8 | 1,443 | 5,000 | 27,955 | 39.6% | 20,770 | 17 | 3.9% | 19 | +1.233 | OK |
 | target_fps_sweep | cnn_int8_fps10000 | CNN | INT8 | 1,442 | 10,000 | 36,787 | 52.1% | 17,499 | 9 | 2.1% | 32 | +1.672 | OK |
 | size_sweep_qi | cnn_int8_tiny_qi_fps10000 | CNN | INT8 | 1,443 | 10,000 | 39,609 | 56.1% | 21,602 | 9 | 2.1% | 43 | +0.873 | OK |
 | size_sweep | mlp_int4_large | MLP | INT4 | 535,818 | - | 9,419 | 13.3% | 14,076 | 47 | 10.9% | 3 | +5.589 | OK |
@@ -132,37 +160,37 @@ ZU3EG budget: 70,560 LUT | 141,120 FF | 432 BRAM_18K | 360 DSP
 
 | Source | Build | Model | Prec | Params | target_fps | LUT% | Acc (%) | FPS | E/inf (mJ) | Dyn W | Bench file |
 |--------|-------|-------|------|--------|------------|------|---------|-----|------------|-------|------------|
-| size_sweep_qi | cnn_int4_tiny_qi_fps100000 | CNN | INT4 | 1,443 | 100,000 | 20.2% | 91.35 | 8930.3 | 0.39 | 0.15 | `finn_cnn-8x16_mnist_int4_qi_fps100k_c.json` |
-| size_sweep_qi | cnn_int4_tiny_qi_fps10000 | CNN | INT4 | 1,443 | 10,000 | 16.2% | 91.35 | 8933.9 | 0.39 | 0.17 | `finn_cnn-8x16_mnist_int4_qi_fps10k_c.json` |
+| size_sweep_qi | cnn_int4_tiny_qi_fps100000 | CNN | INT4 | 1,443 | 100,000 | 20.2% | 91.35 | 8930.3 | 0.39 | 0.21 | `finn_cnn-8x16_mnist_int4_qi_fps100k_c.json` |
+| size_sweep_qi | cnn_int4_tiny_qi_fps10000 | CNN | INT4 | 1,443 | 10,000 | 16.2% | 91.35 | 8933.9 | 0.39 | 0.22 | `finn_cnn-8x16_mnist_int4_qi_fps10k_c.json` |
 | size_sweep_qi | cnn_int4_tiny_qi | CNN | INT4 | 1,443 | 1,000 | 15.2% | 91.35 | 1196.0 | 2.86 | 0.14 | `finn_cnn-8x16_mnist_int4_qi_c.json` |
-| size_sweep_qi | cnn_int4_medium_qi | CNN | INT4 | 19,563 | 1,000 | 22.1% | 96.60 | 1195.6 | 2.95 | 0.22 | `finn_cnn-32x64_mnist_int4_qi_c.json` |
-| size_sweep_qi | cnn_int4_deep_3_qi | CNN | INT4 | 24,059 | 1,000 | 20.3% | 99.26 | 975.4 | 3.57 | 0.18 | `finn_cnn-16x32x64_mnist_int4_qi_c.json` |
+| size_sweep_qi | cnn_int4_medium_qi | CNN | INT4 | 19,563 | 1,000 | 22.1% | 96.60 | 1195.6 | 2.95 | 0.23 | `finn_cnn-32x64_mnist_int4_qi_c.json` |
+| size_sweep_qi | cnn_int4_deep_3_qi | CNN | INT4 | 24,059 | 1,000 | 20.3% | 99.26 | 975.4 | 3.57 | 0.19 | `finn_cnn-16x32x64_mnist_int4_qi_c.json` |
 | default | output_cnn_mnist_tiny_int4 | CNN | INT4 | 1,442 | 1,000 | 15.5% | 88.27 | 525.4 | 6.57 | 0.16 | `finn_cnn-8x16_mnist_int4.json` |
 | size_sweep | cnn_int4_small | CNN | INT4 | 5,178 | - | 19.1% | 95.46 | 352.7 | 9.88 | 0.17 | `finn_cnn-16x32_mnist_int4_c.json` |
-| size_sweep | cnn_int4_deep_3 | CNN | INT4 | 24,058 | - | 22.1% | 99.18 | 322.6 | 10.80 | 0.17 | `finn_cnn-16x32x64_mnist_int4_c.json` |
+| size_sweep | cnn_int4_deep_3 | CNN | INT4 | 24,058 | - | 22.1% | 99.18 | 322.6 | 10.80 | 0.18 | `finn_cnn-16x32x64_mnist_int4_c.json` |
 | size_sweep | cnn_int4_medium | CNN | INT4 | 19,562 | - | 26.7% | 97.30 | 226.9 | 15.61 | 0.19 | `finn_cnn-32x64_mnist_int4_c.json` |
 | size_sweep | cnn_int4_large | CNN | INT4 | 94,186 | - | 32.3% | 99.42 | 216.7 | 16.65 | 0.20 | `finn_cnn-32x64x128_mnist_int4_c.json` |
-| size_sweep_qi | cnn_int8_tiny_qi_fps10000 | CNN | INT8 | 1,443 | 10,000 | 56.1% | 91.47 | 10740.4 | 0.34 | 0.35 | `finn_cnn-8x16_mnist_int8_qi_fps10k_c.json` |
+| size_sweep_qi | cnn_int8_tiny_qi_fps10000 | CNN | INT8 | 1,443 | 10,000 | 56.1% | 91.47 | 10740.4 | 0.34 | 0.47 | `finn_cnn-8x16_mnist_int8_qi_fps10k_c.json` |
 | size_sweep_qi | cnn_int8_small_qi | CNN | INT8 | 5,179 | 1,000 | 54.1% | 95.72 | 1394.2 | 2.64 | 0.28 | `finn_cnn-16x32_mnist_int8_qi_c.json` |
-| size_sweep_qi | cnn_int8_tiny_qi | CNN | INT8 | 1,443 | 1,000 | 29.6% | 91.47 | 1195.9 | 2.93 | 0.17 | `finn_cnn-8x16_mnist_int8_qi_c.json` |
-| default | output_cnn_mnist_tiny | CNN | INT8 | 1,442 | 1,000 | 25.4% | 91.99 | 453.6 | 7.59 | 0.18 | `finn_cnn-8x16_mnist_int8_c.json` |
-| default | output_cnn_tiny | CNN | INT8 | 1,442 | 1,000 | 23.5% | 91.99 | 453.6 | 7.59 | 0.18 | `finn_cnn-8x16_mnist_int8_c.json` |
+| size_sweep_qi | cnn_int8_tiny_qi | CNN | INT8 | 1,443 | 1,000 | 29.6% | 91.47 | 1195.9 | 2.93 | 0.18 | `finn_cnn-8x16_mnist_int8_qi_c.json` |
+| default | output_cnn_mnist_tiny | CNN | INT8 | 1,442 | 1,000 | 25.4% | 91.99 | 453.6 | 7.59 | 0.19 | `finn_cnn-8x16_mnist_int8_c.json` |
+| default | output_cnn_tiny | CNN | INT8 | 1,442 | 1,000 | 23.5% | 91.99 | 453.6 | 7.59 | 0.19 | `finn_cnn-8x16_mnist_int8_c.json` |
 | size_sweep | cnn_int8_small | CNN | INT8 | 5,178 | - | 50.6% | 95.38 | 308.1 | 11.58 | 0.20 | `finn_cnn-16x32_mnist_int8_c.json` |
 | size_sweep | cnn_int8_deep_3 | CNN | INT8 | 24,058 | - | 85.0% | 98.88 | 291.0 | 12.64 | 0.21 | `finn_cnn-16x32x64_mnist_int8_c.json` |
-| default | output_mlp_mnist_tiny_int4 | MLP | INT4 | 52,650 | 1,000 | 11.8% | 97.29 | 1810.6 | 1.90 | 0.15 | `finn_mlp-64x32_mnist_int4_c.json` |
-| size_sweep | mlp_int4_tiny_plus | MLP | INT4 | 80,506 | - | 12.2% | 97.95 | 1197.6 | 2.87 | 0.16 | `finn_mlp-96x48_mnist_int4_c.json` |
-| size_sweep | mlp_int4_small | MLP | INT4 | 109,386 | - | 12.1% | 98.08 | 886.7 | 3.89 | 0.17 | `finn_mlp-128x64_mnist_int4_c.json` |
+| default | output_mlp_mnist_tiny_int4 | MLP | INT4 | 52,650 | 1,000 | 11.8% | 97.29 | 1810.6 | 1.90 | 0.18 | `finn_mlp-64x32_mnist_int4_c.json` |
+| size_sweep | mlp_int4_tiny_plus | MLP | INT4 | 80,506 | - | 12.2% | 97.95 | 1197.6 | 2.87 | 0.18 | `finn_mlp-96x48_mnist_int4_c.json` |
+| size_sweep | mlp_int4_small | MLP | INT4 | 109,386 | - | 12.1% | 98.08 | 886.7 | 3.89 | 0.18 | `finn_mlp-128x64_mnist_int4_c.json` |
 | size_sweep | mlp_int4_small_plus | MLP | INT4 | 170,218 | - | 12.6% | 98.27 | 572.3 | 6.07 | 0.19 | `finn_mlp-192x96_mnist_int4_c.json` |
-| size_sweep | mlp_int4_medium | MLP | INT4 | 235,146 | - | 12.6% | 98.44 | 411.3 | 8.52 | 0.21 | `finn_mlp-256x128_mnist_int4_c.json` |
+| size_sweep | mlp_int4_medium | MLP | INT4 | 235,146 | - | 12.6% | 98.44 | 411.3 | 8.52 | 0.22 | `finn_mlp-256x128_mnist_int4_c.json` |
 | size_sweep | mlp_int4_original | MLP | INT4 | 300,938 | - | 14.0% | 98.30 | 326.0 | 10.68 | 0.19 | `finn_mlp-256x256x128_mnist_int4_c.json` |
-| size_sweep | mlp_int4_large | MLP | INT4 | 535,818 | - | 13.3% | 98.59 | 207.0 | 17.08 | 0.24 | `finn_mlp-512x256_mnist_int4_c.json` |
-| default | output_mlp_mnist_tiny | MLP | INT8 | 52,650 | 1,000 | 18.6% | 96.58 | 1575.8 | 2.21 | 0.16 | `finn_mlp-64x32_mnist_int8_c.json` |
+| size_sweep | mlp_int4_large | MLP | INT4 | 535,818 | - | 13.3% | 98.59 | 207.0 | 17.08 | 0.25 | `finn_mlp-512x256_mnist_int4_c.json` |
+| default | output_mlp_mnist_tiny | MLP | INT8 | 52,650 | 1,000 | 18.6% | 96.58 | 1575.8 | 2.21 | 0.19 | `finn_mlp-64x32_mnist_int8_c.json` |
 | default | output_tfc_mnist_int8 | MLP | INT8 | 59,210 | 1,000 | 30.2% | 97.78 | 1434.0 | 2.47 | 0.17 | `finn_tfc_mnist_int8.json` |
-| size_sweep | mlp_int8_tiny_plus | MLP | INT8 | 80,506 | - | 21.4% | 97.75 | 1042.9 | 3.34 | 0.18 | `finn_mlp-96x48_mnist_int8_c.json` |
-| size_sweep | mlp_int8_small | MLP | INT8 | 109,386 | - | 22.2% | 97.86 | 773.7 | 4.52 | 0.19 | `finn_mlp-128x64_mnist_int8_c.json` |
-| size_sweep | mlp_int8_small_plus | MLP | INT8 | 170,218 | - | 18.1% | 98.09 | 501.0 | 7.08 | 0.23 | `finn_mlp-192x96_mnist_int8_c.json` |
-| size_sweep | mlp_int8_medium | MLP | INT8 | 235,146 | - | 18.3% | 97.99 | 363.4 | 9.86 | 0.26 | `finn_mlp-256x128_mnist_int8_c.json` |
-| size_sweep | mlp_int8_original | MLP | INT8 | 300,938 | - | 34.8% | 97.79 | 293.6 | 12.37 | 0.26 | `finn_mlp-256x256x128_mnist_int8_c.json` |
+| size_sweep | mlp_int8_tiny_plus | MLP | INT8 | 80,506 | - | 21.4% | 97.75 | 1042.9 | 3.34 | 0.19 | `finn_mlp-96x48_mnist_int8_c.json` |
+| size_sweep | mlp_int8_small | MLP | INT8 | 109,386 | - | 22.2% | 97.86 | 773.7 | 4.52 | 0.20 | `finn_mlp-128x64_mnist_int8_c.json` |
+| size_sweep | mlp_int8_small_plus | MLP | INT8 | 170,218 | - | 18.1% | 98.09 | 501.0 | 7.08 | 0.24 | `finn_mlp-192x96_mnist_int8_c.json` |
+| size_sweep | mlp_int8_medium | MLP | INT8 | 235,146 | - | 18.3% | 97.99 | 363.4 | 9.86 | 0.27 | `finn_mlp-256x128_mnist_int8_c.json` |
+| size_sweep | mlp_int8_original | MLP | INT8 | 300,938 | - | 34.8% | 97.79 | 293.6 | 12.37 | 0.27 | `finn_mlp-256x256x128_mnist_int8_c.json` |
 | size_sweep | mlp_int8_large | MLP | INT8 | 535,818 | - | 19.0% | 98.17 | 182.2 | 19.92 | 0.29 | `finn_mlp-512x256_mnist_int8_c.json` |
 
 ## Failed Builds — Resource Constraints
@@ -173,13 +201,13 @@ Informative failures only — manual kills are filtered out. Rows fall into thre
 |--------|-------|------|-----------:|-----------|------------:|---------------------------|
 | size_sweep | cnn_int8 | medium |  | step_synthesize_bitfile | 3055.4 | _no Vivado DRC found; excerpt: ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open_ |
 | size_sweep | cnn_int8 | large |  | step_synthesize_bitfile | 5460.4 | _no Vivado DRC found; excerpt: ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open_ |
-| size_sweep_qi | cnn_int8_qi | medium | 1000 | step_synthesize_bitfile | 3213 | **CARRY8** 8,998 / 8,820 (102.0%)<br>**LUT as Logic** 73,318 / 70,560 (103.9%)<br>**Slice LUTs** 76,772 / 70,560 (108.8%) |
-| size_sweep_qi | cnn_int8_qi | large | 1000 | - | 4500 | _timed out at 75-min driver cap (synth never produced a verdict; specifics unknown)_<br>_implied bust — `medium` at same target_fps confirmed CARRY8, LUT as Logic bust; `large` strictly larger_ |
-| size_sweep_qi | cnn_int8_qi | large | 200 | step_synthesize_bitfile | 1573 | **RAMB18 and RAMB36/FIFO** 440 / 432 (101.9%) |
-| size_sweep_qi | cnn_int8_qi | tiny | 100000 | step_synthesize_bitfile | 2203 | **CARRY8** 11,117 / 8,820 (126.0%)<br>**LUT as Logic** 73,777 / 70,560 (104.6%)<br>**Slice LUTs** 77,378 / 70,560 (109.7%) |
-| size_sweep_qi | cnn_int8_qi | tiny | 500000 | step_synthesize_bitfile | 2216 | **CARRY8** 11,117 / 8,820 (126.0%)<br>**LUT as Logic** 73,777 / 70,560 (104.6%)<br>**Slice LUTs** 77,378 / 70,560 (109.7%) |
+| size_sweep_qi | cnn_int8_qi | medium | 1000 | step_synthesize_bitfile | 3213 | _no Vivado DRC found; excerpt: ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open_ |
+| size_sweep_qi | cnn_int8_qi | large | 1000 | - | 4500 | _timed out at 75-min driver cap (synth never produced a verdict; specifics unknown)_ |
+| size_sweep_qi | cnn_int8_qi | large | 200 | step_synthesize_bitfile | 1573 | _no Vivado DRC found; excerpt: ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open_ |
+| size_sweep_qi | cnn_int8_qi | tiny | 100000 | step_synthesize_bitfile | 2203 | _no Vivado DRC found; excerpt: ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open_ |
+| size_sweep_qi | cnn_int8_qi | tiny | 500000 | step_synthesize_bitfile | 2216 | _no Vivado DRC found; excerpt: ERROR: [Common 17-69] Command failed: Run 'impl_1' failed. Unable to open_ |
 | size_sweep_qi | cnn_int8_qi | small | 10000 | - | 4500 | _timed out at 75-min driver cap (synth never produced a verdict; specifics unknown)_ |
-| size_sweep_qi | cnn_int8_qi | small | 100000 | - | 4500 | _timed out at 75-min driver cap (synth never produced a verdict; specifics unknown)_<br>_implied bust — `tiny` at same target_fps confirmed CARRY8, LUT as Logic bust; `small` strictly larger_ |
+| size_sweep_qi | cnn_int8_qi | small | 100000 | - | 4500 | _timed out at 75-min driver cap (synth never produced a verdict; specifics unknown)_ |
 
 ## Overlay Compile Time Comparison
 
@@ -188,9 +216,9 @@ Bitstream build is a one-time cost; model deployment is weight loading + instruc
 
 | Framework | Bitstream build (one-time) | Per-model deploy | Source |
 |-----------|--------------------------|-----------------|--------|
-| FINN | 13–37 min per model×precision×folding (58 builds measured) | N/A — model IS the bitstream | `time_per_step.json` from each build |
+| FINN | 0–45 min per model×precision×folding (74 builds measured) | N/A — model IS the bitstream | `time_per_step.json` from each build |
 | VTA | ~12 min Vivado synth+impl (HLS separate, in Docker) | 2.6 s (weight export + TVM cross-compile) | Vivado `wait_on_runs` elapsed; `time export_vta_model.py` |
 | DPU | 15.5 min (Vivado synth+impl+bitstream) | ~1 min (vai_c_xir, unmeasured) | `runme.log` timestamps: 15:39:57 to 15:55:29 |
 
-FINN compile times scale with model + folding: fastest `output_mlp_mnist_tiny_int4` at 13.2 min, slowest `cnn_int8_deep_3` at 36.7 min. All models here are small (1.4k–536k params); production models would take significantly longer.
-This sweep set (58 builds counting successes + failures) required **~22.8 hours** of FINN compilation total on a single machine. An overlay user deploys the same 58 models in under 2 minutes total (VTA: 2.6 s × 58; DPU: ~1 min × 58).
+FINN compile times scale with model + folding: fastest `output_resnet8_finn` at 0.1 min, slowest `cnn_int8_medium_qi_fps500` at 45.0 min. All models here are small (1.4k–536k params); production models would take significantly longer.
+This sweep set (74 builds counting successes + failures) required **~30.4 hours** of FINN compilation total on a single machine. An overlay user deploys the same 74 models in under 2 minutes total (VTA: 2.6 s × 74; DPU: ~1 min × 74).

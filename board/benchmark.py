@@ -287,6 +287,9 @@ def build_run_result(run_num, correct, total, elapsed, power_log, sysmon_log,
         'accuracy': 100 * correct / total,
         'time_s': elapsed,
         'throughput_fps': total / elapsed,
+        # NOTE: latency_ms here is 1/throughput (batch-amortized), NOT a true
+        # single-shot latency. True single-shot is config['single_shot_latency_ms']
+        # (added for C1 in run_dpu_benchmark / run_finn_benchmark).
         'latency_ms': 1000 * elapsed / total,
         'avg_power_w': avg_power,
         'energy_total_j': energy_total,
@@ -304,134 +307,6 @@ def build_run_result(run_num, correct, total, elapsed, power_log, sysmon_log,
         parts.append(f"temp={sysmon_summary['temp_pl_c_mean']:.1f}C")
     print(f"  {', '.join(parts)}")
     return result
-
-# ============================================================
-# Vitis AI benchmark
-# ============================================================
-def run_vitisai_benchmark(model_path, dataset, batch_size, num_runs,
-                          warmup_batches, idle_seconds, stabilize_seconds,
-                          results_dir, run_name):
-    from pynq_dpu import DpuOverlay
-
-    print(f"Loading {dataset} dataset...")
-    images, labels = load_mnist() if dataset == 'mnist' else load_cifar10()
-    print(f"  {len(images)} images, shape {images[0].shape}")
-
-    print(f"Loading model: {model_path}")
-    overlay = DpuOverlay('dpu.bit')
-    overlay.load_model(model_path)
-    dpu = overlay.runner
-
-    inputTensors  = dpu.get_input_tensors()
-    outputTensors = dpu.get_output_tensors()
-    input_shape   = tuple(inputTensors[0].dims)
-    output_shape  = tuple(outputTensors[0].dims)
-    print(f"  DPU input: {input_shape}, output: {output_shape}")
-
-    single_image_size = int(np.prod(images[0].shape))
-    dpu_input_size    = int(np.prod(input_shape[1:]))
-    is_batched        = dpu_input_size > single_image_size
-
-    if is_batched:
-        actual_batch = batch_size
-        num_batches  = len(images) // actual_batch
-        print(f"  Batched mode: {actual_batch} images/call, {num_batches} batches")
-    else:
-        actual_batch = 1
-        num_batches  = len(images)
-        print(f"  Single image mode: {num_batches} images")
-
-    config = {
-        'toolchain': 'vitis_ai',
-        'model_path': model_path,
-        'dataset': dataset,
-        'batch_size': actual_batch,
-        'num_runs': num_runs,
-        'num_images': len(images),
-        'image_shape': list(images[0].shape),
-        'dpu_input_shape': list(input_shape),
-        'dpu_output_shape': list(output_shape),
-        'timestamp': datetime.now().isoformat(),
-        'board': 'AUP-ZU3',
-        'dpu': 'DPUCZDX8G_ISA1_B2304',
-        'power_method': 'ina260' if POWER_AVAILABLE else 'none',
-    }
-
-    print(f"Thermal stabilization ({stabilize_seconds}s)...")
-    time.sleep(stabilize_seconds)
-
-    idle = measure_idle(idle_seconds)
-
-    # See run_dpu_benchmark for the rationale: load_cifar10 is NCHW, the DPU
-    # input slot is NHWC. Per-image transpose only fires when channel dim
-    # actually mismatches (single-channel MNIST + MLP topologies are no-ops).
-    def _per_image_to_nhwc(img):
-        img = img.astype(np.float32, copy=False)
-        if img.ndim == 3 and img.shape[0] in (1, 3) and tuple(input_shape[1:]) != img.shape:
-            img = np.transpose(img, (1, 2, 0))
-        return img
-
-    def _stage_batch(batch_imgs):
-        slot = np.empty(input_shape, dtype=np.float32, order='C')
-        for k in range(batch_imgs.shape[0]):
-            slot[k] = _per_image_to_nhwc(batch_imgs[k])
-        return slot
-
-    print(f"Warmup ({warmup_batches} batches)...")
-    for b in range(warmup_batches):
-        if is_batched:
-            batch_imgs = images[b*actual_batch:(b+1)*actual_batch]
-            input_data = [_stage_batch(batch_imgs)]
-        else:
-            input_data = [np.empty(input_shape, dtype=np.float32, order='C')]
-            input_data[0][0] = _per_image_to_nhwc(images[b])
-        output_data = [np.empty(output_shape, dtype=np.float32, order='C')]
-        job_id = dpu.execute_async(input_data, output_data)
-        dpu.wait(job_id)
-
-    print(f"Running {num_runs} measured runs...")
-    all_runs = []
-    for run in range(num_runs):
-        power_log   = []
-        sysmon_log  = []
-        sampling_flag = [True]
-        thread = threading.Thread(target=make_sampler(power_log, sysmon_log, sampling_flag))
-        correct = 0
-        total   = 0
-        thread.start()
-        start_time = time.time()
-
-        if is_batched:
-            for b in range(num_batches):
-                batch_imgs   = images[b*actual_batch:(b+1)*actual_batch]
-                batch_labels = labels[b*actual_batch:(b+1)*actual_batch]
-                input_data   = [_stage_batch(batch_imgs)]
-                output_data  = [np.empty(output_shape, dtype=np.float32, order='C')]
-                job_id = dpu.execute_async(input_data, output_data)
-                dpu.wait(job_id)
-                preds   = np.argmax(output_data[0].reshape(actual_batch, -1), axis=1)
-                correct += int(np.sum(preds == batch_labels))
-                total   += actual_batch
-        else:
-            for i in range(len(images)):
-                input_data  = [np.empty(input_shape,  dtype=np.float32, order='C')]
-                output_data = [np.empty(output_shape, dtype=np.float32, order='C')]
-                input_data[0][0] = _per_image_to_nhwc(images[i])
-                job_id = dpu.execute_async(input_data, output_data)
-                dpu.wait(job_id)
-                pred = int(np.argmax(output_data[0][0]))
-                if pred == labels[i]:
-                    correct += 1
-                total += 1
-
-        elapsed = time.time() - start_time
-        end_time = time.time()
-        sampling_flag[0] = False
-        thread.join()
-        all_runs.append(build_run_result(run + 1, correct, total, elapsed, power_log, sysmon_log,
-                                         t_start=start_time, t_end=end_time))
-
-    return config, idle, all_runs
 
 # ============================================================
 # FINN benchmark
@@ -1055,6 +930,11 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
             print(f'  {name:22s}: {ns/1000.0:9.2f} µs   ({pct:5.1f} %)')
         print(f'  {"total":22s}: {total_ns/1000.0:9.2f} µs   '
               f'(steady-state upper bound ~ {1e9 / max(1, total_ns):.0f} FPS)')
+        # C1 (Part 1): persist the per-stage breakdown + steady-state estimate
+        # the profiler already computed but previously only printed.
+        config['c_stage_timing_ns'] = dict(zip(stage_names,
+                                               [int(x) for x in ns_arr.tolist()]))
+        config['steady_state_fps_estimate'] = 1e9 / max(1, total_ns)
     else:
         print(f"Warmup ({warmup_batches} images)...")
         for b in range(min(warmup_batches, len(images_flat))):
@@ -1092,6 +972,46 @@ def run_finn_benchmark(deploy_dir, dataset, batch_size, num_runs,
         thread.join()
         all_runs.append(build_run_result(run + 1, correct, total, elapsed, power_log, sysmon_log,
                                          t_start=start_time, t_end=end_time))
+
+    # C1 single-shot latency (Part 1 + Part A): K=200 all-in single inferences
+    # (input image -> prediction) after the warmup + measured runs (engine warm).
+    # C path times one batch_fn call with N=1; Python path times one infer().
+    K = 200
+    _ss = []
+    if c_runner is not None:
+        _one_img  = np.ascontiguousarray(c_state['images'][0:1])
+        _one_lbl  = np.ascontiguousarray(c_state['labels'][0:1])
+        _one_pred = np.zeros(1, dtype=np.int32)
+        for _ in range(K):
+            _t0 = time.perf_counter()
+            c_state['batch_fn'](_one_img.ctypes.data, _one_lbl.ctypes.data,
+                                1, _one_pred.ctypes.data)
+            _ss.append((time.perf_counter() - _t0) * 1000.0)
+    else:
+        for i in range(K):
+            _t0 = time.perf_counter()
+            infer(images_flat[i % len(images_flat)])
+            _ss.append((time.perf_counter() - _t0) * 1000.0)
+    # Part A: persist COMPONENTS. all-in = full batch_fn N=1 (input -> pred).
+    config['single_shot_latency_allin_ms'] = float(np.median(_ss))
+    config['single_shot_latency_allin_ms_values'] = [float(x) for x in _ss]
+    # Primary field is an alias of all-in so downstream readers keep working and
+    # so it means the same thing as run_dpu_benchmark's single_shot_latency_ms.
+    config['single_shot_latency_ms'] = config['single_shot_latency_allin_ms']
+    # Without-input-quant = all-in minus the separable CPU pre-FPGA stages
+    # (everything before 'Pack' = cpu_pre/cpu_pre_qi, i.e. FINN's input quant /
+    # first layer). Derived from the C profiler's per-stage breakdown. The Python
+    # path has no per-stage split -> store all-in only, leave the others null.
+    if c_runner is not None and config.get('c_stage_timing_ns'):
+        _sn = c_state['stage_names']
+        _pack = _sn.index('Pack') if 'Pack' in _sn else len(_sn)
+        _iq_ns = sum(config['c_stage_timing_ns'][n] for n in _sn[:_pack])
+        config['input_quant_ms'] = _iq_ns / 1e6
+        config['single_shot_latency_no_inputquant_ms'] = (
+            config['single_shot_latency_allin_ms'] - config['input_quant_ms'])
+    else:
+        config['input_quant_ms'] = None                        # no stage split (Python path)
+        config['single_shot_latency_no_inputquant_ms'] = None
 
     if c_runner is not None:
         c_state['destroy_fn']()
@@ -1556,7 +1476,7 @@ def run_finn_t_benchmark(deploy_dir, weights_dir, hdf5_path,
 # ============================================================
 def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
                       warmup_batches, idle_seconds, stabilize_seconds,
-                      results_dir, run_name):
+                      results_dir, run_name, diag_vart=False):
     import xir
     import vart
 
@@ -1626,15 +1546,38 @@ def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
         thread = threading.Thread(target=make_sampler(power_log, sysmon_log, sampling_flag))
         correct = 0
         total = 0
+        # A1 diagnostic (Part 3) + Part B stage breakdown: when --diag-vart is
+        # set, bucket each image into layout / engine / argmax so the Python/loop
+        # overhead can be sized AND a DPU per-stage breakdown (mirroring FINN's
+        # c_stage_timing_ns) is produced, averaged over the measured loop.
+        # GATED behind --diag-vart on purpose: unlike FINN's c_stage_timing_ns
+        # (a separate one-shot profiler in warmup that never touches the timed
+        # loop), the DPU has no profiler hook, so per-stage timing requires
+        # instrumenting the measured loop. Keeping it behind the flag means the
+        # canonical and power runs stay byte-identical (no perf_counter when off;
+        # only three boolean guards evaluate per image, no timing change).
+        vart_total_s = 0.0
+        layout_total_s = 0.0
+        argmax_total_s = 0.0
         thread.start()
         start_time = time.time()
 
         for i in range(len(images)):
+            if diag_vart:
+                _l0 = time.perf_counter()
             inp = _to_dpu_layout(images[i])
             out = np.empty(output_shape, dtype=np.float32)
+            if diag_vart:
+                _v0 = time.perf_counter()
+                layout_total_s += _v0 - _l0
             job_id = runner.execute_async([inp], [out])
             runner.wait(job_id)
+            if diag_vart:
+                _v1 = time.perf_counter()
+                vart_total_s += _v1 - _v0
             pred = int(np.argmax(out.flatten()))
+            if diag_vart:
+                argmax_total_s += time.perf_counter() - _v1
             if pred == labels[i]:
                 correct += 1
             total += 1
@@ -1643,8 +1586,56 @@ def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
         end_time = time.time()
         sampling_flag[0] = False
         thread.join()
+        if diag_vart:
+            # Reflects the last measured run. py_ms_per_img is everything in the
+            # loop that is NOT execute_async+wait (cast/layout/alloc/argmax/2
+            # pybind crossings + loop dispatch).
+            config['vart_ms_per_img'] = vart_total_s * 1000.0 / total
+            config['py_ms_per_img']   = (elapsed - vart_total_s) * 1000.0 / total
+            config['vart_fraction']   = vart_total_s / elapsed
+            # Per-stage breakdown (ms/img), mirroring FINN's c_stage_timing_ns.
+            # 'engine' == execute_async+wait and INCLUDES the in-hardware input
+            # quant: the DPU does float->fix as the first hardware step inside the
+            # VART call, so it cannot be separated out. There is therefore
+            # deliberately NO DPU 'input_quant' stage (cf. FINN's separable one).
+            config['dpu_stage_timing_ms'] = {
+                'layout': layout_total_s * 1000.0 / total,
+                'engine': vart_total_s   * 1000.0 / total,
+                'argmax': argmax_total_s * 1000.0 / total,
+            }
         all_runs.append(build_run_result(run + 1, correct, total, elapsed, power_log, sysmon_log,
                                          t_start=start_time, t_end=end_time))
+
+    # C1 single-shot latency (Part 1 + Part B): K=200 single inferences after the
+    # warmup + measured runs (engine warm). Each call is timestamped to give BOTH
+    # components from the SAME inferences:
+    #   engine = execute_async+wait (the VART call; includes the in-hardware
+    #            input quant, which is inseparable from it)
+    #   all-in = layout(_to_dpu_layout)+alloc + engine + argmax (image in ->
+    #            prediction out), matching FINN's batch_fn N=1 boundary.
+    K = 200
+    _eng = []
+    _allin = []
+    for i in range(K):
+        img = images[i % len(images)]
+        _a0 = time.perf_counter()
+        inp = _to_dpu_layout(img)
+        out = np.empty(output_shape, dtype=np.float32)
+        _e0 = time.perf_counter()
+        job_id = runner.execute_async([inp], [out])
+        runner.wait(job_id)
+        _e1 = time.perf_counter()
+        _ = int(np.argmax(out.flatten()))
+        _a1 = time.perf_counter()
+        _eng.append((_e1 - _e0) * 1000.0)
+        _allin.append((_a1 - _a0) * 1000.0)
+    # Part B: persist COMPONENTS (engine-only kept; all-in added).
+    config['single_shot_latency_engine_ms'] = float(np.median(_eng))
+    config['single_shot_latency_engine_ms_values'] = [float(x) for x in _eng]
+    config['single_shot_latency_allin_ms'] = float(np.median(_allin))
+    config['single_shot_latency_allin_ms_values'] = [float(x) for x in _allin]
+    # Primary field = all-in (alias), so it means the same thing as FINN's.
+    config['single_shot_latency_ms'] = config['single_shot_latency_allin_ms']
 
     del runner
     return config, idle, all_runs
@@ -2255,7 +2246,7 @@ def save_results(config, idle, all_runs, run_name, dataset, results_dir):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--toolchain',   required=True, choices=['vitis_ai', 'finn', 'finn-t', 'dpu', 'vta'])
+    parser.add_argument('--toolchain',   required=True, choices=['finn', 'finn-t', 'dpu', 'vta'])
     parser.add_argument('--model',       required=True,
                         help='Path to xmodel (vitis_ai/dpu), deploy/ dir (finn/finn-t), or model dir (vta)')
     parser.add_argument('--name',        default=None)
@@ -2279,6 +2270,12 @@ if __name__ == '__main__':
                              'accel[N]. Requires --finn-runtime=c. Allocates a second '
                              'PYNQ buffer pair (~2x memory). No effect on single-image '
                              'runs (warmup, batch=1).')
+    parser.add_argument('--diag-vart', action='store_true',
+                        help='DPU only (A1 diagnostic): time execute_async+wait '
+                             'separately from Python/loop overhead and store '
+                             'vart_ms_per_img / py_ms_per_img / vart_fraction in '
+                             'config. Default OFF; the canonical and power runs '
+                             'must NOT use it (it adds per-image perf_counter calls).')
     args = parser.parse_args()
 
     if args.results_dir is None:
@@ -2298,13 +2295,7 @@ if __name__ == '__main__':
         print("  Or manually: sudo date -s \"YYYY-MM-DD HH:MM:SS\"  (UTC from host: date -u)")
         sys.exit(1)
 
-    if args.toolchain == 'vitis_ai':
-        config, idle, all_runs = run_vitisai_benchmark(
-            model_path=args.model, dataset=args.dataset, batch_size=args.batch,
-            num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
-            stabilize_seconds=args.stabilize, results_dir=args.results_dir,
-            run_name=run_name)
-    elif args.toolchain == 'finn':
+    if args.toolchain == 'finn':
         config, idle, all_runs = run_finn_benchmark(
             deploy_dir=args.model, dataset=args.dataset, batch_size=args.batch,
             num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
@@ -2336,7 +2327,7 @@ if __name__ == '__main__':
             model_path=args.model, dataset=args.dataset, batch_size=args.batch,
             num_runs=args.runs, warmup_batches=10, idle_seconds=args.idle,
             stabilize_seconds=args.stabilize, results_dir=args.results_dir,
-            run_name=run_name)
+            run_name=run_name, diag_vart=args.diag_vart)
     elif args.toolchain == 'vta':
         config, idle, all_runs = run_vta_benchmark(
             model_dir=args.model, dataset=args.dataset, batch_size=args.batch,

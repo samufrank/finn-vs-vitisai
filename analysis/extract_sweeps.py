@@ -389,6 +389,17 @@ def find_benchmark(build_name, model, precision, target_fps, source_label,
     return None
 
 
+def steady_dynamic_w(data, fallback=None):
+    """Steady-state dynamic power: mean of runs 2..N `fnb58_power.dynamic_power_w`
+    (run 1 dropped as cold-start transient; see results/POWER_REPORTING_POLICY.md).
+    Falls back to `fallback` (the all-3 summary value) when per-run power is absent."""
+    vals = [r["fnb58_power"]["dynamic_power_w"]
+            for r in (data.get("runs") or [])[1:]
+            if isinstance(r.get("fnb58_power"), dict)
+            and r["fnb58_power"].get("dynamic_power_w") is not None]
+    return sum(vals) / len(vals) if vals else fallback
+
+
 def extract_benchmark(bench_path):
     """Extract key metrics from a benchmark JSON."""
     if bench_path is None:
@@ -403,7 +414,7 @@ def extract_benchmark(bench_path):
     result["accuracy"] = summary.get("accuracy")
     result["fps"] = summary.get("throughput_fps_mean", summary.get("throughput_fps"))
     result["energy_mj"] = summary.get("energy_per_image_mj_mean", summary.get("energy_per_image_mj"))
-    result["dynamic_w"] = summary.get("dynamic_power_w")
+    result["dynamic_w"] = steady_dynamic_w(data, summary.get("dynamic_power_w"))  # steady-state (runs 2-3)
     result["idle_w"] = summary.get("idle_power_w")
     result["active_w"] = summary.get("avg_power_w_mean", summary.get("avg_power_w"))
     result["bench_file"] = bench_path.name

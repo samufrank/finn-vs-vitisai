@@ -18,7 +18,21 @@ import sys
 from pathlib import Path
 
 RESULTS_DIR = Path("results")
-SKIP_DIRS = {"kv260_archive"}
+# results/vitis_ai/ is the single canonical DPU source. dpu_canonical_20260621/ is
+# the session home holding COPIES (merged/) + raw board JSONs (raw/) of the same 14
+# models, so walking it duplicates every DPU canonical row — skip it.
+SKIP_DIRS = {"kv260_archive", "dpu_canonical_20260621"}
+
+# DPU (Vitis AI) canonical-only. results/vitis_ai/ accumulates non-canonical DPU
+# JSONs next to the canonical 20260621 set: null-power runs (never FNB58-merged —
+# the old 20260502 sweep, old *.xmodel runs, and the broken runs: 8.92% MLP,
+# 25.21% pre-fix resnet8, the orchestrator-bugged transformer) plus two real-power
+# baselines now superseded by the matched re-measure. Skip both so the CSV emits
+# exactly one canonical row per result. DPU-specific — FINN/VTA untouched.
+DPU_SUPERSEDED_BASELINES = {
+    "cnn_mnist_tiny_b512.json",               # 86.74% [8,16] CNN -> cnn_tiny_matched
+    "dpu_mlp-64x32_mnist_int8_300mhz.json",   # 97.14% [64,32] MLP -> mlp_tiny_matched
+}
 
 # Filename convention from STATUS.md:
 # {toolchain}_{model}_{dataset}_{precision}[_{clock}][_{runtime}].json
@@ -277,6 +291,17 @@ def parse_filename(filepath, data=None):
     }
 
 
+def steady_dynamic_w(data, fallback=None):
+    """Steady-state dynamic power: mean of runs 2..N `fnb58_power.dynamic_power_w`
+    (run 1 dropped as cold-start transient; see results/POWER_REPORTING_POLICY.md).
+    Falls back to `fallback` (the all-3 summary value) when per-run power is absent."""
+    vals = [r["fnb58_power"]["dynamic_power_w"]
+            for r in (data.get("runs") or [])[1:]
+            if isinstance(r.get("fnb58_power"), dict)
+            and r["fnb58_power"].get("dynamic_power_w") is not None]
+    return sum(vals) / len(vals) if vals else fallback
+
+
 def extract_metrics(data):
     """Extract key metrics from a benchmark JSON."""
     summary = data.get("summary", {})
@@ -310,8 +335,9 @@ def extract_metrics(data):
     if result["active_w"] is None:
         result["active_w"] = summary.get("avg_power_w")
 
-    # Dynamic power
-    result["dynamic_w"] = summary.get("dynamic_power_w")
+    # Dynamic power — steady-state (runs 2-3), POWER_REPORTING_POLICY.md.
+    # Falls back to summary all-3 mean, then to active-idle, when per-run absent.
+    result["dynamic_w"] = steady_dynamic_w(data, summary.get("dynamic_power_w"))
     if result["dynamic_w"] is None and result["active_w"] and result["idle_w"]:
         result["dynamic_w"] = result["active_w"] - result["idle_w"]
 
@@ -416,6 +442,15 @@ def main():
                         )
                         if has_rerun:
                             continue
+
+            # DPU canonical-only: drop null-power (non-merged / broken) DPU rows
+            # and the two superseded baselines. FINN/VTA (toolchain not in
+            # dpu/vitis_ai) are never touched.
+            if cfg_local.get("toolchain") in ("dpu", "vitis_ai"):
+                if data["summary"].get("dynamic_power_w") is None:
+                    continue
+                if fname in DPU_SUPERSEDED_BASELINES:
+                    continue
 
             meta = parse_filename(fpath, data)
             metrics = extract_metrics(data)
