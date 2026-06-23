@@ -203,6 +203,11 @@ typedef struct {
      * QuantIdentity(Int8...): signed int8). cpu_pre_qi shifts the count
      * by 2^(precision-1) when signed. Classic must be 0. */
     int       idt_signed;
+    /* QI affine input-quant scale, derived from the input threshold table at
+     * init: (thres[T-1] - thres[0]) / (T-1). Reproduces the 255-entry
+     * MultiThreshold scan as q = clip(round_half_up(v/qi_scale), -128, 127)
+     * for the signed-INT8 QI input. Only set when partition==1; 0 otherwise. */
+    double    qi_scale;
     int       use_cache_ops;
     int       initialized;
 } mlp_runner_state_t;
@@ -324,6 +329,11 @@ int finn_mlp_runner_init(
     g_mlp.add            = add;
     g_mlp.partition      = partition;
     g_mlp.idt_signed     = idt_signed;
+    /* Derive the affine input-quant scale from the loaded table (QI only).
+     * Endpoints over (T-1) steps; thres is ascending (checked above). */
+    g_mlp.qi_scale       = (partition == 1 && num_thresholds > 1)
+        ? ((double)thres[num_thresholds - 1] - (double)thres[0]) / (double)(num_thresholds - 1)
+        : 0.0;
     g_mlp.use_cache_ops  = use_cache_ops;
     g_mlp.initialized    = 1;
     return 0;
@@ -393,12 +403,26 @@ static inline void cpu_pre(const uint8_t *img, uint8_t *act)
     }
 }
 
-/* QI partition: float-normalize the raw image and apply a single 255-row
- * MultiThreshold (per-pixel, broadcasting one row across all `in_dim`
- * elements). No first MatMul — Linear1 is on FPGA. For signed IDT the
- * count is shifted down by (T+1)/2 = 2^(N-1) so the resulting byte,
- * reinterpreted as int8, matches MultiThreshold's signed output. */
-static inline void cpu_pre_qi(const uint8_t *img, uint8_t *act)
+/* QI partition input quant. float-normalize the raw image (v = img/255) and
+ * quantize to the FPGA's input dtype. Two bit-identical realizations:
+ *
+ *   cpu_pre_qi_tablewalk — the original 255-entry MultiThreshold scan:
+ *     act[k] = #{ j : thres[j] <= v } - bias, bias = (T+1)/2 = 2^(N-1) for
+ *     signed IDT. O(T) compares per pixel.
+ *
+ *   cpu_pre_qi_affine — uniform affine quantizer that reproduces the scan for
+ *     the signed-INT8 input QuantIdentity at O(1) per pixel:
+ *     q = clip(round_half_up(v / s), -128, 127), s = g_mlp.qi_scale (derived
+ *     from the table at init). Valid because the input QuantIdentity is a
+ *     symmetric uniform quantizer, so thres[j] = (j - (T-1)/2 - 0.5)*s and the
+ *     -2^(N-1) bias is absorbed into zero_point 0.
+ *
+ * cpu_pre_qi dispatches: affine for signed IDT (the only MLP QI case in this
+ * project; verified host-side, bit-identical over all 256 pixel values for all
+ * five MLP-INT8-QI builds), table walk otherwise. Linear1 stays on the FPGA for
+ * both. The table walk is retained for the verification hook
+ * (finn_mlp_qi_selfcheck) and as the unsigned fallback. */
+static inline void cpu_pre_qi_tablewalk(const uint8_t *img, uint8_t *act)
 {
     const int IN  = g_mlp.in_dim;
     const int T   = g_mlp.num_thresholds;
@@ -413,6 +437,28 @@ static inline void cpu_pre_qi(const uint8_t *img, uint8_t *act)
         }
         act[k] = (uint8_t)(count - bias);
     }
+}
+
+static inline void cpu_pre_qi_affine(const uint8_t *img, uint8_t *act)
+{
+    const int IN = g_mlp.in_dim;
+    const float inv255 = 1.0f / 255.0f;
+    const double s = g_mlp.qi_scale;
+    for (int k = 0; k < IN; k++) {
+        const float v = (float)img[k] * inv255;   /* identical to the table walk */
+        /* round-half-up: v >= 0 over the whole uint8 domain, so the (int) cast
+         * truncates toward zero == floor here. NOT rint/lround (banker's). */
+        int q = (int)((double)v / s + 0.5);
+        if (q < -128) q = -128;
+        else if (q > 127) q = 127;
+        act[k] = (uint8_t)q;
+    }
+}
+
+static inline void cpu_pre_qi(const uint8_t *img, uint8_t *act)
+{
+    if (g_mlp.idt_signed) cpu_pre_qi_affine(img, act);
+    else                  cpu_pre_qi_tablewalk(img, act);
 }
 
 /* argmax( hw * mul + add ) over num_classes. */
@@ -600,6 +646,37 @@ int finn_mlp_infer_one_mock(
 }
 
 /* ============================================================
+ * QI affine verification hook (host-side correctness harness; no board).
+ *
+ * Runs BOTH the legacy 255-entry table walk and the new affine quantizer on a
+ * single pixel value, through the ACTUAL C helpers (not a re-port), and returns
+ * each as a signed int8 in [-128, 127]. The harness inits the runner with a
+ * build's input threshold table (partition=qi, signed IDT), then sweeps pixel
+ * 0..255 and asserts tablewalk_out == affine_out. 256 values is the entire
+ * uint8 input domain, so agreement is a proof of bit-identity, not a sample.
+ * Returns 0 on success; negative on misuse.
+ * ============================================================ */
+int finn_mlp_qi_selfcheck(int pixel, int *tablewalk_out, int *affine_out)
+{
+    if (!g_mlp.initialized)       return -1;
+    if (g_mlp.partition != 1)     return -2;
+    if (pixel < 0 || pixel > 255) return -3;
+    if (g_mlp.in_dim < 1)         return -4;
+
+    uint8_t img[g_mlp.in_dim];
+    uint8_t act_tw[g_mlp.in_dim];
+    uint8_t act_af[g_mlp.in_dim];
+    for (int k = 0; k < g_mlp.in_dim; k++) img[k] = (uint8_t)pixel;
+
+    cpu_pre_qi_tablewalk(img, act_tw);
+    cpu_pre_qi_affine(img, act_af);
+
+    if (tablewalk_out) *tablewalk_out = (int)(int8_t)act_tw[0];
+    if (affine_out)    *affine_out    = (int)(int8_t)act_af[0];
+    return 0;
+}
+
+/* ============================================================
  * Profiled entry — one-shot diagnostic. Same semantics as
  * finn_mlp_infer_one, but splits the work into timed stages and
  * writes nanosecond durations to ns_out[0..5]:
@@ -640,18 +717,13 @@ int finn_mlp_infer_one_profiled(const uint8_t *img, uint64_t *ns_out)
     uint64_t t0 = mono_ns();
     uint64_t t1;
     if (g_mlp.partition == 1) {
-        /* QI: stage 0 (MatMul) is a no-op — Linear1 is on FPGA. */
+        /* QI: stage 0 (MatMul) is a no-op — Linear1 is on FPGA. Stage 1
+         * (input quant) uses the same affine/table-walk dispatch as the hot
+         * path (cpu_pre_qi), so the profiled input_quant time reflects the
+         * affine op rather than the retired 255-entry scan. */
         (void)acc; (void)W;
         t1 = t0;
-        const float inv255 = 1.0f / 255.0f;
-        const float *row = TH;                 /* shape (1, T) */
-        const int bias = g_mlp.idt_signed ? ((T + 1) >> 1) : 0;
-        for (int k = 0; k < IN; k++) {
-            const float x = (float)img[k] * inv255;
-            int count = 0;
-            for (int j = 0; j < T; j++) if (row[j] <= x) count++;
-            act[k] = (uint8_t)(count - bias);
-        }
+        cpu_pre_qi(img, act);
     } else {
         for (int c = 0; c < MID; c++) acc[c] = 0.0f;
         for (int k = 0; k < IN; k++) {

@@ -1546,7 +1546,7 @@ def run_dpu_benchmark(model_path, dataset, batch_size, num_runs,
         thread = threading.Thread(target=make_sampler(power_log, sysmon_log, sampling_flag))
         correct = 0
         total = 0
-        # A1 diagnostic (Part 3) + Part B stage breakdown: when --diag-vart is
+        # Diagnostic + stage breakdown: when --diag-vart is
         # set, bucket each image into layout / engine / argmax so the Python/loop
         # overhead can be sized AND a DPU per-stage breakdown (mirroring FINN's
         # c_stage_timing_ns) is produced, averaged over the measured loop.

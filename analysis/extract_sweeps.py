@@ -65,14 +65,16 @@ BUILD_SOURCES = [
         "filter": lambda name: "_qi" not in name,
     },
     {
-        # QI variants — CNN ONLY. MLP QI was empirically slower on board
-        # than the classic partition (715 vs 1575 FPS for tiny @ 1000),
-        # so QI is treated as a CNN-only optimization. Classic MLP stays
-        # in the size_sweep entry above.
+        # QI variants: CNN QI (all precisions) and MLP QI INT8 (the matched,
+        # affine-fixed double-buffered set). Both are real configurations,
+        # distinct from the classic partition, which stays in the size_sweep
+        # entry above. Each build dir is in exactly one source (classic
+        # excludes "_qi"; this requires it), so no build is double-counted.
         "label": "size_sweep_qi",
         "base": REPO / "finn" / "size_sweep_runs",
         "pattern": "*",
-        "filter": lambda name: "_qi" in name and name.startswith("cnn_"),
+        "filter": lambda name: "_qi" in name and (
+            name.startswith("cnn_") or name.startswith("mlp_int8")),
     },
 ]
 
@@ -390,11 +392,11 @@ def find_benchmark(build_name, model, precision, target_fps, source_label,
 
 
 def steady_dynamic_w(data, fallback=None):
-    """Steady-state dynamic power: mean of runs 2..N `fnb58_power.dynamic_power_w`
-    (run 1 dropped as cold-start transient; see results/POWER_REPORTING_POLICY.md).
+    """Steady-state dynamic power: mean of runs 2-3 `fnb58_power.dynamic_power_w`
+    (run 1 dropped as cold-start transient; see context/POWER_REPORTING_POLICY.md).
     Falls back to `fallback` (the all-3 summary value) when per-run power is absent."""
     vals = [r["fnb58_power"]["dynamic_power_w"]
-            for r in (data.get("runs") or [])[1:]
+            for r in (data.get("runs") or [])[1:3]
             if isinstance(r.get("fnb58_power"), dict)
             and r["fnb58_power"].get("dynamic_power_w") is not None]
     return sum(vals) / len(vals) if vals else fallback
@@ -592,9 +594,7 @@ def main():
     all_failures = []
     for src_label, fpath in failure_csvs:
         for f in extract_failed_builds(fpath):
-            # Skip MLP QI failures — QI is CNN-only in this project.
-            if src_label == "size_sweep_qi" and not f.get("sweep", "").startswith("cnn"):
-                continue
+            # All QI build outcomes surface, MLP and CNN alike.
             f["source"] = src_label
             all_failures.append(f)
 

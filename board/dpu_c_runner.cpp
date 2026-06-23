@@ -25,11 +25,13 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <xir/graph/graph.hpp>
@@ -46,6 +48,15 @@ std::unique_ptr<TensorBuffer> alloc_cpu_flat_tensor_buffer(
 static double now_epoch() {
   using namespace std::chrono;
   return duration<double>(system_clock::now().time_since_epoch()).count();
+}
+
+// ISO-8601 local timestamp for config.timestamp (schema parity with
+// benchmark.py's datetime.now().isoformat()).
+static std::string iso_now() {
+  std::time_t t = std::time(nullptr);
+  char buf[32];
+  std::strftime(buf, sizeof(buf), "%Y-%m-%dT%H:%M:%S", std::localtime(&t));
+  return std::string(buf);
 }
 
 static std::string get_arg(int argc, char** argv, const std::string& key,
@@ -87,6 +98,13 @@ int main(int argc, char** argv) {
                  "[--shape N,H,W,C | --sidecar X.json] [--runs R] [--out O.json]\n";
     return 1;
   }
+
+  // dataset label from the input filename, for config.dataset parity with
+  // benchmark.py (read by the analysis scripts; merge_power ignores it).
+  const std::string dataset =
+      inputs.find("mnist") != std::string::npos   ? "mnist"
+      : inputs.find("cifar") != std::string::npos ? "cifar10"
+      : "";
 
   // ---- shape: --shape, else sidecar (explicit or X.bin -> X.json) ----
   long N = -1, H = -1, W = -1, C = -1;
@@ -150,28 +168,25 @@ int main(int argc, char** argv) {
   const xir::Tensor* ot = out_tensors[0];
   const long in_elems  = (long)it->get_element_num();
   const long out_elems = (long)ot->get_element_num();
-  const size_t in_bytes  = (size_t)it->get_data_size();
   const size_t out_bytes = (size_t)ot->get_data_size();
 
   if (in_elems != per_img) {
     std::cerr << "ERROR: input tensor elems " << in_elems
               << " != per_image " << per_img << "\n"; return 2;
   }
-  // Float passthrough requires a float32-sized input tensor. If the runner's
-  // input tensor is int8 (fix-point), passthrough is invalid — flag, don't
-  // silently corrupt. (This is the on-board assumption to confirm.)
-  if (in_bytes != (size_t)in_elems * sizeof(float)) {
-    std::cerr << "ERROR: input tensor is " << in_bytes << " bytes for "
-              << in_elems << " elems (not float32). Float passthrough "
-                 "unsupported for this xmodel; rebuild runner to quantize.\n";
-    return 3;
-  }
   const bool out_is_float = (out_bytes == (size_t)out_elems * sizeof(float));
   std::cout << "input tensor: float32 x" << in_elems
             << " | output: " << out_elems
             << (out_is_float ? " (float32)" : " (int8)") << "\n";
 
-  auto in_tb  = vart::alloc_cpu_flat_tensor_buffer(it);
+  // Float passthrough: present VART a FLOAT input TensorBuffer (same name + shape
+  // as the runner's int8 input tensor `it`). The DPU-DDR runner's
+  // copy_data_for_input auto-converts float->int8 with the device tensor's
+  // fix_point — the same path the Python vart binding uses (array_to_tensor_buffer).
+  // No caller-side quant, no fix_point attr here. `fin` must outlive the runner.
+  auto fin = xir::Tensor::create(it->get_name(), it->get_shape(),
+                                 xir::DataType{xir::DataType::FLOAT, 32});
+  auto in_tb  = vart::alloc_cpu_flat_tensor_buffer(fin.get());
   auto out_tb = vart::alloc_cpu_flat_tensor_buffer(ot);
   uint64_t in_addr, out_addr;
   size_t in_sz, out_sz;
@@ -194,6 +209,14 @@ int main(int argc, char** argv) {
     return argmax(reinterpret_cast<int8_t*>(out_addr), out_elems);
   };
 
+  // ---- idle window: 5 s, no inference, so the external FNB58 meter captures an
+  // idle baseline. merge_power slices [idle.t_start, idle.t_end] for idle power
+  // (hence dynamic power). Mirrors benchmark.py measure_idle — the piece the C
+  // path was missing ("No idle timestamps in benchmark JSON").
+  const double idle_t_start = now_epoch();
+  std::this_thread::sleep_for(std::chrono::seconds(5));
+  const double idle_t_end = now_epoch();
+
   // ---- warmup (10, discarded) ----
   for (long i = 0; i < std::min<long>(10, N); ++i) infer(i);
 
@@ -215,10 +238,15 @@ int main(int argc, char** argv) {
     runs_json << "    {\"run\": " << (r + 1)
               << ", \"t_start\": " << std::fixed << t_start
               << ", \"t_end\": " << t_end
-              << ", \"time_s\": " << secs
               << ", \"accuracy\": " << acc
+              << ", \"time_s\": " << secs
               << ", \"throughput_fps\": " << fps
-              << ", \"latency_ms\": " << (1000.0 / fps) << "}";
+              << ", \"latency_ms\": " << (1000.0 / fps)
+              << ", \"avg_power_w\": null"
+              << ", \"energy_total_j\": null"
+              << ", \"energy_per_image_mj\": null"
+              << ", \"power_samples\": 0"
+              << ", \"sysmon\": null}";
     std::cout << "run " << (r + 1) << ": " << acc << "% , " << (long)fps
               << " FPS\n";
   }
@@ -277,21 +305,31 @@ int main(int argc, char** argv) {
   o << "{\n  \"config\": {\n"
     << "    \"toolchain\": \"dpu_c\",\n"
     << "    \"model_path\": \"" << model << "\",\n"
-    << "    \"inputs\": \"" << inputs << "\",\n"
-    << "    \"runner\": \"dpu_c_runner\",\n"
-    << "    \"num_images\": " << N << ",\n"
+    << "    \"dataset\": \"" << dataset << "\",\n"
+    << "    \"batch_size\": 1,\n"
     << "    \"num_runs\": " << runs << ",\n"
+    << "    \"num_images\": " << N << ",\n"
+    << "    \"image_shape\": [" << H << ", " << W << ", " << C << "],\n"
     << "    \"dpu_input_shape\": [1, " << H << ", " << W << ", " << C << "],\n"
     << "    \"dpu_output_shape\": [1, " << out_elems << "],\n"
+    << "    \"timestamp\": \"" << iso_now() << "\",\n"
+    << "    \"board\": \"AUP-ZU3\",\n"
+    << "    \"dpu\": \"DPUCZDX8G_ISA1_B512\",\n"
+    << "    \"power_method\": \"none\",\n"
+    << "    \"inputs\": \"" << inputs << "\",\n"
     << "    \"single_shot_latency_ms\": " << ss_allin_median << ",\n"
     << "    \"single_shot_latency_allin_ms\": " << ss_allin_median << ",\n"
     << "    \"single_shot_latency_allin_ms_values\": [" << join(ss_allin) << "],\n"
     << "    \"single_shot_latency_engine_ms\": " << ss_engine_median << ",\n"
-    << "    \"single_shot_latency_engine_ms_values\": [" << join(ss_engine) << "],\n"
-    << "    \"board\": \"AUP-ZU3\",\n"
-    << "    \"dpu\": \"DPUCZDX8G_ISA1_B512\"\n"
+    << "    \"single_shot_latency_engine_ms_values\": [" << join(ss_engine) << "]\n"
     << "  },\n"
-    << "  \"idle\": {},\n"
+    << "  \"idle\": {\n"
+    << "    \"t_start\": " << idle_t_start << ",\n"
+    << "    \"t_end\": " << idle_t_end << ",\n"
+    << "    \"power\": {\"mean\": null, \"std\": null, \"n_samples\": 0},\n"
+    << "    \"sysmon\": {\"temp_ps_c\": null, \"temp_pl_c\": null, "
+       "\"vccint_v\": null, \"n_samples\": 0}\n"
+    << "  },\n"
     << "  \"runs\": [\n" << runs_json.str() << "\n  ],\n"
     << "  \"summary\": {\n"
     << "    \"accuracy\": " << acc_last << ",\n"
@@ -299,8 +337,15 @@ int main(int argc, char** argv) {
     << "    \"throughput_fps_std\": " << fps_var << ",\n"
     << "    \"latency_ms_mean\": " << lat_mean << ",\n"
     << "    \"latency_ms_std\": " << lat_var << ",\n"
-    << "    \"single_shot_latency_ms\": " << ss_allin_median << ",\n"
-    << "    \"single_shot_latency_engine_ms\": " << ss_engine_median << "\n"
+    << "    \"idle_power_w\": null,\n"
+    << "    \"idle_power_std\": null,\n"
+    << "    \"idle_temp_pl_c\": null,\n"
+    << "    \"avg_power_w_mean\": null,\n"
+    << "    \"avg_power_w_std\": null,\n"
+    << "    \"dynamic_power_w\": null,\n"
+    << "    \"energy_per_image_mj_mean\": null,\n"
+    << "    \"energy_per_image_mj_std\": null,\n"
+    << "    \"sysmon\": null\n"
     << "  }\n}\n";
   o.close();
   std::cout << "wrote " << out << "  (single_shot_allin=" << ss_allin_median

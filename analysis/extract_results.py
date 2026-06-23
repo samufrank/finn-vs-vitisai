@@ -21,7 +21,10 @@ RESULTS_DIR = Path("results")
 # results/vitis_ai/ is the single canonical DPU source. dpu_canonical_20260621/ is
 # the session home holding COPIES (merged/) + raw board JSONs (raw/) of the same 14
 # models, so walking it duplicates every DPU canonical row — skip it.
-SKIP_DIRS = {"kv260_archive", "dpu_canonical_20260621"}
+# superseded/ holds results retired by a re-run of the identical config (kept for
+# recovery, excluded from the table) — e.g. the May-2 fps10k CNN QI 3-run, replaced
+# by the Jun-22 7-run re-run of the same double-buffered build.
+SKIP_DIRS = {"kv260_archive", "dpu_canonical_20260621", "superseded"}
 
 # DPU (Vitis AI) canonical-only. results/vitis_ai/ accumulates non-canonical DPU
 # JSONs next to the canonical 20260621 set: null-power runs (never FNB58-merged —
@@ -33,6 +36,14 @@ DPU_SUPERSEDED_BASELINES = {
     "cnn_mnist_tiny_b512.json",               # 86.74% [8,16] CNN -> cnn_tiny_matched
     "dpu_mlp-64x32_mnist_int8_300mhz.json",   # 97.14% [64,32] MLP -> mlp_tiny_matched
 }
+
+# Sweep-series DPU tiny: the size-ablation compilation (78.70% CNN / 97.37% MLP),
+# NOT the matched checkpoint FINN/VTA run (86.74% / 97.14%). Excluded from the
+# CROSS-FRAMEWORK grouping only — the matched re-measures (cnn_tiny_matched /
+# mlp_tiny_matched) are the partner there (context/DPU_results_reference.md §2).
+# Sweep-tiny still appears in the master table (DPU size ablation uses the sweep
+# family across all 14 sizes), so this is grouping-scoped, not a full drop.
+DPU_SWEEP_TINY_PREFIXES = ("cnn_tiny_mnist_b1_", "mlp_tiny_mnist_b1_")
 
 # Filename convention from STATUS.md:
 # {toolchain}_{model}_{dataset}_{precision}[_{clock}][_{runtime}].json
@@ -105,7 +116,15 @@ def parse_vitis_b1_naming(fname):
     # New per-model b1 timestamp naming
     m = re.match(r"(cnn|mlp)_([a-z0-9_]+?)_(mnist|cifar10)_b1_\d+", s)
     if m:
-        return m.group(1), m.group(2), m.group(3)
+        size = m.group(2)
+        # The matched-checkpoint DPU re-measures (cnn_tiny_matched / mlp_tiny_matched)
+        # are the SAME size as sweep tiny — normalize the token so they group with
+        # FINN/VTA "tiny" in the cross-framework view (they are the comparison partner;
+        # context/DPU_results_reference.md §2). Sweep-tiny is dropped from that grouping
+        # via DPU_SWEEP_TINY_PREFIXES.
+        if size.endswith("_matched"):
+            size = size[:-len("_matched")]
+        return m.group(1), size, m.group(3)
     # Legacy DPU: cnn_mnist_tiny_b512
     m = re.match(r"(cnn|mlp)_(mnist|cifar10)_([a-z_]+?)_b512", s)
     if m:
@@ -292,11 +311,11 @@ def parse_filename(filepath, data=None):
 
 
 def steady_dynamic_w(data, fallback=None):
-    """Steady-state dynamic power: mean of runs 2..N `fnb58_power.dynamic_power_w`
-    (run 1 dropped as cold-start transient; see results/POWER_REPORTING_POLICY.md).
+    """Steady-state dynamic power: mean of runs 2-3 `fnb58_power.dynamic_power_w`
+    (run 1 dropped as cold-start transient; see context/POWER_REPORTING_POLICY.md).
     Falls back to `fallback` (the all-3 summary value) when per-run power is absent."""
     vals = [r["fnb58_power"]["dynamic_power_w"]
-            for r in (data.get("runs") or [])[1:]
+            for r in (data.get("runs") or [])[1:3]
             if isinstance(r.get("fnb58_power"), dict)
             and r["fnb58_power"].get("dynamic_power_w") is not None]
     return sum(vals) / len(vals) if vals else fallback
@@ -402,13 +421,11 @@ def main():
             if "summary" not in data:
                 continue
 
-            # MLP QI was empirically slower than classic (715 vs 1575 FPS for
-            # tiny @ 1000), so QI is treated as a CNN-only optimization in
-            # this project — drop MLP QI rows from the cross-framework view.
+            # The extractor is the complete internal reference — every distinct
+            # configuration is emitted. Classic vs QI is a real config difference
+            # (derive_variant tags them distinctly); both are kept. Paper-table
+            # curation is a separate, later step, not done here.
             cfg_local = data.get("config", {})
-            if (cfg_local.get("partition") == "qi"
-                    and "mlp" in fname.lower()):
-                continue
 
             # Skip FINN-T raw files when merged version exists
             if fname.startswith("finn_t_") and "merged" not in fname:
@@ -554,6 +571,10 @@ def main():
     groups = {}
     for r in c_rows:
         if r.get("model_class") in (None, "?", "AE") or r.get("size_label") is None:
+            continue
+        # Cross-framework grouping only: drop sweep-series DPU tiny so the matched
+        # DPU is the comparison partner (it remains in the master table below).
+        if r["filename"].startswith(DPU_SWEEP_TINY_PREFIXES):
             continue
         key = (r["model_class"], r["size_label"], r["dataset"], r["precision"])
         groups.setdefault(key, []).append(r)
