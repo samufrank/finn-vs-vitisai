@@ -1,0 +1,76 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2022.2 (lin64) Build 3671981 Fri Oct 14 04:59:54 MDT 2022
+| Date         : Sun Jun 21 00:35:36 2026
+| Host         : finn_dev_samu running 64-bit Ubuntu 22.04.1 LTS
+| Command      : report_drc -file top_wrapper_drc_opted.rpt -pb top_wrapper_drc_opted.pb -rpx top_wrapper_drc_opted.rpx
+| Design       : top_wrapper
+| Device       : xczu3eg-sbva484-1-e
+| Speed File   : -1
+| Design State : Synthesized
+------------------------------------------------------------------------------------------------------------------------
+
+Report DRC
+
+Table of Contents
+-----------------
+1. REPORT SUMMARY
+2. REPORT DETAILS
+
+1. REPORT SUMMARY
+-----------------
+            Netlist: netlist
+          Floorplan: design_1
+      Design limits: <entire design considered>
+           Ruledeck: default
+             Max violations: <unlimited>
+             Violations found: 8
++--------+----------+------------------+------------+
+| Rule   | Severity | Description      | Violations |
++--------+----------+------------------+------------+
+| DPIP-2 | Warning  | Input pipelining | 8          |
++--------+----------+------------------+------------+
+
+2. REPORT DETAILS
+-----------------
+DPIP-2#1 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_2/inst/StreamingDataflowPartition_2_MVAU_hls_0/StreamingDataflowPartition_2_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_21s_21_4_1_U2/MVAU_hls_0_mac_muladd_8ns_8s_21s_21_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_2/inst/StreamingDataflowPartition_2_MVAU_hls_0/StreamingDataflowPartition_2_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_21s_21_4_1_U2/MVAU_hls_0_mac_muladd_8ns_8s_21s_21_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#2 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_0/StreamingDataflowPartition_3_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_18s_18_4_1_U2/MVAU_hls_1_mac_muladd_8ns_8s_18s_18_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_0/StreamingDataflowPartition_3_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_18s_18_4_1_U2/MVAU_hls_1_mac_muladd_8ns_8s_18s_18_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#3 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_1/StreamingDataflowPartition_3_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_21s_21_4_1_U2/MVAU_hls_2_mac_muladd_8ns_8s_21s_21_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_1/StreamingDataflowPartition_3_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_21s_21_4_1_U2/MVAU_hls_2_mac_muladd_8ns_8s_21s_21_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#4 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_2/StreamingDataflowPartition_3_MVAU_hls_2/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_22s_22_4_1_U2/MVAU_hls_3_mac_muladd_8ns_8s_22s_22_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_2/StreamingDataflowPartition_3_MVAU_hls_2/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_22s_22_4_1_U2/MVAU_hls_3_mac_muladd_8ns_8s_22s_22_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#5 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_3/StreamingDataflowPartition_3_MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_19s_19_4_1_U2/MVAU_hls_4_mac_muladd_8ns_8s_19s_19_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_3/StreamingDataflowPartition_3_MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_19s_19_4_1_U2/MVAU_hls_4_mac_muladd_8ns_8s_19s_19_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#6 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_4/StreamingDataflowPartition_3_MVAU_hls_4/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_22s_22_4_1_U2/MVAU_hls_5_mac_muladd_8ns_8s_22s_22_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_4/StreamingDataflowPartition_3_MVAU_hls_4/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_22s_22_4_1_U2/MVAU_hls_5_mac_muladd_8ns_8s_22s_22_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#7 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_5/StreamingDataflowPartition_3_MVAU_hls_5/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_22s_22_4_1_U2/MVAU_hls_6_mac_muladd_8ns_8s_22s_22_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_hls_5/StreamingDataflowPartition_3_MVAU_hls_5/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/mac_muladd_8ns_8s_22s_22_4_1_U2/MVAU_hls_6_mac_muladd_8ns_8s_22s_22_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+DPIP-2#8 Warning
+Input pipelining  
+DSP top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_rtl_0/StreamingDataflowPartition_3_MVAU_rtl_0/inst/inst/blkDsp.genblk2_2.core/genPipes[0].genSIMD[0].genDSP.genblk1.dsp input top_i/StreamingDataflowPartition_3/inst/StreamingDataflowPartition_3_MVAU_rtl_0/StreamingDataflowPartition_3_MVAU_rtl_0/inst/inst/blkDsp.genblk2_2.core/genPipes[0].genSIMD[0].genDSP.genblk1.dsp/A[29:0] is not pipelined. Pipelining DSP48 input will improve performance.
+Related violations: <none>
+
+

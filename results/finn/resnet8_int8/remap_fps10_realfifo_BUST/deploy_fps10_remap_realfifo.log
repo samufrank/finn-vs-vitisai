@@ -1,0 +1,674 @@
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/qonnx/src/qonnx/transformation/gemm_to_matmul.py:57: UserWarning: The GemmToMatMul transformation only offers explicit support for version 9 of the Gemm node, but the ONNX version of the supplied model is 14. Thus the transformation may fail or return incomplete results.
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/qonnx/src/qonnx/transformation/infer_data_layouts.py:127: UserWarning: Assuming 4D input is NCHW
+  warnings.warn("Assuming 4D input is NCHW")
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/convert_to_hw_layers.py:668: UserWarning: Broadcasting Mul(Mul_0)
+  warnings.warn("Broadcasting " + str(node.op_type) + "(" + node.name + ")")
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/convert_to_hw_layers.py:668: UserWarning: Broadcasting Add(Add_0)
+  warnings.warn("Broadcasting " + str(node.op_type) + "(" + node.name + ")")
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/convert_to_hw_layers.py:668: UserWarning: Broadcasting Mul(Mul_1)
+  warnings.warn("Broadcasting " + str(node.op_type) + "(" + node.name + ")")
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/convert_to_hw_layers.py:63: UserWarning: Im2Col_0 : Input is not int. Can't infer ConvInpGen.
+  warnings.warn("%s : Input is not int. Can't infer ConvInpGen." % n.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/convert_to_hw_layers.py:63: UserWarning: Im2Col_1 : Input is not int. Can't infer ConvInpGen.
+  warnings.warn("%s : Input is not int. Can't infer ConvInpGen." % n.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/thresholding.py:84: UserWarning: inputDataType changing for Thresholding_0: UINT32 -> UINT9 
+  warnings.warn(warn_str)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/thresholding.py:84: UserWarning: inputDataType changing for Thresholding_1: UINT32 -> UINT9 
+  warnings.warn(warn_str)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/thresholding.py:84: UserWarning: inputDataType changing for Thresholding_2: UINT32 -> UINT9 
+  warnings.warn(warn_str)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/set_folding.py:221: UserWarning: SetFolding doesn't know how to handle op_type FMPadding_rtl
+  warnings.warn("SetFolding doesn't know how to handle op_type " + op_type)
+Input ONNX: /workspace/project/finn/resnet8_finn_int8.onnx
+Output dir: /workspace/project/finn/output_resnet8_finn_deploy_fps10_remap_realfifo
+Mode: full  target_fps=10
+Folding override: /workspace/project/finn/folding_fps10_mvau_distributed.json
+Building dataflow accelerator from /workspace/project/finn/resnet8_finn_int8.onnx
+Intermediate outputs will be generated in /tmp/finn_dev_samu
+Final outputs will be generated in /workspace/project/finn/output_resnet8_finn_deploy_fps10_remap_realfifo
+Build log is at /workspace/project/finn/output_resnet8_finn_deploy_fps10_remap_realfifo/build_dataflow.log
+Running step: step_qonnx_to_finn [1/18]
+Running step: step_tidy_up [2/18]
+Running step: step_resnet_streamline [3/18]
+Running step: step_resnet_convert_to_hw [4/18]
+Running step: step_create_dataflow_partition [5/18]
+Running step: step_specialize_layers [6/18]
+Running step: step_target_fps_parallelization [7/18]
+Running step: step_apply_folding_config [8/18]
+Running step: step_minimize_bit_width [9/18]
+Running step: step_generate_estimate_reports [10/18]
+Running step: step_hw_codegen [11/18]
+Running step: step_hw_ipgen [12/18]
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/builder/build_dataflow_steps.py:575: UserWarning: Multi-in/out streams currently not supported in FINN C++ verilator driver, falling back to Python
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for AddStreams_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Thresholding_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DuplicateStreams_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DownSampler_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for AddStreams_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Thresholding_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DuplicateStreams_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DownSampler_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_5
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_6
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for AddStreams_hls_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Thresholding_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_5
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Pool_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+Running step: step_set_fifo_depths [13/18]
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for Pool_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for AddStreams_hls_2
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_6
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_5
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_4
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DownSampler_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DuplicateStreams_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for AddStreams_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_3
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_2
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DownSampler_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DuplicateStreams_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for AddStreams_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:2245:8: Duplicate declaration of module: 'swg_controller'
+ 2245 | module swg_controller
+      |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:819:8: ... Location of original declaration
+  819 | module swg_controller
+      |        ^~~~~~~~~~~~~~
+                 ... For warning description see https://verilator.org/warn/MODDUP?v=4.224
+                 ... Use "/* verilator lint_off MODDUP */" and lint_on around source to disable this message.
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:2360:8: Duplicate declaration of module: 'swg_cyclic_buffer_addressable'
+ 2360 | module swg_cyclic_buffer_addressable #(
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:934:8: ... Location of original declaration
+  934 | module swg_cyclic_buffer_addressable #(
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:2387:8: Duplicate declaration of module: 'swg_reg_buffer'
+ 2387 | module swg_reg_buffer
+      |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:961:8: ... Location of original declaration
+  961 | module swg_reg_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:2416:8: Duplicate declaration of module: 'swg_ram_buffer'
+ 2416 | module swg_ram_buffer
+      |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:990:8: ... Location of original declaration
+  990 | module swg_ram_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:6386:8: Duplicate declaration of module: 'axi2we'
+ 6386 | module axi2we #(
+      |        ^~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:6081:8: ... Location of original declaration
+ 6081 | module axi2we #(
+      |        ^~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:37114:8: Duplicate declaration of module: 'axi2we'
+37114 | module axi2we #(
+      |        ^~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:6081:8: ... Location of original declaration
+ 6081 | module axi2we #(
+      |        ^~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:40278:8: Duplicate declaration of module: 'fmpadding'
+40278 | module fmpadding #(
+      |        ^~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:22925:8: ... Location of original declaration
+22925 | module fmpadding #(
+      |        ^~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:46260:8: Duplicate declaration of module: 'fmpadding_axi'
+46260 | module fmpadding_axi #(
+      |        ^~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:43127:8: ... Location of original declaration
+43127 | module fmpadding_axi #(
+      |        ^~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48998:8: Duplicate declaration of module: 'axi4lite_if'
+48998 | module axi4lite_if
+      |        ^~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:40016:8: ... Location of original declaration
+40016 | module axi4lite_if
+      |        ^~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:53022:8: Duplicate declaration of module: 'fmpadding'
+53022 | module fmpadding #(
+      |        ^~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:22925:8: ... Location of original declaration
+22925 | module fmpadding #(
+      |        ^~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:56783:8: Duplicate declaration of module: 'dwc_axi'
+56783 | module dwc_axi #(
+      |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:57880:8: Duplicate declaration of module: 'fmpadding_axi'
+57880 | module fmpadding_axi #(
+      |        ^~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:43127:8: ... Location of original declaration
+43127 | module fmpadding_axi #(
+      |        ^~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:65846:8: Duplicate declaration of module: 'dwc_axi'
+65846 | module dwc_axi #(
+      |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:65959:8: Duplicate declaration of module: 'dwc'
+65959 | module dwc #(
+      |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:103302:8: Duplicate declaration of module: 'dwc_axi'
+103302 | module dwc_axi #(
+       |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:104001:8: Duplicate declaration of module: 'axi2we'
+104001 | module axi2we #(
+       |        ^~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:6081:8: ... Location of original declaration
+ 6081 | module axi2we #(
+      |        ^~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:146237:8: Duplicate declaration of module: 'dwc'
+146237 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:146463:8: Duplicate declaration of module: 'thresholding'
+146463 | module thresholding #(
+       |        ^~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:129207:8: ... Location of original declaration
+129207 | module thresholding #(
+       |        ^~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:153768:8: Duplicate declaration of module: 'axi4lite_if'
+153768 | module axi4lite_if
+       |        ^~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:40016:8: ... Location of original declaration
+40016 | module axi4lite_if
+      |        ^~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:154119:8: Duplicate declaration of module: 'dwc_axi'
+154119 | module dwc_axi #(
+       |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:161646:8: Duplicate declaration of module: 'swg_controller'
+161646 | module swg_controller
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:819:8: ... Location of original declaration
+  819 | module swg_controller
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:161761:8: Duplicate declaration of module: 'swg_cyclic_buffer_addressable'
+161761 | module swg_cyclic_buffer_addressable #(
+       |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:934:8: ... Location of original declaration
+  934 | module swg_cyclic_buffer_addressable #(
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:161788:8: Duplicate declaration of module: 'swg_reg_buffer'
+161788 | module swg_reg_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:961:8: ... Location of original declaration
+  961 | module swg_reg_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:161817:8: Duplicate declaration of module: 'swg_ram_buffer'
+161817 | module swg_ram_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:990:8: ... Location of original declaration
+  990 | module swg_ram_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:162063:8: Duplicate declaration of module: 'axi2we'
+162063 | module axi2we #(
+       |        ^~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:6081:8: ... Location of original declaration
+ 6081 | module axi2we #(
+      |        ^~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:163428:8: Duplicate declaration of module: 'fmpadding'
+163428 | module fmpadding #(
+       |        ^~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:22925:8: ... Location of original declaration
+22925 | module fmpadding #(
+      |        ^~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:171079:8: Duplicate declaration of module: 'dwc'
+171079 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:187619:8: Duplicate declaration of module: 'swg_controller'
+187619 | module swg_controller
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:819:8: ... Location of original declaration
+  819 | module swg_controller
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:187734:8: Duplicate declaration of module: 'swg_cyclic_buffer_addressable'
+187734 | module swg_cyclic_buffer_addressable #(
+       |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:934:8: ... Location of original declaration
+  934 | module swg_cyclic_buffer_addressable #(
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:187761:8: Duplicate declaration of module: 'swg_reg_buffer'
+187761 | module swg_reg_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:961:8: ... Location of original declaration
+  961 | module swg_reg_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:187790:8: Duplicate declaration of module: 'swg_ram_buffer'
+187790 | module swg_ram_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:990:8: ... Location of original declaration
+  990 | module swg_ram_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:191488:8: Duplicate declaration of module: 'thresholding'
+191488 | module thresholding #(
+       |        ^~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:129207:8: ... Location of original declaration
+129207 | module thresholding #(
+       |        ^~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:193487:8: Duplicate declaration of module: 'fmpadding'
+193487 | module fmpadding #(
+       |        ^~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:22925:8: ... Location of original declaration
+22925 | module fmpadding #(
+      |        ^~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:195221:8: Duplicate declaration of module: 'dwc'
+195221 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:214071:8: Duplicate declaration of module: 'swg_controller'
+214071 | module swg_controller
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:819:8: ... Location of original declaration
+  819 | module swg_controller
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:214186:8: Duplicate declaration of module: 'swg_cyclic_buffer_addressable'
+214186 | module swg_cyclic_buffer_addressable #(
+       |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:934:8: ... Location of original declaration
+  934 | module swg_cyclic_buffer_addressable #(
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:214213:8: Duplicate declaration of module: 'swg_reg_buffer'
+214213 | module swg_reg_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:961:8: ... Location of original declaration
+  961 | module swg_reg_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:214242:8: Duplicate declaration of module: 'swg_ram_buffer'
+214242 | module swg_ram_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:990:8: ... Location of original declaration
+  990 | module swg_ram_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:218517:8: Duplicate declaration of module: 'dwc'
+218517 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:219163:8: Duplicate declaration of module: 'axi4lite_if'
+219163 | module axi4lite_if
+       |        ^~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:40016:8: ... Location of original declaration
+40016 | module axi4lite_if
+      |        ^~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:219724:8: Duplicate declaration of module: 'dwc_axi'
+219724 | module dwc_axi #(
+       |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:222868:8: Duplicate declaration of module: 'swg_controller'
+222868 | module swg_controller
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:819:8: ... Location of original declaration
+  819 | module swg_controller
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:222983:8: Duplicate declaration of module: 'swg_cyclic_buffer_addressable'
+222983 | module swg_cyclic_buffer_addressable #(
+       |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:934:8: ... Location of original declaration
+  934 | module swg_cyclic_buffer_addressable #(
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:223010:8: Duplicate declaration of module: 'swg_reg_buffer'
+223010 | module swg_reg_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:961:8: ... Location of original declaration
+  961 | module swg_reg_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:223039:8: Duplicate declaration of module: 'swg_ram_buffer'
+223039 | module swg_ram_buffer
+       |        ^~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:990:8: ... Location of original declaration
+  990 | module swg_ram_buffer
+      |        ^~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:224520:8: Duplicate declaration of module: 'dwc'
+224520 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:226228:8: Duplicate declaration of module: 'dwc_axi'
+226228 | module dwc_axi #(
+       |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:229794:8: Duplicate declaration of module: 'dwc_axi'
+229794 | module dwc_axi #(
+       |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:230189:8: Duplicate declaration of module: 'dwc'
+230189 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:230894:8: Duplicate declaration of module: 'dwc'
+230894 | module dwc #(
+       |        ^~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:47100:8: ... Location of original declaration
+47100 | module dwc #(
+      |        ^~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:233546:8: Duplicate declaration of module: 'thresholding_axi'
+233546 | module thresholding_axi #(
+       |        ^~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:44:8: ... Location of original declaration
+   44 | module thresholding_axi #(
+      |        ^~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:234741:8: Duplicate declaration of module: 'fmpadding_axi'
+234741 | module fmpadding_axi #(
+       |        ^~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:43127:8: ... Location of original declaration
+43127 | module fmpadding_axi #(
+      |        ^~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:236680:8: Duplicate declaration of module: 'thresholding_axi'
+236680 | module thresholding_axi #(
+       |        ^~~~~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:44:8: ... Location of original declaration
+   44 | module thresholding_axi #(
+      |        ^~~~~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:238971:8: Duplicate declaration of module: 'fmpadding_axi'
+238971 | module fmpadding_axi #(
+       |        ^~~~~~~~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:43127:8: ... Location of original declaration
+43127 | module fmpadding_axi #(
+      |        ^~~~~~~~~~~~~
+%Warning-MODDUP: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:240863:8: Duplicate declaration of module: 'dwc_axi'
+240863 | module dwc_axi #(
+       |        ^~~~~~~
+                 /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:48367:8: ... Location of original declaration
+48367 | module dwc_axi #(
+      |        ^~~~~~~
+%Warning-TIMESCALEMOD: /home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/finn-rtllib/swg/swg_pkg.sv:32:9: Timescale missing on this module as other modules have it (IEEE 1800-2017 3.14.2.3)
+   32 | package swg;
+      |         ^~~
+                       /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:210:8: ... Location of module with timescale
+  210 | module MVAU_hls_3_Matrix_Vector_Activate_Stream_Batch_p_ZL7threshs_77_ROM_AUTO_1R (
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-TIMESCALEMOD: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:44:8: Timescale missing on this module as other modules have it (IEEE 1800-2017 3.14.2.3)
+   44 | module thresholding_axi #(
+      |        ^~~~~~~~~~~~~~~~
+                       /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:210:8: ... Location of module with timescale
+  210 | module MVAU_hls_3_Matrix_Vector_Activate_Stream_Batch_p_ZL7threshs_77_ROM_AUTO_1R (
+      |        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+%Warning-UNPACKED: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:202155:10: Unsupported: Unpacked struct/union
+                                                                                                 : ... In instance finn_design_wrapper.finn_design_i.MVAU_rtl_0.MVAU_rtl_0_wstrm.inst.core.mem
+202155 |  typedef struct {
+       |          ^~~~~~
+%Warning-LITENDIAN: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:208557:8: Little bit endian vector: left < right of bit range: [1:5]
+                                                                                                 : ... In instance finn_design_wrapper.finn_design_i.MVAU_rtl_0.MVAU_rtl_0.inst.inst.blkDsp.genblk2.core
+208557 |  logic [1:5] L = '0;
+       |        ^
+%Warning-UNPACKED: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:23081:10: Unsupported: Unpacked struct/union
+                                                                                                : ... In instance finn_design_wrapper.finn_design_i.FMPadding_rtl_4.inst.impl.padding
+23081 |  typedef struct {
+      |          ^~~~~~
+%Warning-CASEINCOMPLETE: /tmp/finn_dev_samu/vivado_stitch_proj_d4gm9u1z/finn_design_wrapper.v:862:16: Case values incompletely covered (example pattern 0x6)
+  862 |         unique case (State)
+      |                ^~~~
+make: Entering directory '/tmp/finn_dev_samu/pyverilator_ipstitched_1c5ku5_p'
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o pyverilator_wrapper.o /tmp/finn_dev_samu/pyverilator_ipstitched_1c5ku5_p/pyverilator_wrapper.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o verilated.o /usr/local/share/verilator/include/verilated.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o verilated_vcd_c.o /usr/local/share/verilator/include/verilated_vcd_c.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper.o Vfinn_design_wrapper.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__0.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__0.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__1.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__1.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__2.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__2.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__3.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__3.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__4.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__4.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__5.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__5.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__6.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__6.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__7.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__7.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__8.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__8.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__9.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__9.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17 -Os -c -o Vfinn_design_wrapper__Trace__0.o Vfinn_design_wrapper__Trace__0.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__ConstPool_0.o Vfinn_design_wrapper__ConstPool_0.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__ConstPool_1.o Vfinn_design_wrapper__ConstPool_1.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__ConstPool_2.o Vfinn_design_wrapper__ConstPool_2.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__ConstPool_3.o Vfinn_design_wrapper__ConstPool_3.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__ConstPool_4.o Vfinn_design_wrapper__ConstPool_4.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper___024root__Slow.o Vfinn_design_wrapper___024root__Slow.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__0__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__0__Slow.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__1__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__1__Slow.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__2__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__2__Slow.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__3__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__3__Slow.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__Syms.o Vfinn_design_wrapper__Syms.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__Trace__0__Slow.o Vfinn_design_wrapper__Trace__0__Slow.cpp
+ccache g++  -I.  -MMD -I/usr/local/share/verilator/include -I/usr/local/share/verilator/include/vltstd -DVM_COVERAGE=0 -DVM_SC=0 -DVM_TRACE=1 -DVM_TRACE_FST=0 -DVM_TRACE_VCD=1 -faligned-new -fcf-protection=none -Wno-bool-operation -Wno-sign-compare -Wno-uninitialized -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable -Wno-shadow     -fPIC --std=c++11  -std=gnu++17  -c -o Vfinn_design_wrapper__Trace__1__Slow.o Vfinn_design_wrapper__Trace__1__Slow.cpp
+echo "" > Vfinn_design_wrapper__ALL.verilator_deplist.tmp
+Archive ar -rcs Vfinn_design_wrapper__ALL.a Vfinn_design_wrapper.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__0.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__1.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__2.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__3.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__4.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__5.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__6.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__7.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__8.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__9.o Vfinn_design_wrapper__Trace__0.o Vfinn_design_wrapper__ConstPool_0.o Vfinn_design_wrapper__ConstPool_1.o Vfinn_design_wrapper__ConstPool_2.o Vfinn_design_wrapper__ConstPool_3.o Vfinn_design_wrapper__ConstPool_4.o Vfinn_design_wrapper___024root__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__0__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__1__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__2__Slow.o Vfinn_design_wrapper___024root__DepSet_h47b9eb99__3__Slow.o Vfinn_design_wrapper__Syms.o Vfinn_design_wrapper__Trace__0__Slow.o Vfinn_design_wrapper__Trace__1__Slow.o
+g++ -fPIC -shared pyverilator_wrapper.o verilated.o verilated_vcd_c.o Vfinn_design_wrapper__ALL.a      -o Vfinn_design_wrapper
+rm Vfinn_design_wrapper__ALL.verilator_deplist.tmp
+make: Leaving directory '/tmp/finn_dev_samu/pyverilator_ipstitched_1c5ku5_p'
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/set_fifo_depths.py:378: UserWarning: No output detected, calculated FIFO depths may not be correct
+  warnings.warn("No output detected, calculated FIFO depths may not be correct")
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for AddStreams_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Thresholding_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DuplicateStreams_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DownSampler_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for AddStreams_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Thresholding_rtl_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DuplicateStreams_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_5
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for DownSampler_hls_1
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_6
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_3
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_5
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_7
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for FMPadding_rtl_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for StreamingDataWidthConverter_rtl_8
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_4
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_hls_6
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for AddStreams_hls_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Thresholding_rtl_2
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for ConvolutionInputGenerator_rtl_5
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for Pool_hls_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/prepare_ip.py:56: UserWarning: Using pre-existing code for MVAU_rtl_0
+  warnings.warn("Using pre-existing code for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for Pool_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for AddStreams_hls_2
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_6
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_5
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_4
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DownSampler_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DuplicateStreams_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for AddStreams_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_3
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_2
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_1
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DownSampler_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for DuplicateStreams_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for AddStreams_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/hlssynth_ip.py:74: UserWarning: Using pre-existing IP for MVAU_hls_0
+  warnings.warn("Using pre-existing IP for %s" % node.name)
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_2: rounding-up FIFO depth from 1156 to 2048 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_3: rounding-up FIFO depth from 18496 to 32768 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_4: rounding-up FIFO depth from 147456 to 262144 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_13: rounding-up FIFO depth from 1076 to 2048 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_19: rounding-up FIFO depth from 960 to 1024 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_20: rounding-up FIFO depth from 7038 to 8192 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_24: rounding-up FIFO depth from 561 to 1024 for impl_style=vivado
+  warnings.warn(
+/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/custom_op/fpgadataflow/rtl/streamingfifo_rtl.py:70: UserWarning: StreamingFIFO_rtl_36: rounding-up FIFO depth from 36542 to 65536 for impl_style=vivado
+  warnings.warn(
+ERROR: [IP_Flow 19-3461] Value '262144' is out of the range for parameter 'FIFO depth(FIFO_DEPTH)' for BD Cell 'StreamingFIFO_rtl_4/fifo' . Valid values are - 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
+ERROR: [BD 41-245] set_property error - Value '262144' is out of the range for parameter 'FIFO depth(FIFO_DEPTH)' for BD Cell 'StreamingFIFO_rtl_4/fifo' . Valid values are - 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192, 16384, 32768
+Customization errors found on 'StreamingFIFO_rtl_4/fifo'. Restoring to previous valid configuration.
+
+Traceback (most recent call last):
+  File "/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/builder/build_dataflow.py", line 158, in build_dataflow_cfg
+    model = transform_step(model, cfg)
+  File "/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/builder/build_dataflow_steps.py", line 643, in step_create_stitched_ip
+    model = model.transform(
+  File "/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/qonnx/src/qonnx/core/modelwrapper.py", line 140, in transform
+    (transformed_model, model_was_changed) = transformation.apply(transformed_model)
+  File "/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/src/finn/transformation/fpgadataflow/create_stitched_ip.py", line 617, in apply
+    raise Exception(
+Exception: CreateStitchedIP failed, no wrapper HDL found under /tmp/finn_dev_samu/vivado_stitch_proj_ox61b_iz/finn_vivado_stitch_proj.srcs/sources_1/bd/finn_design/hdl/finn_design_wrapper.v or /tmp/finn_dev_samu/vivado_stitch_proj_ox61b_iz/finn_vivado_stitch_proj.gen/sources_1/bd/finn_design/hdl/finn_design_wrapper.v.
+                    Please check logs under the parent directory.
+Running step: step_create_stitched_ip [14/18]
+enable_build_pdb_debug not set in build config, exiting...
+Build failed
+--- build_dataflow_cfg rc=-1 ---
+intermediate_models: ['dataflow_parent.onnx', 'step_apply_folding_config.onnx', 'step_create_dataflow_partition.onnx', 'step_generate_estimate_reports.onnx', 'step_hw_codegen.onnx', 'step_hw_ipgen.onnx', 'step_minimize_bit_width.onnx', 'step_qonnx_to_finn.onnx', 'step_resnet_convert_to_hw.onnx', 'step_resnet_streamline.onnx', 'step_set_fifo_depths.onnx', 'step_specialize_layers.onnx', 'step_target_fps_parallelization.onnx', 'step_tidy_up.onnx', 'supported_op_partitions']

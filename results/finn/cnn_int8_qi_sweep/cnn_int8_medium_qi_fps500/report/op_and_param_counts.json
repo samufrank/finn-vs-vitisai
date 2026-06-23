@@ -1,0 +1,24 @@
+{
+  "FMPadding_rtl_0": {},
+  "ConvolutionInputGenerator_rtl_0": {},
+  "MVAU_hls_0": {
+    "op_mac_8bx8b": 225792,
+    "param_weight_8b": 288,
+    "param_threshold_18b": 32
+  },
+  "StreamingMaxPool_hls_0": {},
+  "FMPadding_rtl_1": {},
+  "ConvolutionInputGenerator_rtl_1": {},
+  "MVAU_hls_1": {
+    "op_mac_8bx8b": 3612672,
+    "param_weight_8b": 18432,
+    "param_threshold_21b": 64
+  },
+  "StreamingMaxPool_hls_1": {},
+  "total": {
+    "op_mac_8bx8b": 3838464.0,
+    "param_weight_8b": 18720.0,
+    "param_threshold_18b": 32.0,
+    "param_threshold_21b": 64.0
+  }
+}

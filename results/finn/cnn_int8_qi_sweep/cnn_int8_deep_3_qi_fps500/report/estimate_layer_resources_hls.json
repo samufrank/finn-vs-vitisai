@@ -1,0 +1,42 @@
+{
+  "MVAU_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "4320",
+    "LUT": "7942",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "StreamingMaxPool_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "450",
+    "LUT": "2484",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "MVAU_hls_1": {
+    "BRAM_18K": "0",
+    "FF": "6070",
+    "LUT": "9946",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "3"
+  },
+  "StreamingMaxPool_hls_1": {
+    "BRAM_18K": "0",
+    "FF": "825",
+    "LUT": "4535",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "MVAU_hls_2": {
+    "BRAM_18K": "255",
+    "FF": "2806",
+    "LUT": "7764",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "3"
+  }
+}

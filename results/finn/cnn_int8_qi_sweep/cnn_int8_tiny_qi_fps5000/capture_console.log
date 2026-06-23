@@ -1,0 +1,15 @@
+[capture_build] 2026-06-09T07:23:05Z BEGIN cnn_int8_tiny_qi_fps5000 onnx=cnn_mnist_tiny_qi.onnx fps=5000 timeout=10800s
+[capture_build] 2026-06-09T07:50:47Z END   cnn_int8_tiny_qi_fps5000 rc=0 elapsed=1662s last_step=step_deployment_package timed_out=False fit=True
+
+================ CAPTURE SUMMARY ================
+label        : cnn_int8_tiny_qi_fps5000
+verdict      : FIT
+last_step    : step_deployment_package
+elapsed_s    : 1662
+impl src dir : /tmp/finn_qi_int8_sweep/vivado_zynq_proj_crwu38ok/finn_zynq_link.runs/impl_1
+saved runme  : results/finn/cnn_int8_qi_sweep/cnn_int8_tiny_qi_fps5000/cnn_int8_tiny_qi_fps5000_impl_runme.log (95015 bytes)
+saved rpt    : results/finn/cnn_int8_qi_sweep/cnn_int8_tiny_qi_fps5000/cnn_int8_tiny_qi_fps5000_top_wrapper_clock_utilization_routed.rpt
+saved rpt    : results/finn/cnn_int8_qi_sweep/cnn_int8_tiny_qi_fps5000/cnn_int8_tiny_qi_fps5000_top_wrapper_utilization_placed.rpt
+verdict lines (0 matched):
+  (no verdict pattern matched — inspect the saved runme.log)
+================================================

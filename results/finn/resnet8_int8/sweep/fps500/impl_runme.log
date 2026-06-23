@@ -1,0 +1,200 @@
+
+*** Running vivado
+    with args -log finn_design_wrapper.vdi -applog -m64 -product Vivado -messageDb vivado.pb -mode batch -source finn_design_wrapper.tcl -notrace
+
+
+****** Vivado v2022.2 (64-bit)
+  **** SW Build 3671981 on Fri Oct 14 04:59:54 MDT 2022
+  **** IP Build 3669848 on Fri Oct 14 08:30:02 MDT 2022
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+
+source finn_design_wrapper.tcl -notrace
+Command: link_design -top finn_design_wrapper -part xczu3eg-sbva484-1-e
+Design is defaulting to srcset: sources_1
+Design is defaulting to constrset: constrs_1
+INFO: [Device 21-403] Loading part xczu3eg-sbva484-1-e
+Netlist sorting complete. Time (s): cpu = 00:00:00.88 ; elapsed = 00:00:00.88 . Memory (MB): peak = 2710.035 ; gain = 0.000 ; free physical = 36084 ; free virtual = 57355
+INFO: [Netlist 29-17] Analyzing 11020 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 5 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2022.2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+Parsing XDC File [/tmp/finn_dev_samu/synth_out_of_context_ka72cy7z/results_finn_design_wrapper/finn_design_wrapper.xdc]
+Finished Parsing XDC File [/tmp/finn_dev_samu/synth_out_of_context_ka72cy7z/results_finn_design_wrapper/finn_design_wrapper.xdc]
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3016.812 ; gain = 0.000 ; free physical = 35695 ; free virtual = 56964
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 411 instances were transformed.
+  DSP48E1 => DSP48E2 (DSP_ALU, DSP_A_B_DATA, DSP_C_DATA, DSP_MULTIPLIER, DSP_M_DATA, DSP_OUTPUT, DSP_PREADD, DSP_PREADD_DATA): 1 instance 
+  DSP48E2 => DSP48E2 (DSP_ALU, DSP_A_B_DATA, DSP_C_DATA, DSP_MULTIPLIER, DSP_M_DATA, DSP_OUTPUT, DSP_PREADD, DSP_PREADD_DATA): 62 instances
+  RAM64M8 => RAM64M8 (RAMD64E(x8)): 174 instances
+  RAM64X1D => RAM64X1D (RAMD64E(x2)): 174 instances
+
+7 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+link_design completed successfully
+link_design: Time (s): cpu = 00:00:28 ; elapsed = 00:00:29 . Memory (MB): peak = 3016.812 ; gain = 1322.777 ; free physical = 35695 ; free virtual = 56964
+Command: opt_design
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+Running DRC as a precondition to command opt_design
+
+Starting DRC Task
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Project 1-461] DRC finished with 0 Errors
+INFO: [Project 1-462] Please refer to the DRC report (report_drc) for more information.
+
+Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.94 . Memory (MB): peak = 3109.562 ; gain = 92.750 ; free physical = 35697 ; free virtual = 56967
+
+Starting Cache Timing Information Task
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Ending Cache Timing Information Task | Checksum: 1e57c342c
+
+Time (s): cpu = 00:00:12 ; elapsed = 00:00:05 . Memory (MB): peak = 3622.266 ; gain = 512.703 ; free physical = 35272 ; free virtual = 56541
+
+Starting Logic Optimization Task
+
+Phase 1 Retarget
+INFO: [Opt 31-1287] Pulled Inverter finn_design_i/MVAU_hls_3/MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/flow_control_loop_pipe_sequential_init_U/nf_2_reg_49299[2]_i_1 into driver instance finn_design_i/MVAU_hls_3/MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/flow_control_loop_pipe_sequential_init_U/ap_CS_iter1_fsm[1]_i_2__0, which resulted in an inversion of 79 pins
+INFO: [Opt 31-1287] Pulled Inverter finn_design_i/MVAU_hls_5/MVAU_hls_5/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/flow_control_loop_pipe_sequential_init_U/icmp_ln249_reg_13342[0]_i_1 into driver instance finn_design_i/MVAU_hls_5/MVAU_hls_5/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_540/flow_control_loop_pipe_sequential_init_U/ap_CS_iter1_fsm[1]_i_2__1, which resulted in an inversion of 6 pins
+INFO: [Opt 31-1287] Pulled Inverter finn_design_i/MVAU_hls_6/MVAU_hls_6/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/flow_control_loop_pipe_sequential_init_U/local_temp_V_7_reg_50817[7]_i_1 into driver instance finn_design_i/MVAU_hls_6/MVAU_hls_6/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/flow_control_loop_pipe_sequential_init_U/local_temp_V_7_reg_50817[7]_i_3, which resulted in an inversion of 6 pins
+INFO: [Opt 31-138] Pushed 7 inverter(s) to 4134 load pin(s).
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_0/MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_8ns_8s_17s_18_4_1_U1031/MVAU_hls_0_mac_muladd_8ns_8s_17s_18_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_0/MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_8s_8ns_17s_18_4_1_U1033/MVAU_hls_0_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_0/MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_8s_8ns_17s_18_4_1_U1035/MVAU_hls_0_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_0/MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_8s_8ns_17s_18_4_1_U1037/MVAU_hls_0_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_3/MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8ns_8s_17s_18_4_1_U11/MVAU_hls_3_mac_muladd_8ns_8s_17s_18_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_3/MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8s_8ns_17s_18_4_1_U13/MVAU_hls_3_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_3/MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8s_8ns_17s_18_4_1_U15/MVAU_hls_3_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_3/MVAU_hls_3/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8s_8ns_17s_18_4_1_U17/MVAU_hls_3_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_6/MVAU_hls_6/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8ns_8s_17s_18_4_1_U11/MVAU_hls_6_mac_muladd_8ns_8s_17s_18_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_6/MVAU_hls_6/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8s_8ns_17s_18_4_1_U13/MVAU_hls_6_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_6/MVAU_hls_6/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8s_8ns_17s_18_4_1_U15/MVAU_hls_6_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: finn_design_i/MVAU_hls_6/MVAU_hls_6/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_2070/mac_muladd_8s_8ns_17s_18_4_1_U17/MVAU_hls_6_mac_muladd_8s_8ns_17s_18_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-49] Retargeted 0 cell(s).
+Phase 1 Retarget | Checksum: 1337882b7
+
+Time (s): cpu = 00:00:09 ; elapsed = 00:00:05 . Memory (MB): peak = 3917.125 ; gain = 32.000 ; free physical = 35196 ; free virtual = 56466
+INFO: [Opt 31-389] Phase Retarget created 0 cells and removed 10 cells
+
+Phase 2 Constant propagation
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Phase 2 Constant propagation | Checksum: 108c214a8
+
+Time (s): cpu = 00:00:10 ; elapsed = 00:00:06 . Memory (MB): peak = 3917.125 ; gain = 32.000 ; free physical = 35197 ; free virtual = 56466
+INFO: [Opt 31-389] Phase Constant propagation created 0 cells and removed 0 cells
+
+Phase 3 Sweep
+Phase 3 Sweep | Checksum: 14d706e9a
+
+Time (s): cpu = 00:00:12 ; elapsed = 00:00:08 . Memory (MB): peak = 3917.125 ; gain = 32.000 ; free physical = 35133 ; free virtual = 56402
+INFO: [Opt 31-389] Phase Sweep created 0 cells and removed 0 cells
+
+Phase 4 BUFG optimization
+INFO: [Opt 31-1077] Phase BUFG optimization inserted 0 global clock buffer(s) for CLOCK_LOW_FANOUT.
+Phase 4 BUFG optimization | Checksum: 14d706e9a
+
+Time (s): cpu = 00:00:13 ; elapsed = 00:00:09 . Memory (MB): peak = 3949.141 ; gain = 64.016 ; free physical = 35136 ; free virtual = 56405
+INFO: [Opt 31-662] Phase BUFG optimization created 0 cells of which 0 are BUFGs and removed 0 cells.
+
+Phase 5 Shift Register Optimization
+INFO: [Opt 31-1064] SRL Remap converted 0 SRLs to 0 registers and converted 0 registers of register chains to 0 SRLs
+Phase 5 Shift Register Optimization | Checksum: 14d706e9a
+
+Time (s): cpu = 00:00:13 ; elapsed = 00:00:09 . Memory (MB): peak = 3949.141 ; gain = 64.016 ; free physical = 35136 ; free virtual = 56406
+INFO: [Opt 31-389] Phase Shift Register Optimization created 0 cells and removed 0 cells
+
+Phase 6 Post Processing Netlist
+Phase 6 Post Processing Netlist | Checksum: 14d706e9a
+
+Time (s): cpu = 00:00:13 ; elapsed = 00:00:09 . Memory (MB): peak = 3949.141 ; gain = 64.016 ; free physical = 35136 ; free virtual = 56406
+INFO: [Opt 31-389] Phase Post Processing Netlist created 0 cells and removed 0 cells
+Opt_design Change Summary
+=========================
+
+
+-------------------------------------------------------------------------------------------------------------------------
+|  Phase                        |  #Cells created  |  #Cells Removed  |  #Constrained objects preventing optimizations  |
+-------------------------------------------------------------------------------------------------------------------------
+|  Retarget                     |               0  |              10  |                                              0  |
+|  Constant propagation         |               0  |               0  |                                              0  |
+|  Sweep                        |               0  |               0  |                                              0  |
+|  BUFG optimization            |               0  |               0  |                                              0  |
+|  Shift Register Optimization  |               0  |               0  |                                              0  |
+|  Post Processing Netlist      |               0  |               0  |                                              0  |
+-------------------------------------------------------------------------------------------------------------------------
+
+
+
+Starting Connectivity Check Task
+
+Time (s): cpu = 00:00:00.26 ; elapsed = 00:00:00.26 . Memory (MB): peak = 3949.141 ; gain = 0.000 ; free physical = 35159 ; free virtual = 56429
+Ending Logic Optimization Task | Checksum: f753492b
+
+Time (s): cpu = 00:00:18 ; elapsed = 00:00:13 . Memory (MB): peak = 3949.141 ; gain = 64.016 ; free physical = 35160 ; free virtual = 56430
+
+Starting Power Optimization Task
+INFO: [Pwropt 34-132] Skipping clock gating for clocks with a period < 2.00 ns.
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [Pwropt 34-9] Applying IDT optimizations ...
+INFO: [Pwropt 34-10] Applying ODC optimizations ...
+Running Vector-less Activity Propagation...
+
+Finished Running Vector-less Activity Propagation
+
+
+Starting PowerOpt Patch Enables Task
+INFO: [Pwropt 34-162] WRITE_MODE attribute of 0 BRAM(s) out of a total of 406 has been updated to save power. Run report_power_opt to get a complete listing of the BRAMs updated.
+INFO: [Pwropt 34-201] Structural ODC has moved 0 WE to EN ports
+Number of BRAM Ports augmented: 0 newly gated: 0 Total Ports: 812
+Ending PowerOpt Patch Enables Task | Checksum: f753492b
+
+Time (s): cpu = 00:00:01 ; elapsed = 00:00:01 . Memory (MB): peak = 5181.914 ; gain = 0.000 ; free physical = 34839 ; free virtual = 56109
+Ending Power Optimization Task | Checksum: f753492b
+
+Time (s): cpu = 00:00:58 ; elapsed = 00:00:21 . Memory (MB): peak = 5181.914 ; gain = 1232.773 ; free physical = 35035 ; free virtual = 56304
+
+Starting Final Cleanup Task
+Ending Final Cleanup Task | Checksum: f753492b
+
+Time (s): cpu = 00:00:00 ; elapsed = 00:00:00.01 . Memory (MB): peak = 5181.914 ; gain = 0.000 ; free physical = 35035 ; free virtual = 56304
+
+Starting Netlist Obfuscation Task
+Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 5181.914 ; gain = 0.000 ; free physical = 35035 ; free virtual = 56304
+Ending Netlist Obfuscation Task | Checksum: f753492b
+
+Time (s): cpu = 00:00:00.03 ; elapsed = 00:00:00.02 . Memory (MB): peak = 5181.914 ; gain = 0.000 ; free physical = 35035 ; free virtual = 56304
+INFO: [Common 17-83] Releasing license: Implementation
+45 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+opt_design completed successfully
+opt_design: Time (s): cpu = 00:01:32 ; elapsed = 00:00:42 . Memory (MB): peak = 5181.914 ; gain = 2165.102 ; free physical = 35035 ; free virtual = 56304
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [Timing 38-480] Writing timing data to binary archive.
+INFO: [Common 17-1381] The checkpoint '/tmp/finn_dev_samu/synth_out_of_context_ka72cy7z/results_finn_design_wrapper/vivadocompile/vivadocompile.runs/impl_1/finn_design_wrapper_opt.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:23 ; elapsed = 00:00:10 . Memory (MB): peak = 5181.914 ; gain = 0.000 ; free physical = 34788 ; free virtual = 56101
+INFO: [runtcl-4] Executing : report_drc -file finn_design_wrapper_drc_opted.rpt -pb finn_design_wrapper_drc_opted.pb -rpx finn_design_wrapper_drc_opted.rpx
+Command: report_drc -file finn_design_wrapper_drc_opted.rpt -pb finn_design_wrapper_drc_opted.pb -rpx finn_design_wrapper_drc_opted.rpx
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1704] No user IP repositories specified
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/tools/Xilinx/Vivado/2022.2/data/ip'.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 2-168] The results of DRC are in file /tmp/finn_dev_samu/synth_out_of_context_ka72cy7z/results_finn_design_wrapper/vivadocompile/vivadocompile.runs/impl_1/finn_design_wrapper_drc_opted.rpt.
+report_drc completed successfully
+Command: place_design
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+Running DRC as a precondition to command place_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+ERROR: [DRC UTLZ-1] Resource utilization: LUT as Logic over-utilized in Top Level Design (This design requires more LUT as Logic cells than are available in the target device. This design requires 107503 of such cell types but only 70560 compatible sites are available in the target device. Please analyze your synthesis results and constraints to ensure the design is mapped to Xilinx primitives as expected. If so, please consider targeting a larger device. Please set tcl parameter "drc.disableLUTOverUtilError" to 1 to change this error to warning.)
+ERROR: [DRC UTLZ-1] Resource utilization: LUT1 and LUT2 and LUT3 and LUT4 and LUT5 and LUT6 and RAMD64E and SRL16E and SRLC32E over-utilized in Top Level Design (This design requires more LUT1 and LUT2 and LUT3 and LUT4 and LUT5 and LUT6 and RAMD64E and SRL16E and SRLC32E cells than are available in the target device. This design requires 146676 of such cell types but only 141120 compatible sites are available in the target device. Please analyze your synthesis results and constraints to ensure the design is mapped to Xilinx primitives as expected. If so, please consider targeting a larger device.)
+ERROR: [DRC UTLZ-1] Resource utilization: Slice LUTs over-utilized in Top Level Design (This design requires more Slice LUTs cells than are available in the target device. This design requires 109274 of such cell types but only 70560 compatible sites are available in the target device. Please analyze your synthesis results and constraints to ensure the design is mapped to Xilinx primitives as expected. If so, please consider targeting a larger device. Please set tcl parameter "drc.disableLUTOverUtilError" to 1 to change this error to warning.)
+INFO: [Vivado_Tcl 4-198] DRC finished with 3 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+ERROR: [Vivado_Tcl 4-23] Error(s) found during DRC. Placer not run.
+INFO: [Common 17-83] Releasing license: Implementation
+62 Infos, 0 Warnings, 0 Critical Warnings and 4 Errors encountered.
+place_design failed
+ERROR: [Common 17-39] 'place_design' failed due to earlier errors.
+
+INFO: [Common 17-206] Exiting Vivado at Tue Jun  9 02:59:38 2026...

@@ -1,0 +1,8 @@
+[2026-06-09T14:41:39Z] RERUN attempt 1 for cnn_int8_deep_3_qi_fps1000
+[2026-06-09T14:41:39Z] BUILD START cnn_int8_deep_3_qi_fps1000  onnx=cnn_mnist_deep_3_qi.onnx fps=1000
+[2026-06-09T15:19:52Z] capture_build.py rc=0 wall=2293s for cnn_int8_deep_3_qi_fps1000
+[2026-06-09T15:19:53Z] BUILD DONE  cnn_int8_deep_3_qi_fps1000  FIT  LUT=87.6 BRAM=13.2 DSP=9.7 CARRY8=55.1  binding=LUT  elapsed=2293s
+[2026-06-09T15:19:53Z] RERUN attempt 1: real verdict FIT
+[2026-06-09T15:19:53Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T15:19:53Z] RERUN COMPLETE: cnn_int8_deep_3_qi_fps1000 -> FIT
+RERUN_DONE_MARKER_WRITTEN

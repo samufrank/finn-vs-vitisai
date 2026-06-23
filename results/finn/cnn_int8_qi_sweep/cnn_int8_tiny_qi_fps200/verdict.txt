@@ -1,0 +1,13 @@
+label: cnn_int8_tiny_qi_fps200
+onnx: cnn_mnist_tiny_qi.onnx
+target_fps: 200
+elapsed_s: 1557
+last_finn_step: step_deployment_package
+verdict: FIT
+LUT%: 29.46  (used 20786 of 70560)
+FF%: 16.93  (used 23896 of 141120)
+CARRY8%: 13.73  (used 1211 of 8820)
+BRAM%: 5.32  (used 11.5 of 216)
+DSP%: 0.56  (used 2 of 360)
+max_utilized_resource: LUT
+captured_files: capture_console.log, finn_build.log, impl_runme.log, report, top_wrapper_clock_utilization_routed.rpt, top_wrapper_utilization_placed.rpt

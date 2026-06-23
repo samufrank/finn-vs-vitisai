@@ -1,0 +1,50 @@
+[2026-06-09T06:04:02Z] === SWEEP START: 10 builds, scratch=/tmp/finn_qi_int8_sweep ===
+[2026-06-09T06:04:02Z] BUILD START cnn_int8_tiny_qi_fps200  onnx=cnn_mnist_tiny_qi.onnx fps=200
+[2026-06-09T06:29:58Z] capture_build.py rc=0 wall=1557s for cnn_int8_tiny_qi_fps200
+[2026-06-09T06:29:58Z] BUILD DONE  cnn_int8_tiny_qi_fps200  FIT  LUT=29.5 BRAM=5.3 DSP=0.6 CARRY8=13.7  binding=LUT  elapsed=1557s
+[2026-06-09T06:29:58Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T06:29:58Z] BUILD START cnn_int8_tiny_qi_fps500  onnx=cnn_mnist_tiny_qi.onnx fps=500
+[2026-06-09T06:55:42Z] capture_build.py rc=0 wall=1544s for cnn_int8_tiny_qi_fps500
+[2026-06-09T06:55:42Z] BUILD DONE  cnn_int8_tiny_qi_fps500  FIT  LUT=29.6 BRAM=5.6 DSP=0.8 CARRY8=13.8  binding=LUT  elapsed=1544s
+[2026-06-09T06:55:42Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T06:55:42Z] BUILD START cnn_int8_tiny_qi_fps3000  onnx=cnn_mnist_tiny_qi.onnx fps=3000
+[2026-06-09T07:23:05Z] capture_build.py rc=0 wall=1643s for cnn_int8_tiny_qi_fps3000
+[2026-06-09T07:23:05Z] BUILD DONE  cnn_int8_tiny_qi_fps3000  FIT  LUT=35.6 BRAM=6.2 DSP=3.1 CARRY8=19.6  binding=LUT  elapsed=1642s
+[2026-06-09T07:23:05Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T07:23:05Z] BUILD START cnn_int8_tiny_qi_fps5000  onnx=cnn_mnist_tiny_qi.onnx fps=5000
+[2026-06-09T07:50:47Z] capture_build.py rc=0 wall=1662s for cnn_int8_tiny_qi_fps5000
+[2026-06-09T07:50:47Z] BUILD DONE  cnn_int8_tiny_qi_fps5000  FIT  LUT=39.6 BRAM=3.9 DSP=5.3 CARRY8=31.2  binding=LUT  elapsed=1662s
+[2026-06-09T07:50:47Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T07:50:47Z] BUILD START cnn_int8_small_qi_fps200  onnx=cnn_mnist_small_qi.onnx fps=200
+[2026-06-09T08:16:20Z] capture_build.py rc=0 wall=1533s for cnn_int8_small_qi_fps200
+[2026-06-09T08:16:21Z] BUILD DONE  cnn_int8_small_qi_fps200  FIT  LUT=34.1 BRAM=9.5 DSP=0.8 CARRY8=14.2  binding=LUT  elapsed=1533s
+[2026-06-09T08:16:21Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T08:16:21Z] BUILD START cnn_int8_small_qi_fps500  onnx=cnn_mnist_small_qi.onnx fps=500
+[2026-06-09T08:41:50Z] capture_build.py rc=0 wall=1529s for cnn_int8_small_qi_fps500
+[2026-06-09T08:41:50Z] BUILD DONE  cnn_int8_small_qi_fps500  FIT  LUT=34.0 BRAM=6.5 DSP=1.9 CARRY8=14.2  binding=LUT  elapsed=1529s
+[2026-06-09T08:41:50Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T08:41:50Z] BUILD START cnn_int8_small_qi_fps3000  onnx=cnn_mnist_small_qi.onnx fps=3000
+[2026-06-09T09:20:15Z] capture_build.py rc=0 wall=2305s for cnn_int8_small_qi_fps3000
+[2026-06-09T09:20:15Z] BUILD DONE  cnn_int8_small_qi_fps3000  FIT  LUT=64.5 BRAM=5.3 DSP=11.1 CARRY8=54.9  binding=LUT  elapsed=2305s
+[2026-06-09T09:20:15Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T09:20:15Z] BUILD START cnn_int8_medium_qi_fps500  onnx=cnn_mnist_medium_qi.onnx fps=500
+[2026-06-09T10:05:24Z] capture_build.py rc=0 wall=2709s for cnn_int8_medium_qi_fps500
+[2026-06-09T10:05:25Z] BUILD DONE  cnn_int8_medium_qi_fps500  FIT  LUT=87.9 BRAM=14.8 DSP=9.7 CARRY8=55.5  binding=LUT  elapsed=2709s
+[2026-06-09T10:05:25Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T10:05:25Z] BUILD START cnn_int8_deep_3_qi_fps500  onnx=cnn_mnist_deep_3_qi.onnx fps=500
+[2026-06-09T10:33:07Z] capture_build.py rc=0 wall=1662s for cnn_int8_deep_3_qi_fps500
+[2026-06-09T10:33:08Z] BUILD DONE  cnn_int8_deep_3_qi_fps500  FIT  LUT=42.4 BRAM=68.5 DSP=3.6 CARRY8=20.4  binding=BRAM  elapsed=1662s
+[2026-06-09T10:33:08Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T10:33:08Z] BUILD START cnn_int8_deep_3_qi_fps1000  onnx=cnn_mnist_deep_3_qi.onnx fps=1000
+[2026-06-09T10:35:24Z] capture_build.py rc=3 wall=137s for cnn_int8_deep_3_qi_fps1000
+[2026-06-09T10:35:24Z] WARN capture rc=3 for cnn_int8_deep_3_qi_fps1000: leaving scratch for inspection
+[2026-06-09T10:35:24Z] BUILD DONE  cnn_int8_deep_3_qi_fps1000  INCOMPLETE  LUT=n/a BRAM=n/a DSP=n/a CARRY8=n/a  binding=-  elapsed=136s
+[2026-06-09T10:35:24Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T10:35:24Z] === SWEEP COMPLETE ===
+[2026-06-09T14:41:39Z] RERUN attempt 1 for cnn_int8_deep_3_qi_fps1000
+[2026-06-09T14:41:39Z] BUILD START cnn_int8_deep_3_qi_fps1000  onnx=cnn_mnist_deep_3_qi.onnx fps=1000
+[2026-06-09T15:19:52Z] capture_build.py rc=0 wall=2293s for cnn_int8_deep_3_qi_fps1000
+[2026-06-09T15:19:53Z] BUILD DONE  cnn_int8_deep_3_qi_fps1000  FIT  LUT=87.6 BRAM=13.2 DSP=9.7 CARRY8=55.1  binding=LUT  elapsed=2293s
+[2026-06-09T15:19:53Z] RERUN attempt 1: real verdict FIT
+[2026-06-09T15:19:53Z] wrote /home/samu/dev/CEN571-final/finn-vs-vitisai/results/finn/cnn_int8_qi_sweep/summary.md
+[2026-06-09T15:19:53Z] RERUN COMPLETE: cnn_int8_deep_3_qi_fps1000 -> FIT

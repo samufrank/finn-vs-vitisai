@@ -1,0 +1,11 @@
+cnn_int8_tiny_qi_fps200	fps=200	FIT	LUT=29.5	BRAM=5.3	DSP=0.6	CARRY8=13.7	binding=LUT	elapsed=1557s
+cnn_int8_tiny_qi_fps500	fps=500	FIT	LUT=29.6	BRAM=5.6	DSP=0.8	CARRY8=13.8	binding=LUT	elapsed=1544s
+cnn_int8_tiny_qi_fps3000	fps=3000	FIT	LUT=35.6	BRAM=6.2	DSP=3.1	CARRY8=19.6	binding=LUT	elapsed=1642s
+cnn_int8_tiny_qi_fps5000	fps=5000	FIT	LUT=39.6	BRAM=3.9	DSP=5.3	CARRY8=31.2	binding=LUT	elapsed=1662s
+cnn_int8_small_qi_fps200	fps=200	FIT	LUT=34.1	BRAM=9.5	DSP=0.8	CARRY8=14.2	binding=LUT	elapsed=1533s
+cnn_int8_small_qi_fps500	fps=500	FIT	LUT=34.0	BRAM=6.5	DSP=1.9	CARRY8=14.2	binding=LUT	elapsed=1529s
+cnn_int8_small_qi_fps3000	fps=3000	FIT	LUT=64.5	BRAM=5.3	DSP=11.1	CARRY8=54.9	binding=LUT	elapsed=2305s
+cnn_int8_medium_qi_fps500	fps=500	FIT	LUT=87.9	BRAM=14.8	DSP=9.7	CARRY8=55.5	binding=LUT	elapsed=2709s
+cnn_int8_deep_3_qi_fps500	fps=500	FIT	LUT=42.4	BRAM=68.5	DSP=3.6	CARRY8=20.4	binding=BRAM	elapsed=1662s
+cnn_int8_deep_3_qi_fps1000	fps=1000	INCOMPLETE	LUT=n/a	BRAM=n/a	DSP=n/a	CARRY8=n/a	binding=-	elapsed=136s
+cnn_int8_deep_3_qi_fps1000	fps=1000	FIT	LUT=87.6	BRAM=13.2	DSP=9.7	CARRY8=55.1	binding=LUT	elapsed=2293s

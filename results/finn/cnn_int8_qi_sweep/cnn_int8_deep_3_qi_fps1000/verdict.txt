@@ -1,0 +1,13 @@
+label: cnn_int8_deep_3_qi_fps1000
+onnx: cnn_mnist_deep_3_qi.onnx
+target_fps: 1000
+elapsed_s: 2293
+last_finn_step: step_deployment_package
+verdict: FIT
+LUT%: 87.63  (used 61831 of 70560)
+FF%: 42.53  (used 60021 of 141120)
+CARRY8%: 55.12  (used 4862 of 8820)
+BRAM%: 13.19  (used 28.5 of 216)
+DSP%: 9.72  (used 35 of 360)
+max_utilized_resource: LUT
+captured_files: capture_console.log, finn_build.log, impl_runme.log, report, top_wrapper_clock_utilization_routed.rpt, top_wrapper_utilization_placed.rpt

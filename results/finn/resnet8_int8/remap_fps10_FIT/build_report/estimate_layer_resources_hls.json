@@ -1,0 +1,122 @@
+{
+  "MVAU_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "5482",
+    "LUT": "9158",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "AddStreams_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "31",
+    "LUT": "134",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "DuplicateStreams_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "30",
+    "LUT": "118",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "DownSampler_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "61",
+    "LUT": "338",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "MVAU_hls_1": {
+    "BRAM_18K": "0",
+    "FF": "4382",
+    "LUT": "8960",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "MVAU_hls_2": {
+    "BRAM_18K": "0",
+    "FF": "5682",
+    "LUT": "10342",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "MVAU_hls_3": {
+    "BRAM_18K": "0",
+    "FF": "6866",
+    "LUT": "11143",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "AddStreams_hls_1": {
+    "BRAM_18K": "0",
+    "FF": "30",
+    "LUT": "132",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "DuplicateStreams_hls_1": {
+    "BRAM_18K": "0",
+    "FF": "29",
+    "LUT": "116",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "DownSampler_hls_1": {
+    "BRAM_18K": "0",
+    "FF": "72",
+    "LUT": "507",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "MVAU_hls_4": {
+    "BRAM_18K": "104",
+    "FF": "2790",
+    "LUT": "9524",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "MVAU_hls_5": {
+    "BRAM_18K": "255",
+    "FF": "2588",
+    "LUT": "8905",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "MVAU_hls_6": {
+    "BRAM_18K": "255",
+    "FF": "4893",
+    "LUT": "10071",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "1"
+  },
+  "AddStreams_hls_2": {
+    "BRAM_18K": "0",
+    "FF": "29",
+    "LUT": "131",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  },
+  "Pool_hls_0": {
+    "BRAM_18K": "0",
+    "FF": "76",
+    "LUT": "247",
+    "DSP48E": 0,
+    "URAM": "0",
+    "DSP": "0"
+  }
+}

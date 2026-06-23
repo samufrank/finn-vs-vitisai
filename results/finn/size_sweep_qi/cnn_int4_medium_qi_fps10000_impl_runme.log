@@ -1,0 +1,1061 @@
+
+*** Running vivado
+    with args -log top_wrapper.vdi -applog -m64 -product Vivado -messageDb vivado.pb -mode batch -source top_wrapper.tcl -notrace
+
+
+****** Vivado v2022.2 (64-bit)
+  **** SW Build 3671981 on Fri Oct 14 04:59:54 MDT 2022
+  **** IP Build 3669848 on Fri Oct 14 08:30:02 MDT 2022
+    ** Copyright 1986-2022 Xilinx, Inc. All Rights Reserved.
+
+source top_wrapper.tcl -notrace
+INFO: [IP_Flow 19-234] Refreshing IP repositories
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingDataflowPartition_0_IODMA_hls_0_cp6basbr/project_StreamingDataflowPartition_0_IODMA_hls_0/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/vivado_stitch_proj_lrwa5adz/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_0_zlwc95oj'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_FMPadding_rtl_0_rta51_p3'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_1_elk76e81'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_ConvolutionInputGenerator_rtl_0_tvt4_hxk'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_2_aal0nxhs'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingDataWidthConverter_rtl_0_en55xark'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_3_d1jlr5nc'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_MVAU_hls_0_hlp__pwj/project_MVAU_hls_0/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_4_9qqahxx8'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingDataWidthConverter_rtl_1_jqcyo1a2'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_5_gi7qj1a6'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingMaxPool_hls_0_lanvxly6/project_StreamingMaxPool_hls_0/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_6_y_07wide'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_FMPadding_rtl_1_hpaqu2fr'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_7_65fsy6ca'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingDataWidthConverter_rtl_2_xf4wn0n4'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_8_xmhnt66b'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_ConvolutionInputGenerator_rtl_1_ux8fw78h'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_9_1kbfkgjb'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingDataWidthConverter_hls_0_9mmt95u7/project_StreamingDataWidthConverter_hls_0/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_10_vhj84tf8'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_MVAU_hls_1_qlke5l3m/project_MVAU_hls_1/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_11_6g1ijysm'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingMaxPool_hls_1_tfva78g1/project_StreamingMaxPool_hls_1/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingFIFO_rtl_12_oy5xst63'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/vivado_stitch_proj_gysnqhi4/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/finn-rtllib/memstream'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/code_gen_ipgen_StreamingDataflowPartition_2_IODMA_hls_0_2jodyeh5/project_StreamingDataflowPartition_2_IODMA_hls_0/sol1/impl/ip'.
+INFO: [IP_Flow 19-1700] Loaded user IP repository '/tmp/finn_dev_samu/vivado_stitch_proj_l538w76w/ip'.
+INFO: [IP_Flow 19-2313] Loaded Vivado IP repository '/tools/Xilinx/Vivado/2022.2/data/ip'.
+Command: link_design -top top_wrapper -part xczu3eg-sbva484-1-e
+Design is defaulting to srcset: sources_1
+Design is defaulting to constrset: constrs_1
+INFO: [Device 21-403] Loading part xczu3eg-sbva484-1-e
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_StreamingDataflowPartition_1_0/top_StreamingDataflowPartition_1_0.dcp' for cell 'top_i/StreamingDataflowPartition_1'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_idma0_0/top_idma0_0.dcp' for cell 'top_i/idma0'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_odma0_0/top_odma0_0.dcp' for cell 'top_i/odma0'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_rst_zynq_ps_100M_0/top_rst_zynq_ps_100M_0.dcp' for cell 'top_i/rst_zynq_ps_100M'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_smartconnect_0_0/top_smartconnect_0_0.dcp' for cell 'top_i/smartconnect_0'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_zynq_ps_0/top_zynq_ps_0.dcp' for cell 'top_i/zynq_ps'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_xbar_0/top_xbar_0.dcp' for cell 'top_i/axi_interconnect_0/xbar'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_auto_ds_0/top_auto_ds_0.dcp' for cell 'top_i/axi_interconnect_0/s00_couplers/auto_ds'
+INFO: [Project 1-454] Reading design checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_auto_pc_0/top_auto_pc_0.dcp' for cell 'top_i/axi_interconnect_0/s00_couplers/auto_pc'
+Netlist sorting complete. Time (s): cpu = 00:00:00.62 ; elapsed = 00:00:00.63 . Memory (MB): peak = 2716.324 ; gain = 0.000 ; free physical = 35735 ; free virtual = 57663
+INFO: [Netlist 29-17] Analyzing 3195 Unisim elements for replacement
+INFO: [Netlist 29-28] Unisim Transformation completed in 1 CPU seconds
+INFO: [Project 1-479] Netlist was created with Vivado 2022.2
+INFO: [Project 1-570] Preparing netlist for logic optimization
+Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_zynq_ps_0/top_zynq_ps_0.xdc] for cell 'top_i/zynq_ps/inst'
+Finished Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_zynq_ps_0/top_zynq_ps_0.xdc] for cell 'top_i/zynq_ps/inst'
+Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_smartconnect_0_0/bd_0/ip/ip_1/bd_acc6_psr_aclk_0_board.xdc] for cell 'top_i/smartconnect_0/inst/clk_map/psr_aclk/U0'
+Finished Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_smartconnect_0_0/bd_0/ip/ip_1/bd_acc6_psr_aclk_0_board.xdc] for cell 'top_i/smartconnect_0/inst/clk_map/psr_aclk/U0'
+Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_smartconnect_0_0/bd_0/ip/ip_1/bd_acc6_psr_aclk_0.xdc] for cell 'top_i/smartconnect_0/inst/clk_map/psr_aclk/U0'
+Finished Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_smartconnect_0_0/bd_0/ip/ip_1/bd_acc6_psr_aclk_0.xdc] for cell 'top_i/smartconnect_0/inst/clk_map/psr_aclk/U0'
+Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_rst_zynq_ps_100M_0/top_rst_zynq_ps_100M_0_board.xdc] for cell 'top_i/rst_zynq_ps_100M/U0'
+Finished Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_rst_zynq_ps_100M_0/top_rst_zynq_ps_100M_0_board.xdc] for cell 'top_i/rst_zynq_ps_100M/U0'
+Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_rst_zynq_ps_100M_0/top_rst_zynq_ps_100M_0.xdc] for cell 'top_i/rst_zynq_ps_100M/U0'
+Finished Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_rst_zynq_ps_100M_0/top_rst_zynq_ps_100M_0.xdc] for cell 'top_i/rst_zynq_ps_100M/U0'
+Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_auto_ds_0/top_auto_ds_0_clocks.xdc] for cell 'top_i/axi_interconnect_0/s00_couplers/auto_ds/inst'
+Finished Parsing XDC File [/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.gen/sources_1/bd/top/ip/top_auto_ds_0/top_auto_ds_0_clocks.xdc] for cell 'top_i/axi_interconnect_0/s00_couplers/auto_ds/inst'
+INFO: [Project 1-1714] 63 XPM XDC files have been applied to the design.
+INFO: [Opt 31-138] Pushed 0 inverter(s) to 0 load pin(s).
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3204.156 ; gain = 0.000 ; free physical = 35659 ; free virtual = 57557
+INFO: [Project 1-111] Unisim Transformation Summary:
+  A total of 1040 instances were transformed.
+  DSP48E2 => DSP48E2 (DSP_ALU, DSP_A_B_DATA, DSP_C_DATA, DSP_MULTIPLIER, DSP_M_DATA, DSP_OUTPUT, DSP_PREADD, DSP_PREADD_DATA): 360 instances
+  RAM16X1D => RAM32X1D (RAMD32(x2)): 2 instances
+  RAM16X1S => RAM32X1S (RAMS32): 527 instances
+  RAM32M => RAM32M (RAMD32(x6), RAMS32(x2)): 6 instances
+  RAM32M16 => RAM32M16 (RAMD32(x14), RAMS32(x2)): 126 instances
+  RAM32X1D => RAM32X1D (RAMD32(x2)): 2 instances
+  RAM64M8 => RAM64M8 (RAMD64E(x8)): 16 instances
+  RAM64X1D => RAM64X1D (RAMD64E(x2)): 1 instance 
+
+50 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+link_design completed successfully
+link_design: Time (s): cpu = 00:00:26 ; elapsed = 00:00:26 . Memory (MB): peak = 3204.156 ; gain = 1387.582 ; free physical = 35660 ; free virtual = 57557
+Command: opt_design -directive Explore
+INFO: [Vivado_Tcl 4-136] Directive used for opt_design is: Explore
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+Running DRC as a precondition to command opt_design
+
+Starting DRC Task
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Project 1-461] DRC finished with 0 Errors
+INFO: [Project 1-462] Please refer to the DRC report (report_drc) for more information.
+
+Time (s): cpu = 00:00:02 ; elapsed = 00:00:00.88 . Memory (MB): peak = 3204.156 ; gain = 0.000 ; free physical = 35643 ; free virtual = 57540
+
+Starting Logic Optimization Task
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+
+Phase 1 Retarget
+INFO: [Opt 31-1287] Pulled Inverter top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/flow_control_loop_pipe_sequential_init_U/icmp_ln249_reg_4040[0]_i_1 into driver instance top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/flow_control_loop_pipe_sequential_init_U/icmp_ln249_reg_4040[0]_i_3, which resulted in an inversion of 3 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/flow_control_loop_pipe_sequential_init_U/ap_loop_exit_ready_pp0_iter1_reg_i_1 into driver instance top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/flow_control_loop_pipe_sequential_init_U/sf_fu_3196[0]_i_4, which resulted in an inversion of 4 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_StreamingDataWidthConverter_hls_0/inst/StreamingDataWidthConverter_Batch_32u_288u_7056u_U0/regslice_both_in0_V_U/icmp_ln557_reg_200[0]_i_1 into driver instance top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_StreamingDataWidthConverter_hls_0/inst/StreamingDataWidthConverter_Batch_32u_288u_7056u_U0/regslice_both_in0_V_U/icmp_ln557_reg_200[0]_i_3, which resulted in an inversion of 4 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_StreamingDataWidthConverter_hls_0/inst/StreamingDataWidthConverter_Batch_32u_288u_7056u_U0/regslice_both_in0_V_U/icmp_ln566_reg_210[0]_i_1 into driver instance top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_StreamingDataWidthConverter_hls_0/inst/StreamingDataWidthConverter_Batch_32u_288u_7056u_U0/regslice_both_in0_V_U/B_V_data_1_state[1]_i_3, which resulted in an inversion of 6 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/current_word_1[3]_i_1 into driver instance top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/s_axi_rvalid_INST_0_i_3, which resulted in an inversion of 2 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.USE_SPLIT.write_resp_inst/first_mi_word_i_2 into driver instance top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.USE_SPLIT.write_resp_inst/s_axi_bvalid_INST_0_i_1, which resulted in an inversion of 5 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/idma0/inst/StreamingDataflowPartition_0_IODMA_hls_0/inst/gmem_m_axi_U/bus_read/fifo_rctl/sect_addr_buf[63]_i_1 into driver instance top_i/idma0/inst/StreamingDataflowPartition_0_IODMA_hls_0/inst/gmem_m_axi_U/bus_read/fifo_rctl/state[1]_i_2, which resulted in an inversion of 17 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/smartconnect_0/inst/s00_entry_pipeline/s00_si_converter/inst/converter.wrap_narrow_inst/gen_thread_loop[0].r_payld_fifo/cmd_fifo/cmd_len_qq[7]_i_1 into driver instance top_i/smartconnect_0/inst/s00_entry_pipeline/s00_si_converter/inst/converter.wrap_narrow_inst/gen_thread_loop[0].r_payld_fifo/cmd_fifo/gen_pipelined.state[2]_i_3, which resulted in an inversion of 6 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/smartconnect_0/inst/s00_entry_pipeline/s00_si_converter/inst/converter.wrap_narrow_inst/w_payld_fifo/cmd_fifo/cmd_len_qq[7]_i_1__0 into driver instance top_i/smartconnect_0/inst/s00_entry_pipeline/s00_si_converter/inst/converter.wrap_narrow_inst/w_payld_fifo/cmd_fifo/gen_pipelined.state[2]_i_3__0, which resulted in an inversion of 6 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/smartconnect_0/inst/s01_entry_pipeline/s01_si_converter/inst/converter.wrap_narrow_inst/gen_thread_loop[0].r_payld_fifo/cmd_fifo/cmd_len_qq[7]_i_1 into driver instance top_i/smartconnect_0/inst/s01_entry_pipeline/s01_si_converter/inst/converter.wrap_narrow_inst/gen_thread_loop[0].r_payld_fifo/cmd_fifo/gen_pipelined.state[2]_i_3, which resulted in an inversion of 6 pins
+INFO: [Opt 31-1287] Pulled Inverter top_i/smartconnect_0/inst/s01_entry_pipeline/s01_si_converter/inst/converter.wrap_narrow_inst/w_payld_fifo/cmd_fifo/cmd_len_qq[7]_i_1__0 into driver instance top_i/smartconnect_0/inst/s01_entry_pipeline/s01_si_converter/inst/converter.wrap_narrow_inst/w_payld_fifo/cmd_fifo/gen_pipelined.state[2]_i_3__0, which resulted in an inversion of 6 pins
+INFO: [Opt 31-138] Pushed 75 inverter(s) to 3654 load pin(s).
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_10s_13_4_1_U567/MVAU_hls_1_mac_muladd_4ns_4s_10s_13_4_1_DSP48_5_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_9s_10_4_1_U322/MVAU_hls_1_mac_muladd_4ns_4s_9s_10_4_1_DSP48_2_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_9s_10_4_1_U323/MVAU_hls_1_mac_muladd_4ns_4s_9s_10_4_1_DSP48_2_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U568/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U569/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U570/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U571/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U572/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U573/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U574/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U575/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_10s_13_4_1_U576/MVAU_hls_1_mac_muladd_4s_4ns_10s_13_4_1_DSP48_6_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U325/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U326/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U328/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U329/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U331/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U332/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U334/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U335/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U337/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U338/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U340/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U341/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U343/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U344/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U346/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U347/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U349/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U350/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U352/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U354/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U356/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U358/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U362/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U366/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U368/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U370/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U372/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U374/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U376/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U378/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U380/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U382/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U384/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U386/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U388/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U390/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U392/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U394/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U396/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U398/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U400/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U402/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U404/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U406/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U408/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U410/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U412/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U414/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U416/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U418/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U420/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U422/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U424/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U426/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U428/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U430/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U432/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U434/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U436/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U438/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U440/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U442/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U444/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U446/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U448/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U450/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U452/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U454/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U456/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U458/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U460/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U462/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U464/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U466/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U468/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U470/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U472/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U474/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U476/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U478/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U480/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U482/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U484/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U486/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U488/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U490/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U492/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Opt 31-925] Fixed cascade connection for DSP: top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_9s_10_4_1_U494/MVAU_hls_1_mac_muladd_4s_4ns_9s_10_4_1_DSP48_3_U/p_reg_reg
+INFO: [Common 17-14] Message 'Opt 31-925' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+INFO: [Opt 31-49] Retargeted 0 cell(s).
+Phase 1 Retarget | Checksum: 1310fe528
+
+Time (s): cpu = 00:00:35 ; elapsed = 00:00:11 . Memory (MB): peak = 3944.289 ; gain = 584.875 ; free physical = 34859 ; free virtual = 56972
+INFO: [Opt 31-389] Phase Retarget created 564 cells and removed 971 cells
+INFO: [Opt 31-1021] In phase Retarget, 72 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+
+Phase 2 Constant propagation
+INFO: [Opt 31-138] Pushed 23 inverter(s) to 50 load pin(s).
+Phase 2 Constant propagation | Checksum: 901f0953
+
+Time (s): cpu = 00:00:37 ; elapsed = 00:00:12 . Memory (MB): peak = 3944.289 ; gain = 584.875 ; free physical = 34793 ; free virtual = 56978
+INFO: [Opt 31-389] Phase Constant propagation created 475 cells and removed 5898 cells
+INFO: [Opt 31-1021] In phase Constant propagation, 87 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+
+Phase 3 Sweep
+Phase 3 Sweep | Checksum: 167ac00ba
+
+Time (s): cpu = 00:00:39 ; elapsed = 00:00:14 . Memory (MB): peak = 3944.289 ; gain = 584.875 ; free physical = 34635 ; free virtual = 56876
+INFO: [Opt 31-389] Phase Sweep created 0 cells and removed 2219 cells
+INFO: [Opt 31-1021] In phase Sweep, 172 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+
+Phase 4 BUFG optimization
+INFO: [Opt 31-1077] Phase BUFG optimization inserted 0 global clock buffer(s) for CLOCK_LOW_FANOUT.
+Phase 4 BUFG optimization | Checksum: 167ac00ba
+
+Time (s): cpu = 00:00:42 ; elapsed = 00:00:15 . Memory (MB): peak = 3976.305 ; gain = 616.891 ; free physical = 34689 ; free virtual = 56909
+INFO: [Opt 31-662] Phase BUFG optimization created 0 cells of which 0 are BUFGs and removed 0 cells.
+
+Phase 5 Shift Register Optimization
+INFO: [Opt 31-1064] SRL Remap converted 0 SRLs to 0 registers and converted 0 registers of register chains to 0 SRLs
+Phase 5 Shift Register Optimization | Checksum: 167ac00ba
+
+Time (s): cpu = 00:00:42 ; elapsed = 00:00:15 . Memory (MB): peak = 3976.305 ; gain = 616.891 ; free physical = 34690 ; free virtual = 56914
+INFO: [Opt 31-389] Phase Shift Register Optimization created 0 cells and removed 0 cells
+INFO: [Opt 31-1555] control_set_opt supports Versal devices only, and device xczu3eg is unsupported
+
+Phase 6 Post Processing Netlist
+Phase 6 Post Processing Netlist | Checksum: e84c75f5
+
+Time (s): cpu = 00:00:42 ; elapsed = 00:00:16 . Memory (MB): peak = 3976.305 ; gain = 616.891 ; free physical = 34690 ; free virtual = 56910
+INFO: [Opt 31-389] Phase Post Processing Netlist created 0 cells and removed 0 cells
+INFO: [Opt 31-1021] In phase Post Processing Netlist, 78 netlist objects are constrained preventing optimization. Please run opt_design with -debug_log to get more detail. 
+Opt_design Change Summary
+=========================
+
+
+-------------------------------------------------------------------------------------------------------------------------
+|  Phase                        |  #Cells created  |  #Cells Removed  |  #Constrained objects preventing optimizations  |
+-------------------------------------------------------------------------------------------------------------------------
+|  Retarget                     |             564  |             971  |                                             72  |
+|  Constant propagation         |             475  |            5898  |                                             87  |
+|  Sweep                        |               0  |            2219  |                                            172  |
+|  BUFG optimization            |               0  |               0  |                                              0  |
+|  Shift Register Optimization  |               0  |               0  |                                              0  |
+|  Post Processing Netlist      |               0  |               0  |                                             78  |
+-------------------------------------------------------------------------------------------------------------------------
+
+
+
+Starting Connectivity Check Task
+
+Time (s): cpu = 00:00:00.1 ; elapsed = 00:00:00.11 . Memory (MB): peak = 3976.305 ; gain = 0.000 ; free physical = 34553 ; free virtual = 56825
+Ending Logic Optimization Task | Checksum: 913c5f7e
+
+Time (s): cpu = 00:00:45 ; elapsed = 00:00:18 . Memory (MB): peak = 3976.305 ; gain = 616.891 ; free physical = 34553 ; free virtual = 56825
+
+Starting Netlist Obfuscation Task
+Netlist sorting complete. Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3976.305 ; gain = 0.000 ; free physical = 34494 ; free virtual = 56766
+Ending Netlist Obfuscation Task | Checksum: 913c5f7e
+
+Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.01 . Memory (MB): peak = 3976.305 ; gain = 0.000 ; free physical = 34494 ; free virtual = 56766
+INFO: [Common 17-83] Releasing license: Implementation
+185 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+opt_design completed successfully
+opt_design: Time (s): cpu = 00:00:49 ; elapsed = 00:00:21 . Memory (MB): peak = 3976.305 ; gain = 772.148 ; free physical = 34496 ; free virtual = 56768
+INFO: [Timing 38-480] Writing timing data to binary archive.
+INFO: [Common 17-1381] The checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_opt.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:08 ; elapsed = 00:00:06 . Memory (MB): peak = 4024.328 ; gain = 48.023 ; free physical = 34686 ; free virtual = 56898
+INFO: [runtcl-4] Executing : report_drc -file top_wrapper_drc_opted.rpt -pb top_wrapper_drc_opted.pb -rpx top_wrapper_drc_opted.rpx
+Command: report_drc -file top_wrapper_drc_opted.rpt -pb top_wrapper_drc_opted.pb -rpx top_wrapper_drc_opted.rpx
+INFO: [IP_Flow 19-1839] IP Catalog is up to date.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 2-168] The results of DRC are in file /tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_drc_opted.rpt.
+report_drc completed successfully
+Command: place_design -directive ExtraTimingOpt
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+Running DRC as a precondition to command place_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+
+Starting Placer Task
+INFO: [Place 46-5] The placer was invoked with the 'ExtraTimingOpt' directive.
+INFO: [Place 30-611] Multithreading enabled for place_design using a maximum of 8 CPUs
+
+Phase 1 Placer Initialization
+
+Phase 1.1 Placer Initialization Netlist Sorting
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 4040.336 ; gain = 0.000 ; free physical = 34577 ; free virtual = 56783
+Phase 1.1 Placer Initialization Netlist Sorting | Checksum: 64c6edaa
+
+Time (s): cpu = 00:00:00.02 ; elapsed = 00:00:00.03 . Memory (MB): peak = 4040.336 ; gain = 0.000 ; free physical = 34577 ; free virtual = 56783
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00 . Memory (MB): peak = 4040.336 ; gain = 0.000 ; free physical = 34577 ; free virtual = 56783
+
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Phase 1.2 IO Placement/ Clock Placement/ Build Placer Device | Checksum: d2757b22
+
+Time (s): cpu = 00:00:45 ; elapsed = 00:00:27 . Memory (MB): peak = 4933.203 ; gain = 892.867 ; free physical = 32968 ; free virtual = 55248
+
+Phase 1.3 Build Placer Netlist Model
+Phase 1.3 Build Placer Netlist Model | Checksum: e3dea2c0
+
+Time (s): cpu = 00:01:16 ; elapsed = 00:00:40 . Memory (MB): peak = 5415.746 ; gain = 1375.410 ; free physical = 32888 ; free virtual = 55176
+
+Phase 1.4 Constrain Clocks/Macros
+Phase 1.4 Constrain Clocks/Macros | Checksum: e3dea2c0
+
+Time (s): cpu = 00:01:16 ; elapsed = 00:00:40 . Memory (MB): peak = 5415.746 ; gain = 1375.410 ; free physical = 32891 ; free virtual = 55178
+Phase 1 Placer Initialization | Checksum: e3dea2c0
+
+Time (s): cpu = 00:01:16 ; elapsed = 00:00:40 . Memory (MB): peak = 5415.746 ; gain = 1375.410 ; free physical = 32891 ; free virtual = 55178
+
+Phase 2 Global Placement
+
+Phase 2.1 Floorplanning
+
+Phase 2.1.1 Partition Driven Placement
+
+Phase 2.1.1.1 PBP: Partition Driven Placement
+Phase 2.1.1.1 PBP: Partition Driven Placement | Checksum: 1a8cedf63
+
+Time (s): cpu = 00:01:49 ; elapsed = 00:00:52 . Memory (MB): peak = 5495.785 ; gain = 1455.449 ; free physical = 32995 ; free virtual = 55295
+
+Phase 2.1.1.2 PBP: Clock Region Placement
+Phase 2.1.1.2 PBP: Clock Region Placement | Checksum: 1a8cedf63
+
+Time (s): cpu = 00:01:49 ; elapsed = 00:00:53 . Memory (MB): peak = 5495.785 ; gain = 1455.449 ; free physical = 32990 ; free virtual = 55290
+
+Phase 2.1.1.3 PBP: Discrete Incremental
+Phase 2.1.1.3 PBP: Discrete Incremental | Checksum: 15bd140f0
+
+Time (s): cpu = 00:01:50 ; elapsed = 00:00:53 . Memory (MB): peak = 5495.785 ; gain = 1455.449 ; free physical = 33020 ; free virtual = 55320
+
+Phase 2.1.1.4 PBP: Compute Congestion
+Phase 2.1.1.4 PBP: Compute Congestion | Checksum: 15bd140f0
+
+Time (s): cpu = 00:01:51 ; elapsed = 00:00:54 . Memory (MB): peak = 5542.148 ; gain = 1501.812 ; free physical = 33004 ; free virtual = 55302
+
+Phase 2.1.1.5 PBP: Macro Placement
+Phase 2.1.1.5 PBP: Macro Placement | Checksum: 11273a6bc
+
+Time (s): cpu = 00:01:53 ; elapsed = 00:00:56 . Memory (MB): peak = 5542.148 ; gain = 1501.812 ; free physical = 32950 ; free virtual = 55250
+
+Phase 2.1.1.6 PBP: UpdateTiming
+Phase 2.1.1.6 PBP: UpdateTiming | Checksum: 19a5ecad0
+
+Time (s): cpu = 00:01:58 ; elapsed = 00:00:58 . Memory (MB): peak = 5572.164 ; gain = 1531.828 ; free physical = 32944 ; free virtual = 55252
+
+Phase 2.1.1.7 PBP: Add part constraints
+Phase 2.1.1.7 PBP: Add part constraints | Checksum: 19a5ecad0
+
+Time (s): cpu = 00:01:58 ; elapsed = 00:00:58 . Memory (MB): peak = 5572.164 ; gain = 1531.828 ; free physical = 32953 ; free virtual = 55261
+Phase 2.1.1 Partition Driven Placement | Checksum: 19a5ecad0
+
+Time (s): cpu = 00:01:58 ; elapsed = 00:00:58 . Memory (MB): peak = 5572.164 ; gain = 1531.828 ; free physical = 32972 ; free virtual = 55279
+Phase 2.1 Floorplanning | Checksum: 1ad459fb3
+
+Time (s): cpu = 00:01:58 ; elapsed = 00:00:58 . Memory (MB): peak = 5572.164 ; gain = 1531.828 ; free physical = 32972 ; free virtual = 55280
+
+Phase 2.2 Update Timing before SLR Path Opt
+Phase 2.2 Update Timing before SLR Path Opt | Checksum: 1ad459fb3
+
+Time (s): cpu = 00:01:59 ; elapsed = 00:00:58 . Memory (MB): peak = 5572.164 ; gain = 1531.828 ; free physical = 32972 ; free virtual = 55280
+
+Phase 2.3 Post-Processing in Floorplanning
+Phase 2.3 Post-Processing in Floorplanning | Checksum: 1ad459fb3
+
+Time (s): cpu = 00:01:59 ; elapsed = 00:00:59 . Memory (MB): peak = 5572.164 ; gain = 1531.828 ; free physical = 32984 ; free virtual = 55294
+
+Phase 2.4 Global Placement Core
+
+Phase 2.4.1 UpdateTiming Before Physical Synthesis
+Phase 2.4.1 UpdateTiming Before Physical Synthesis | Checksum: 12288f666
+
+Time (s): cpu = 00:03:00 ; elapsed = 00:01:21 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 33245 ; free virtual = 55519
+
+Phase 2.4.2 Physical Synthesis In Placer
+INFO: [Physopt 32-1035] Found 0 LUTNM shape to break, 1412 LUT instances to create LUTNM shape
+INFO: [Physopt 32-1044] Break lutnm for timing: one critical 0, two critical 0, total 0, new lutff created 0
+INFO: [Physopt 32-1138] End 1 Pass. Optimized 622 nets or LUTs. Breaked 0 LUT, combined 622 existing LUTs and moved 0 existing LUT
+INFO: [Physopt 32-1030] Pass 1. Identified 33 candidate driver sets for equivalent driver rewiring.
+INFO: [Physopt 32-661] Optimized 27 nets.  Re-placed 157 instances.
+INFO: [Physopt 32-775] End 1 Pass. Optimized 27 nets or cells. Created 0 new cell, deleted 7 existing cells and moved 157 existing cells
+Netlist sorting complete. Time (s): cpu = 00:00:00.1 ; elapsed = 00:00:00.11 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 33327 ; free virtual = 55598
+INFO: [Physopt 32-65] No nets found for high-fanout optimization.
+INFO: [Physopt 32-232] Optimized 0 net. Created 0 new instance.
+INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
+INFO: [Physopt 32-670] No setup violation found.  DSP Register Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  Shift Register to Pipeline Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  Shift Register Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  BRAM Register Optimization was not performed.
+INFO: [Physopt 32-670] No setup violation found.  URAM Register Optimization was not performed.
+INFO: [Physopt 32-949] No candidate nets found for dynamic/static region interface net replication
+INFO: [Physopt 32-775] End 1 Pass. Optimized 0 net or cell. Created 0 new cell, deleted 0 existing cell and moved 0 existing cell
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 33338 ; free virtual = 55610
+
+Summary of Physical Synthesis Optimizations
+============================================
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+|  Optimization                                     |  Added Cells  |  Removed Cells  |  Optimized Cells/Nets  |  Dont Touch  |  Iterations  |  Elapsed   |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+|  LUT Combining                                    |            0  |            622  |                   622  |           0  |           1  |  00:00:01  |
+|  Retime                                           |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
+|  Equivalent Driver Rewiring                       |            0  |              7  |                    27  |           0  |           1  |  00:00:02  |
+|  Very High Fanout                                 |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
+|  DSP Register                                     |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  Shift Register to Pipeline                       |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  Shift Register                                   |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  BRAM Register                                    |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  URAM Register                                    |            0  |              0  |                     0  |           0  |           0  |  00:00:00  |
+|  Dynamic/Static Region Interface Net Replication  |            0  |              0  |                     0  |           0  |           1  |  00:00:00  |
+|  Total                                            |            0  |            629  |                   649  |           0  |           5  |  00:00:04  |
+-----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Phase 2.4.2 Physical Synthesis In Placer | Checksum: 203be558e
+
+Time (s): cpu = 00:03:11 ; elapsed = 00:01:29 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 33120 ; free virtual = 55392
+Phase 2.4 Global Placement Core | Checksum: 1bd62036c
+
+Time (s): cpu = 00:03:16 ; elapsed = 00:01:32 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 33089 ; free virtual = 55366
+Phase 2 Global Placement | Checksum: 1bd62036c
+
+Time (s): cpu = 00:03:16 ; elapsed = 00:01:32 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 33115 ; free virtual = 55395
+
+Phase 3 Detail Placement
+
+Phase 3.1 Commit Multi Column Macros
+Phase 3.1 Commit Multi Column Macros | Checksum: 1013218ba
+
+Time (s): cpu = 00:03:21 ; elapsed = 00:01:34 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 33057 ; free virtual = 55332
+
+Phase 3.2 Commit Most Macros & LUTRAMs
+Phase 3.2 Commit Most Macros & LUTRAMs | Checksum: 2179c1608
+
+Time (s): cpu = 00:03:29 ; elapsed = 00:01:37 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 33028 ; free virtual = 55301
+
+Phase 3.3 Small Shape DP
+
+Phase 3.3.1 Small Shape Clustering
+Phase 3.3.1 Small Shape Clustering | Checksum: 23598ff71
+
+Time (s): cpu = 00:03:31 ; elapsed = 00:01:38 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32940 ; free virtual = 55213
+
+Phase 3.3.2 Flow Legalize Slice Clusters
+Phase 3.3.2 Flow Legalize Slice Clusters | Checksum: 26b9a6cc0
+
+Time (s): cpu = 00:03:31 ; elapsed = 00:01:39 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32935 ; free virtual = 55208
+
+Phase 3.3.3 Slice Area Swap
+
+Phase 3.3.3.1 Slice Area Swap Initial
+Phase 3.3.3.1 Slice Area Swap Initial | Checksum: 2564c9ef7
+
+Time (s): cpu = 00:03:34 ; elapsed = 00:01:41 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32907 ; free virtual = 55184
+Phase 3.3.3 Slice Area Swap | Checksum: 2564c9ef7
+
+Time (s): cpu = 00:03:35 ; elapsed = 00:01:41 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32907 ; free virtual = 55184
+Phase 3.3 Small Shape DP | Checksum: 2603cddce
+
+Time (s): cpu = 00:03:47 ; elapsed = 00:01:45 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 31698 ; free virtual = 54421
+
+Phase 3.4 Re-assign LUT pins
+Phase 3.4 Re-assign LUT pins | Checksum: 1f71e1e79
+
+Time (s): cpu = 00:03:50 ; elapsed = 00:01:48 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32239 ; free virtual = 54825
+
+Phase 3.5 Pipeline Register Optimization
+Phase 3.5 Pipeline Register Optimization | Checksum: 13aaf4ae9
+
+Time (s): cpu = 00:03:50 ; elapsed = 00:01:49 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32244 ; free virtual = 54826
+Phase 3 Detail Placement | Checksum: 13aaf4ae9
+
+Time (s): cpu = 00:03:51 ; elapsed = 00:01:49 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32245 ; free virtual = 54831
+
+Phase 4 Post Placement Optimization and Clean-Up
+
+Phase 4.1 Post Commit Optimization
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+
+Phase 4.1.1 Post Placement Optimization
+Post Placement Optimization Initialization | Checksum: 18e5a17cc
+
+Phase 4.1.1.1 BUFG Insertion
+
+Starting Physical Synthesis Task
+
+Phase 1 Physical Synthesis Initialization
+INFO: [Physopt 32-721] Multithreading enabled for phys_opt_design using a maximum of 8 CPUs
+INFO: [Physopt 32-619] Estimated Timing Summary | WNS=3.926 | TNS=0.000 |
+Phase 1 Physical Synthesis Initialization | Checksum: 27ec4f27c
+
+Time (s): cpu = 00:00:04 ; elapsed = 00:00:00.85 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32451 ; free virtual = 55018
+INFO: [Place 46-35] Processed net top_i/rst_zynq_ps_100M/U0/peripheral_aresetn[0], inserted BUFG to drive 3335 loads.
+INFO: [Place 46-45] Replicated bufg driver top_i/rst_zynq_ps_100M/U0/ACTIVE_LOW_PR_OUT_DFF[0].FDRE_PER_N_replica
+INFO: [Place 46-35] Processed net top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/B_V_data_1_load_B, inserted BUFG to drive 2304 loads.
+INFO: [Place 46-35] Processed net top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/regslice_both_weights_V_U/B_V_data_1_payload_A[2303]_i_1_n_3, inserted BUFG to drive 2304 loads.
+INFO: [Place 46-35] Processed net top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/flow_control_loop_pipe_sequential_init_U/E[0], inserted BUFG to drive 2133 loads.
+INFO: [Place 46-35] Processed net top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U555/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/E[0], inserted BUFG to drive 1960 loads.
+INFO: [Place 46-35] Processed net top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U419/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/E[0], inserted BUFG to drive 1406 loads.
+INFO: [Place 46-56] BUFG insertion identified 6 candidate nets. Inserted BUFG: 6, Replicated BUFG Driver: 1, Skipped due to Placement/Routing Conflicts: 0, Skipped due to Timing Degradation: 0, Skipped due to Illegal Netlist: 0.
+Ending Physical Synthesis Task | Checksum: 1fdf5c2be
+
+Time (s): cpu = 00:00:11 ; elapsed = 00:00:04 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32497 ; free virtual = 55064
+Phase 4.1.1.1 BUFG Insertion | Checksum: 2040c88d1
+
+Time (s): cpu = 00:04:54 ; elapsed = 00:02:08 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32507 ; free virtual = 55074
+
+Phase 4.1.1.2 Post Placement Timing Optimization
+INFO: [Place 30-746] Post Placement Timing Summary WNS=3.926. For the most accurate timing information please run report_timing.
+Phase 4.1.1.2 Post Placement Timing Optimization | Checksum: 1878556fa
+
+Time (s): cpu = 00:04:55 ; elapsed = 00:02:09 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32515 ; free virtual = 55078
+
+Time (s): cpu = 00:04:55 ; elapsed = 00:02:09 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32515 ; free virtual = 55078
+Phase 4.1 Post Commit Optimization | Checksum: 1878556fa
+
+Time (s): cpu = 00:04:55 ; elapsed = 00:02:09 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32518 ; free virtual = 55081
+Netlist sorting complete. Time (s): cpu = 00:00:00.21 ; elapsed = 00:00:00.22 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32526 ; free virtual = 55081
+
+Phase 4.2 Post Placement Cleanup
+Phase 4.2 Post Placement Cleanup | Checksum: 1a5d47108
+
+Time (s): cpu = 00:04:59 ; elapsed = 00:02:12 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32542 ; free virtual = 55101
+
+Phase 4.3 Placer Reporting
+
+Phase 4.3.1 Print Estimated Congestion
+INFO: [Place 30-612] Post-Placement Estimated Congestion 
+ ________________________________________________________________________
+|           | Global Congestion | Long Congestion   | Short Congestion  |
+| Direction | Region Size       | Region Size       | Region Size       |
+|___________|___________________|___________________|___________________|
+|      North|                1x1|                1x1|                4x4|
+|___________|___________________|___________________|___________________|
+|      South|                1x1|                1x1|                1x1|
+|___________|___________________|___________________|___________________|
+|       East|                1x1|                1x1|                4x4|
+|___________|___________________|___________________|___________________|
+|       West|                4x4|                1x1|                8x8|
+|___________|___________________|___________________|___________________|
+
+Phase 4.3.1 Print Estimated Congestion | Checksum: 1a5d47108
+
+Time (s): cpu = 00:05:00 ; elapsed = 00:02:13 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32550 ; free virtual = 55105
+Phase 4.3 Placer Reporting | Checksum: 1a5d47108
+
+Time (s): cpu = 00:05:00 ; elapsed = 00:02:13 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32550 ; free virtual = 55105
+
+Phase 4.4 Final Placement Cleanup
+Netlist sorting complete. Time (s): cpu = 00:00:00.01 ; elapsed = 00:00:00.01 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32551 ; free virtual = 55105
+
+Time (s): cpu = 00:05:00 ; elapsed = 00:02:13 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32551 ; free virtual = 55105
+Phase 4 Post Placement Optimization and Clean-Up | Checksum: 155af205f
+
+Time (s): cpu = 00:05:01 ; elapsed = 00:02:14 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32549 ; free virtual = 55103
+Ending Placer Task | Checksum: 14ba39ca5
+
+Time (s): cpu = 00:05:01 ; elapsed = 00:02:14 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32550 ; free virtual = 55104
+INFO: [Common 17-83] Releasing license: Implementation
+231 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+place_design completed successfully
+place_design: Time (s): cpu = 00:05:05 ; elapsed = 00:02:15 . Memory (MB): peak = 5595.199 ; gain = 1554.863 ; free physical = 32684 ; free virtual = 55239
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:14 ; elapsed = 00:00:07 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32458 ; free virtual = 55166
+INFO: [Common 17-1381] The checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_placed.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:22 ; elapsed = 00:00:12 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32600 ; free virtual = 55193
+INFO: [runtcl-4] Executing : report_io -file top_wrapper_io_placed.rpt
+report_io: Time (s): cpu = 00:00:00.09 ; elapsed = 00:00:00.26 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32576 ; free virtual = 55161
+INFO: [runtcl-4] Executing : report_utilization -file top_wrapper_utilization_placed.rpt -pb top_wrapper_utilization_placed.pb
+INFO: [runtcl-4] Executing : report_control_sets -verbose -file top_wrapper_control_sets_placed.rpt
+report_control_sets: Time (s): cpu = 00:00:00.14 ; elapsed = 00:00:00.31 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32582 ; free virtual = 55169
+Command: phys_opt_design -directive AggressiveExplore
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Vivado_Tcl 4-137] Directive used for phys_opt_design is: AggressiveExplore
+
+Starting Initial Update Timing Task
+
+Time (s): cpu = 00:00:28 ; elapsed = 00:00:07 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32565 ; free virtual = 55159
+INFO: [Vivado_Tcl 4-383] Design worst setup slack (WNS) is greater than or equal to 0.000 ns. Skipping all physical synthesis optimizations.
+INFO: [Vivado_Tcl 4-232] No setup violation found. The netlist was not modified.
+INFO: [Common 17-83] Releasing license: Implementation
+241 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+phys_opt_design completed successfully
+phys_opt_design: Time (s): cpu = 00:00:30 ; elapsed = 00:00:08 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32565 ; free virtual = 55159
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:14 ; elapsed = 00:00:07 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31903 ; free virtual = 54656
+INFO: [Common 17-1381] The checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_physopt.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:17 ; elapsed = 00:00:10 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 32031 ; free virtual = 54680
+Command: route_design -directive NoTimingRelaxation
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+Running DRC as a precondition to command route_design
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 4-198] DRC finished with 0 Errors
+INFO: [Vivado_Tcl 4-199] Please refer to the DRC report (report_drc) for more information.
+
+
+Starting Routing Task
+INFO: [Route 35-270] Using Router directive 'NoTimingRelaxation'.
+INFO: [Route 35-254] Multithreading enabled for route_design using a maximum of 8 CPUs
+
+Phase 1 Build RT Design
+Checksum: PlaceDB: ed12a040 ConstDB: 0 ShapeSum: 4041e257 RouteDB: 1e4f1a0e
+Nodegraph reading from file.  Time (s): cpu = 00:00:00.32 ; elapsed = 00:00:00.34 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31896 ; free virtual = 54549
+Post Restoration Checksum: NetGraph: 27f95065 NumContArr: 5dd8bcda Constraints: 9d5dae1d Timing: 0
+Phase 1 Build RT Design | Checksum: 1232fbb5c
+
+Time (s): cpu = 00:00:35 ; elapsed = 00:00:07 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31950 ; free virtual = 54603
+
+Phase 2 Router Initialization
+
+Phase 2.1 Fix Topology Constraints
+Phase 2.1 Fix Topology Constraints | Checksum: 1232fbb5c
+
+Time (s): cpu = 00:00:36 ; elapsed = 00:00:08 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31870 ; free virtual = 54523
+
+Phase 2.2 Pre Route Cleanup
+Phase 2.2 Pre Route Cleanup | Checksum: 1232fbb5c
+
+Time (s): cpu = 00:00:36 ; elapsed = 00:00:08 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31865 ; free virtual = 54518
+
+Phase 2.3 Global Clock Net Routing
+ Number of Nodes with overlaps = 0
+Phase 2.3 Global Clock Net Routing | Checksum: 1d4989b05
+
+Time (s): cpu = 00:00:39 ; elapsed = 00:00:10 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31855 ; free virtual = 54512
+
+Phase 2.4 Update Timing
+Phase 2.4 Update Timing | Checksum: 2986ceb61
+
+Time (s): cpu = 00:01:02 ; elapsed = 00:00:20 . Memory (MB): peak = 5595.199 ; gain = 0.000 ; free physical = 31867 ; free virtual = 54534
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=4.047  | TNS=0.000  | WHS=-0.064 | THS=-26.682|
+
+
+Router Utilization Summary
+  Global Vertical Routing Utilization    = 0.00552276 %
+  Global Horizontal Routing Utilization  = 0.00164171 %
+  Routable Net Status*
+  *Does not include unroutable nets such as driverless and loadless.
+  Run report_route_status for detailed report.
+  Number of Failed Nets               = 64061
+    (Failed Nets is the sum of unrouted and partially routed nets)
+  Number of Unrouted Nets             = 56744
+  Number of Partially Routed Nets     = 7317
+  Number of Node Overlaps             = 9
+
+Phase 2 Router Initialization | Checksum: 2a3ccbc9a
+
+Time (s): cpu = 00:01:43 ; elapsed = 00:00:33 . Memory (MB): peak = 5626.188 ; gain = 30.988 ; free physical = 31265 ; free virtual = 53902
+
+Phase 3 Initial Routing
+
+Phase 3.1 Global Routing
+Phase 3.1 Global Routing | Checksum: 2a3ccbc9a
+
+Time (s): cpu = 00:01:43 ; elapsed = 00:00:33 . Memory (MB): peak = 5626.188 ; gain = 30.988 ; free physical = 31265 ; free virtual = 53901
+Phase 3 Initial Routing | Checksum: 1e32d3042
+
+Time (s): cpu = 00:01:59 ; elapsed = 00:00:38 . Memory (MB): peak = 5664.188 ; gain = 68.988 ; free physical = 31164 ; free virtual = 53783
+
+Phase 4 Rip-up And Reroute
+
+Phase 4.1 Global Iteration 0
+ Number of Nodes with overlaps = 9511
+ Number of Nodes with overlaps = 672
+ Number of Nodes with overlaps = 19
+ Number of Nodes with overlaps = 5
+ Number of Nodes with overlaps = 3
+ Number of Nodes with overlaps = 2
+ Number of Nodes with overlaps = 0
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.685  | TNS=0.000  | WHS=-0.014 | THS=-0.050 |
+
+Phase 4.1 Global Iteration 0 | Checksum: 2fd71d749
+
+Time (s): cpu = 00:03:24 ; elapsed = 00:01:12 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31478 ; free virtual = 54064
+
+Phase 4.2 Global Iteration 1
+ Number of Nodes with overlaps = 7
+ Number of Nodes with overlaps = 0
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.685  | TNS=0.000  | WHS=N/A    | THS=N/A    |
+
+Phase 4.2 Global Iteration 1 | Checksum: 2fa23cf17
+
+Time (s): cpu = 00:03:33 ; elapsed = 00:01:16 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31511 ; free virtual = 54068
+Phase 4 Rip-up And Reroute | Checksum: 2fa23cf17
+
+Time (s): cpu = 00:03:33 ; elapsed = 00:01:17 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31511 ; free virtual = 54067
+
+Phase 5 Delay and Skew Optimization
+
+Phase 5.1 Delay CleanUp
+
+Phase 5.1.1 Update Timing
+Phase 5.1.1 Update Timing | Checksum: 277af62b9
+
+Time (s): cpu = 00:03:51 ; elapsed = 00:01:22 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31512 ; free virtual = 54069
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.685  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+
+Phase 5.1.2 Update Timing
+Phase 5.1.2 Update Timing | Checksum: 27799f243
+
+Time (s): cpu = 00:04:05 ; elapsed = 00:01:26 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31493 ; free virtual = 54050
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.685  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+Phase 5.1 Delay CleanUp | Checksum: 27799f243
+
+Time (s): cpu = 00:04:05 ; elapsed = 00:01:26 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31499 ; free virtual = 54056
+
+Phase 5.2 Clock Skew Optimization
+Phase 5.2 Clock Skew Optimization | Checksum: 27799f243
+
+Time (s): cpu = 00:04:05 ; elapsed = 00:01:26 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31499 ; free virtual = 54056
+Phase 5 Delay and Skew Optimization | Checksum: 27799f243
+
+Time (s): cpu = 00:04:05 ; elapsed = 00:01:26 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31499 ; free virtual = 54056
+
+Phase 6 Post Hold Fix
+
+Phase 6.1 Hold Fix Iter
+
+Phase 6.1.1 Update Timing
+Phase 6.1.1 Update Timing | Checksum: 3337ad52e
+
+Time (s): cpu = 00:04:19 ; elapsed = 00:01:30 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31516 ; free virtual = 54072
+INFO: [Route 35-416] Intermediate Timing Summary | WNS=2.685  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+Phase 6.1 Hold Fix Iter | Checksum: 2b286ef56
+
+Time (s): cpu = 00:04:19 ; elapsed = 00:01:31 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31510 ; free virtual = 54067
+Phase 6 Post Hold Fix | Checksum: 2b286ef56
+
+Time (s): cpu = 00:04:19 ; elapsed = 00:01:31 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31510 ; free virtual = 54067
+
+Phase 7 Route finalize
+
+Router Utilization Summary
+  Global Vertical Routing Utilization    = 10.6093 %
+  Global Horizontal Routing Utilization  = 11.3278 %
+  Routable Net Status*
+  *Does not include unroutable nets such as driverless and loadless.
+  Run report_route_status for detailed report.
+  Number of Failed Nets               = 0
+    (Failed Nets is the sum of unrouted and partially routed nets)
+  Number of Unrouted Nets             = 0
+  Number of Partially Routed Nets     = 0
+  Number of Node Overlaps             = 0
+
+Phase 7 Route finalize | Checksum: 247afeed1
+
+Time (s): cpu = 00:04:20 ; elapsed = 00:01:31 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31502 ; free virtual = 54059
+
+Phase 8 Verifying routed nets
+
+ Verification completed successfully
+Phase 8 Verifying routed nets | Checksum: 247afeed1
+
+Time (s): cpu = 00:04:21 ; elapsed = 00:01:32 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31499 ; free virtual = 54055
+
+Phase 9 Depositing Routes
+Phase 9 Depositing Routes | Checksum: 247afeed1
+
+Time (s): cpu = 00:04:24 ; elapsed = 00:01:35 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31517 ; free virtual = 54073
+
+Phase 10 Resolve XTalk
+Phase 10 Resolve XTalk | Checksum: 247afeed1
+
+Time (s): cpu = 00:04:25 ; elapsed = 00:01:35 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31526 ; free virtual = 54083
+
+Phase 11 Route finalize
+Phase 11 Route finalize | Checksum: 247afeed1
+
+Time (s): cpu = 00:04:25 ; elapsed = 00:01:35 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31525 ; free virtual = 54082
+
+Phase 12 Post Router Timing
+INFO: [Route 35-20] Post Routing Timing Summary | WNS=2.686  | TNS=0.000  | WHS=0.010  | THS=0.000  |
+
+Phase 12 Post Router Timing | Checksum: 2d5cc649d
+
+Time (s): cpu = 00:05:01 ; elapsed = 00:01:43 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31472 ; free virtual = 54031
+INFO: [Route 35-61] The design met the timing requirement.
+INFO: [Route 35-16] Router Completed Successfully
+
+Time (s): cpu = 00:05:01 ; elapsed = 00:01:43 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31659 ; free virtual = 54218
+
+Routing Is Done.
+INFO: [Common 17-83] Releasing license: Implementation
+259 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+route_design completed successfully
+route_design: Time (s): cpu = 00:05:07 ; elapsed = 00:01:45 . Memory (MB): peak = 5680.195 ; gain = 84.996 ; free physical = 31661 ; free virtual = 54220
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:14 ; elapsed = 00:00:07 . Memory (MB): peak = 5680.195 ; gain = 0.000 ; free physical = 31449 ; free virtual = 54166
+INFO: [Common 17-1381] The checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_routed.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:26 ; elapsed = 00:00:15 . Memory (MB): peak = 5688.199 ; gain = 8.004 ; free physical = 31556 ; free virtual = 54163
+INFO: [runtcl-4] Executing : report_drc -file top_wrapper_drc_routed.rpt -pb top_wrapper_drc_routed.pb -rpx top_wrapper_drc_routed.rpx
+Command: report_drc -file top_wrapper_drc_routed.rpt -pb top_wrapper_drc_routed.pb -rpx top_wrapper_drc_routed.rpx
+INFO: [IP_Flow 19-1839] IP Catalog is up to date.
+INFO: [DRC 23-27] Running DRC with 8 threads
+INFO: [Vivado_Tcl 2-168] The results of DRC are in file /tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_drc_routed.rpt.
+report_drc completed successfully
+INFO: [runtcl-4] Executing : report_methodology -file top_wrapper_methodology_drc_routed.rpt -pb top_wrapper_methodology_drc_routed.pb -rpx top_wrapper_methodology_drc_routed.rpx
+Command: report_methodology -file top_wrapper_methodology_drc_routed.rpt -pb top_wrapper_methodology_drc_routed.pb -rpx top_wrapper_methodology_drc_routed.rpx
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+INFO: [DRC 23-133] Running Methodology with 8 threads
+INFO: [Vivado_Tcl 2-1520] The results of Report Methodology are in file /tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_methodology_drc_routed.rpt.
+report_methodology completed successfully
+report_methodology: Time (s): cpu = 00:00:39 ; elapsed = 00:00:09 . Memory (MB): peak = 5696.203 ; gain = 0.000 ; free physical = 31583 ; free virtual = 54190
+INFO: [runtcl-4] Executing : report_power -file top_wrapper_power_routed.rpt -pb top_wrapper_power_summary_routed.pb -rpx top_wrapper_power_routed.rpx
+Command: report_power -file top_wrapper_power_routed.rpt -pb top_wrapper_power_summary_routed.pb -rpx top_wrapper_power_routed.rpx
+INFO: [Timing 38-35] Done setting XDC timing constraints.
+Running Vector-less Activity Propagation...
+
+Finished Running Vector-less Activity Propagation
+271 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+report_power completed successfully
+report_power: Time (s): cpu = 00:00:37 ; elapsed = 00:00:11 . Memory (MB): peak = 5720.215 ; gain = 24.012 ; free physical = 31530 ; free virtual = 54153
+INFO: [runtcl-4] Executing : report_route_status -file top_wrapper_route_status.rpt -pb top_wrapper_route_status.pb
+INFO: [runtcl-4] Executing : report_timing_summary -max_paths 10 -report_unconstrained -file top_wrapper_timing_summary_routed.rpt -pb top_wrapper_timing_summary_routed.pb -rpx top_wrapper_timing_summary_routed.rpx
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -1, Temperature grade: E, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+INFO: [runtcl-4] Executing : report_incremental_reuse -file top_wrapper_incremental_reuse_routed.rpt
+INFO: [Vivado_Tcl 4-1062] Incremental flow is disabled. No incremental reuse Info to report.
+INFO: [runtcl-4] Executing : report_clock_utilization -file top_wrapper_clock_utilization_routed.rpt
+INFO: [runtcl-4] Executing : report_bus_skew -warn_on_violation -file top_wrapper_bus_skew_routed.rpt -pb top_wrapper_bus_skew_routed.pb -rpx top_wrapper_bus_skew_routed.rpx
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -1, Temperature grade: E, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+Command: phys_opt_design -directive AggressiveExplore
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Vivado_Tcl 4-241] Physical synthesis in post route mode ( 100.0% nets are fully routed)
+INFO: [Vivado_Tcl 4-137] Directive used for phys_opt_design is: AggressiveExplore
+
+Starting Initial Update Timing Task
+
+Time (s): cpu = 00:00:09 ; elapsed = 00:00:03 . Memory (MB): peak = 5720.215 ; gain = 0.000 ; free physical = 31548 ; free virtual = 54171
+INFO: [Vivado_Tcl 4-383] Design worst setup slack (WNS) is greater than or equal to 0.000 ns. Skipping all physical synthesis optimizations.
+INFO: [Vivado_Tcl 4-232] No setup violation found. The netlist was not modified.
+INFO: [Common 17-83] Releasing license: Implementation
+9 Infos, 0 Warnings, 0 Critical Warnings and 0 Errors encountered.
+phys_opt_design completed successfully
+INFO: [Timing 38-480] Writing timing data to binary archive.
+Writing XDEF routing.
+Writing XDEF routing logical nets.
+Writing XDEF routing special nets.
+Write XDEF Complete: Time (s): cpu = 00:00:15 ; elapsed = 00:00:07 . Memory (MB): peak = 5720.215 ; gain = 0.000 ; free physical = 31235 ; free virtual = 54017
+INFO: [Common 17-1381] The checkpoint '/tmp/finn_dev_samu/vivado_zynq_proj_itgr646u/finn_zynq_link.runs/impl_1/top_wrapper_postroute_physopt.dcp' has been generated.
+write_checkpoint: Time (s): cpu = 00:00:18 ; elapsed = 00:00:11 . Memory (MB): peak = 5720.215 ; gain = 0.000 ; free physical = 31421 ; free virtual = 54092
+INFO: [runtcl-4] Executing : report_timing_summary -max_paths 10 -report_unconstrained -warn_on_violation -file top_wrapper_timing_summary_postroute_physopted.rpt -pb top_wrapper_timing_summary_postroute_physopted.pb -rpx top_wrapper_timing_summary_postroute_physopted.rpx
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -1, Temperature grade: E, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+INFO: [runtcl-4] Executing : report_bus_skew -warn_on_violation -file top_wrapper_bus_skew_postroute_physopted.rpt -pb top_wrapper_bus_skew_postroute_physopted.pb -rpx top_wrapper_bus_skew_postroute_physopted.rpx
+INFO: [Timing 38-91] UpdateTimingParams: Speed grade: -1, Temperature grade: E, Delay Type: min_max.
+INFO: [Timing 38-191] Multithreading enabled for timing update using a maximum of 8 CPUs
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s01_nodes/s01_w_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s01_nodes/s01_w_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s01_nodes/s01_w_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s01_nodes/s01_w_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s01_nodes/s01_aw_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s01_nodes/s01_aw_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s01_nodes/s01_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s01_nodes/s01_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s00_nodes/s00_w_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s00_nodes/s00_w_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s00_nodes/s00_w_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s00_nodes/s00_w_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s00_nodes/s00_r_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s00_nodes/s00_r_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s00_nodes/s00_aw_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s00_nodes/s00_aw_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/s00_nodes/s00_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/s00_nodes/s00_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_w_node/inst/inst_si_handler/gen_si_handler.gen_request_fifos.gen_req_fifo[1].inst_req_fifo/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_w_node/inst/inst_si_handler/gen_si_handler.gen_request_fifos.gen_req_fifo[1].inst_req_fifo/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_w_node/inst/inst_si_handler/gen_si_handler.gen_request_fifos.gen_req_fifo[0].inst_req_fifo/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_w_node/inst/inst_si_handler/gen_si_handler.gen_request_fifos.gen_req_fifo[0].inst_req_fifo/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_w_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_w_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_r_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_r_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_r_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_r_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_b_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_b_node/inst/inst_mi_handler/gen_normal_area.gen_fifo_req.inst_fifo_req/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_aw_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_aw_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-167] Found XPM memory block top_i/smartconnect_0/inst/m00_nodes/m00_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst with a P_MEMORY_PRIMITIVE property set to distributed. A value of block is required. You will not be able to use the updatemem program to update the bitstream with new data for the top_i/smartconnect_0/inst/m00_nodes/m00_ar_node/inst/inst_mi_handler/gen_normal_area.inst_fifo_node_payld/gen_xpm_memory_fifo.inst_fifo/gen_mem_rep[0].inst_xpm_memory/xpm_memory_base_inst block.
+INFO: [Memdata 28-208] The XPM instance: <top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_StreamingFIFO_rtl_1/fifo/inst/gen_fifo.xpm_fifo_axis_inst/xpm_fifo_base_inst/gen_sdpram.xpm_memory_base_inst> is part of IP: <top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_StreamingFIFO_rtl_1/fifo>. This XPM instance will be excluded from the .mmi because updatemem is prohibited from making changes to an XPM that is part of an IP.
+Command: write_bitstream -force top_wrapper.bit
+Attempting to get a license for feature 'Implementation' and/or device 'xczu3eg'
+INFO: [Common 17-349] Got license for feature 'Implementation' and/or device 'xczu3eg'
+Running DRC as a precondition to command write_bitstream
+INFO: [IP_Flow 19-1839] IP Catalog is up to date.
+INFO: [DRC 23-27] Running DRC with 8 threads
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_8s_9_4_1_U193/MVAU_hls_1_mac_muladd_4ns_4s_8s_9_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_8s_9_4_1_U193/MVAU_hls_1_mac_muladd_4ns_4s_8s_9_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_8s_9_4_1_U194/MVAU_hls_1_mac_muladd_4ns_4s_8s_9_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_8s_9_4_1_U194/MVAU_hls_1_mac_muladd_4ns_4s_8s_9_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_8s_9_4_1_U321/MVAU_hls_1_mac_muladd_4ns_4s_8s_9_4_1_DSP48_0_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4ns_4s_8s_9_4_1_U321/MVAU_hls_1_mac_muladd_4ns_4s_8s_9_4_1_DSP48_0_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U353/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U353/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U357/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U357/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U361/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U361/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U365/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U365/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U369/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U369/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U373/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U373/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U377/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U377/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U381/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U381/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U385/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U385/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U389/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U389/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U393/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U393/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U397/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U397/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U401/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U401/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U405/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U405/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U409/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U409/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U413/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U413/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U417/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U417/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U421/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U421/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U425/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U425/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U429/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U429/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U433/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U433/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U437/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U437/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U441/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U441/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U445/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U445/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U449/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U449/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U453/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U453/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U457/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U457/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U461/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U461/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U465/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U465/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U469/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U469/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U473/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U473/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U477/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U477/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U481/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U481/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U485/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U485/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U489/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U489/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U493/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U493/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U497/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U497/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U501/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U501/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U505/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U505/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U509/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U509/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U513/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U513/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U517/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U517/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U521/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U521/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U525/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U525/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U529/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U529/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U533/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U533/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U537/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U537/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U541/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U541/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U545/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U545/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U549/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U549/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U553/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U553/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U557/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U557/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U561/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U561/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U565/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_13s_13_4_1_U565/MVAU_hls_1_mac_muladd_4s_4ns_13s_13_4_1_DSP48_4_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U195/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U195/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U196/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U196/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U197/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U197/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U198/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U198/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U199/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U199/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U200/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U200/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U201/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U201/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U202/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U202/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U203/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U203/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U204/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U204/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U205/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U205/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U206/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U206/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U207/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U207/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U208/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U208/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U209/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U209/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U210/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U210/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U211/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U211/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U212/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U212/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U213/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U213/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U214/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U214/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U215/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U215/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U216/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U216/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U217/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U217/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U219/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U219/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U221/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U221/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U222/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U222/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U223/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U223/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U224/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U224/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U225/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U225/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U226/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U226/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U227/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U227/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U228/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U228/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U229/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U229/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U230/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U230/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U231/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U231/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U232/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U232/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U233/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U233/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U234/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U234/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U235/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U235/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U236/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U236/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U237/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U237/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U238/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U238/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+WARNING: [DRC DPIP-2] Input pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U239/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg input top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_1/StreamingDataflowPartition_1_MVAU_hls_1/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_30/mac_muladd_4s_4ns_8s_9_4_1_U239/MVAU_hls_1_mac_muladd_4s_4ns_8s_9_4_1_DSP48_1_U/p_reg_reg/C[47:0] is not pipelined. Pipelining DSP48 input will improve performance.
+INFO: [Common 17-14] Message 'DRC DPIP-2' appears 100 times and further instances of the messages will be disabled. Use the Tcl command set_msg_config to change the current settings.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U21/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U21/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U23/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U23/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U24/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U24/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U25/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U25/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U27/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U27/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U28/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U28/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U29/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U29/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U31/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U31/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U32/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U32/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U33/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U33/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U35/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U35/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC DPOP-4] MREG Output pipelining: DSP top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U36/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg multiplier stage top_i/StreamingDataflowPartition_1/inst/StreamingDataflowPartition_1_MVAU_hls_0/StreamingDataflowPartition_1_MVAU_hls_0/inst/grp_Matrix_Vector_Activate_Stream_Batch_fu_150/mac_muladd_8s_4s_12s_13_4_1_U36/MVAU_hls_0_mac_muladd_8s_4s_12s_13_4_1_DSP48_0_U/p_reg_reg/P[47:0] is not pipelined (MREG=0). Pipelining the multiplier function will improve performance and will save significant power so it is suggested whenever possible to fully pipeline this function.  If this multiplier was inferred, it is suggested to describe an additional register stage after this function.  If there is no registered adder/accumulator following the multiply function, two pipeline stages are suggested to allow both the MREG and PREG registers to be used.  If the DSP48 was instantiated in the design, it is suggested to set both the MREG and PREG attributes to 1 when performing multiply functions.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A1' of cell top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O5=(A5)+((~A5)*(~A2)*A4)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A5' of cell top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O5=(A4)+((~A4)*(~A1)*A3)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC PDCN-1569] LUT equation term check: Used physical LUT pin 'A5' of cell top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1 (pin top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/gpregsm1.user_valid_i_1/I1) is not included in the LUT equation: 'O5=(A3)+((~A3)*(~A1)*A4)'. If this cell is a user instantiated LUT in the design, please remove connectivity to the pin or change the equation and/or INIT string of the LUT to prevent this issue. If the cell is inferred or IP created LUT, please regenerate the IP and/or resynthesize the design to attempt to correct the issue.
+WARNING: [DRC RTSTAT-10] No routable loads: 33 net(s) have no routable loads. The problem bus(es) and/or net(s) are top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/aempty_fwft_i, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/aempty_fwft_i, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.rd/gr1.gr1_int.rfwft/aempty_fwft_i, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/ngwrdrst.grst.rd_rst_reg[2:0], top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/ngwrdrst.grst.rd_rst_reg[2:0], top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/ngwrdrst.grst.rd_rst_reg[2:0], top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/ngwrdrst.grst.wr_rst_reg[2:0], top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/ngwrdrst.grst.wr_rst_reg[2:0], top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/rstblk/ngwrdrst.grst.wr_rst_reg[2:0], top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_afull_fb, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_afull_fb, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_afull_fb, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/USE_B_CHANNEL.cmd_b_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_afull_i, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_WRITE.write_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_afull_i, top_i/axi_interconnect_0/s00_couplers/auto_ds/inst/gen_downsizer.gen_simple_downsizer.axi_downsizer_inst/USE_READ.read_addr_inst/cmd_queue/inst/fifo_gen_inst/inst_fifo_gen/gconvfifo.rf/grf.rf/gntv_or_sync_fifo.gl0.wr/gwss.wsts/ram_afull_i... and (the first 15 of 21 listed).
+INFO: [Vivado 12-3199] DRC finished with 0 Errors, 202 Warnings
+INFO: [Vivado 12-3200] Please refer to the DRC report (report_drc) for more information.
+INFO: [Designutils 20-2272] Running write_bitstream with 8 threads.
+Loading data files...
+Loading site data...
+Loading route data...
+Processing options...
+Creating bitmap...
+Creating bitstream...
+Writing bitstream ./top_wrapper.bit...
+INFO: [Vivado 12-1842] Bitgen Completed Successfully.
+INFO: [Project 1-1876] WebTalk data collection is mandatory when using a ULT device. To see the specific WebTalk data collected for your design, open the usage_statistics_webtalk.html or usage_statistics_webtalk.xml file in the implementation directory.
+INFO: [Common 17-83] Releasing license: Implementation
+45 Infos, 116 Warnings, 0 Critical Warnings and 0 Errors encountered.
+write_bitstream completed successfully
+write_bitstream: Time (s): cpu = 00:00:31 ; elapsed = 00:00:24 . Memory (MB): peak = 5760.500 ; gain = 40.285 ; free physical = 31429 ; free virtual = 54115
+INFO: [Common 17-206] Exiting Vivado at Tue Jun  2 02:26:44 2026...

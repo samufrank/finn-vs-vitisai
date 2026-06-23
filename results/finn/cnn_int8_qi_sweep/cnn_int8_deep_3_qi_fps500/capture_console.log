@@ -1,0 +1,15 @@
+[capture_build] 2026-06-09T10:05:25Z BEGIN cnn_int8_deep_3_qi_fps500 onnx=cnn_mnist_deep_3_qi.onnx fps=500 timeout=10800s
+[capture_build] 2026-06-09T10:33:07Z END   cnn_int8_deep_3_qi_fps500 rc=0 elapsed=1662s last_step=step_deployment_package timed_out=False fit=True
+
+================ CAPTURE SUMMARY ================
+label        : cnn_int8_deep_3_qi_fps500
+verdict      : FIT
+last_step    : step_deployment_package
+elapsed_s    : 1662
+impl src dir : /tmp/finn_qi_int8_sweep/vivado_zynq_proj_lr751bhr/finn_zynq_link.runs/impl_1
+saved runme  : results/finn/cnn_int8_qi_sweep/cnn_int8_deep_3_qi_fps500/cnn_int8_deep_3_qi_fps500_impl_runme.log (97738 bytes)
+saved rpt    : results/finn/cnn_int8_qi_sweep/cnn_int8_deep_3_qi_fps500/cnn_int8_deep_3_qi_fps500_top_wrapper_clock_utilization_routed.rpt
+saved rpt    : results/finn/cnn_int8_qi_sweep/cnn_int8_deep_3_qi_fps500/cnn_int8_deep_3_qi_fps500_top_wrapper_utilization_placed.rpt
+verdict lines (0 matched):
+  (no verdict pattern matched — inspect the saved runme.log)
+================================================

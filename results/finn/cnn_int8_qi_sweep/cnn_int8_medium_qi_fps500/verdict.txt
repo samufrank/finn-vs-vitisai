@@ -1,0 +1,13 @@
+label: cnn_int8_medium_qi_fps500
+onnx: cnn_mnist_medium_qi.onnx
+target_fps: 500
+elapsed_s: 2709
+last_finn_step: step_deployment_package
+verdict: FIT
+LUT%: 87.93  (used 62046 of 70560)
+FF%: 42.73  (used 60307 of 141120)
+CARRY8%: 55.52  (used 4897 of 8820)
+BRAM%: 14.81  (used 32 of 216)
+DSP%: 9.72  (used 35 of 360)
+max_utilized_resource: LUT
+captured_files: capture_console.log, finn_build.log, impl_runme.log, report, top_wrapper_clock_utilization_routed.rpt, top_wrapper_utilization_placed.rpt

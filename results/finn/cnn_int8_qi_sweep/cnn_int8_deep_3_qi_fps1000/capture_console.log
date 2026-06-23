@@ -1,0 +1,16 @@
+[capture_build] moved stale output aside -> /home/samu/dev/CEN571-final/finn-vs-vitisai/finn/size_sweep_runs/cnn_int8_deep_3_qi_fps1000.stale
+[capture_build] 2026-06-09T14:41:40Z BEGIN cnn_int8_deep_3_qi_fps1000 onnx=cnn_mnist_deep_3_qi.onnx fps=1000 timeout=10800s
+[capture_build] 2026-06-09T15:19:52Z END   cnn_int8_deep_3_qi_fps1000 rc=0 elapsed=2293s last_step=step_deployment_package timed_out=False fit=True
+
+================ CAPTURE SUMMARY ================
+label        : cnn_int8_deep_3_qi_fps1000
+verdict      : FIT
+last_step    : step_deployment_package
+elapsed_s    : 2293
+impl src dir : /tmp/finn_qi_int8_sweep/vivado_zynq_proj_73tg7cfr/finn_zynq_link.runs/impl_1
+saved runme  : results/finn/cnn_int8_qi_sweep/cnn_int8_deep_3_qi_fps1000/cnn_int8_deep_3_qi_fps1000_impl_runme.log (112379 bytes)
+saved rpt    : results/finn/cnn_int8_qi_sweep/cnn_int8_deep_3_qi_fps1000/cnn_int8_deep_3_qi_fps1000_top_wrapper_clock_utilization_routed.rpt
+saved rpt    : results/finn/cnn_int8_qi_sweep/cnn_int8_deep_3_qi_fps1000/cnn_int8_deep_3_qi_fps1000_top_wrapper_utilization_placed.rpt
+verdict lines (0 matched):
+  (no verdict pattern matched — inspect the saved runme.log)
+================================================

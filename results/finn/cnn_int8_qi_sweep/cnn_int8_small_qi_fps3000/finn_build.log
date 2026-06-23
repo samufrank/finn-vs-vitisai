@@ -1,0 +1,96 @@
+Obtaining file:///home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/qonnx
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: attrs>=22.2.0 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (26.1.0)
+Requirement already satisfied: clize>=5.0.1 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (5.0.1)
+Requirement already satisfied: protobuf==3.20.3 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (3.20.3)
+Requirement already satisfied: bitstring>=3.1.7 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (3.1.7)
+Requirement already satisfied: numpy>=1.24.1 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (1.26.4)
+Requirement already satisfied: onnx>=1.13.0 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (1.16.0)
+Requirement already satisfied: onnxruntime>=1.16.1 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (1.18.1)
+Requirement already satisfied: sigtools>=4.0.1 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (4.0.1)
+Requirement already satisfied: toposort>=1.7.0 in /usr/local/lib/python3.10/dist-packages (from qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (1.7)
+Requirement already satisfied: docutils>=0.17.0 in /usr/local/lib/python3.10/dist-packages (from clize>=5.0.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (0.22.4)
+Requirement already satisfied: od in /usr/local/lib/python3.10/dist-packages (from clize>=5.0.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (2.0.2)
+Requirement already satisfied: flatbuffers in /usr/local/lib/python3.10/dist-packages (from onnxruntime>=1.16.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (25.12.19)
+Requirement already satisfied: sympy in /usr/local/lib/python3.10/dist-packages (from onnxruntime>=1.16.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (1.14.0)
+Requirement already satisfied: packaging in /usr/local/lib/python3.10/dist-packages (from onnxruntime>=1.16.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (26.0)
+Requirement already satisfied: coloredlogs in /usr/local/lib/python3.10/dist-packages (from onnxruntime>=1.16.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (15.0.1)
+Requirement already satisfied: humanfriendly>=9.1 in /usr/local/lib/python3.10/dist-packages (from coloredlogs->onnxruntime>=1.16.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (10.0)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.10/dist-packages (from sympy->onnxruntime>=1.16.1->qonnx==0.3.0.post1.dev100+gfd61cfe.d20260609) (1.3.0)
+Installing collected packages: qonnx
+  Running setup.py develop for qonnx
+Successfully installed qonnx
+Obtaining file:///home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/finn-experimental
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: deap in /usr/local/lib/python3.10/dist-packages (from finn-experimental==0.0.post0.dev49+g0724be2) (1.3.1)
+Requirement already satisfied: mip in /usr/local/lib/python3.10/dist-packages (from finn-experimental==0.0.post0.dev49+g0724be2) (1.13.0)
+Requirement already satisfied: networkx in /usr/local/lib/python3.10/dist-packages (from finn-experimental==0.0.post0.dev49+g0724be2) (2.8)
+Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from deap->finn-experimental==0.0.post0.dev49+g0724be2) (1.26.4)
+Requirement already satisfied: cffi in /usr/local/lib/python3.10/dist-packages (from mip->finn-experimental==0.0.post0.dev49+g0724be2) (2.0.0)
+Requirement already satisfied: pycparser in /usr/local/lib/python3.10/dist-packages (from cffi->mip->finn-experimental==0.0.post0.dev49+g0724be2) (3.0)
+Installing collected packages: finn-experimental
+  Running setup.py develop for finn-experimental
+Successfully installed finn-experimental
+Obtaining file:///home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/brevitas
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: dependencies==2.0.1 in /usr/local/lib/python3.10/dist-packages (from brevitas==0.10.0) (2.0.1)
+Requirement already satisfied: packaging in /usr/local/lib/python3.10/dist-packages (from brevitas==0.10.0) (26.0)
+Requirement already satisfied: setuptools in /usr/local/lib/python3.10/dist-packages (from brevitas==0.10.0) (68.2.2)
+Requirement already satisfied: sympy in /usr/local/lib/python3.10/dist-packages (from brevitas==0.10.0) (1.14.0)
+Requirement already satisfied: torch>=1.9.1 in /usr/local/lib/python3.10/dist-packages (from brevitas==0.10.0) (1.13.1+cu116)
+Requirement already satisfied: typing-extensions>=3.7.4 in /usr/local/lib/python3.10/dist-packages (from brevitas==0.10.0) (4.15.0)
+Collecting unfoldNd
+  Downloading unfoldNd-0.2.3-py3-none-any.whl (16 kB)
+Requirement already satisfied: mpmath<1.4,>=1.1.0 in /usr/local/lib/python3.10/dist-packages (from sympy->brevitas==0.10.0) (1.3.0)
+Requirement already satisfied: numpy in /usr/local/lib/python3.10/dist-packages (from unfoldNd->brevitas==0.10.0) (1.26.4)
+Installing collected packages: unfoldNd, brevitas
+  Running setup.py develop for brevitas
+Successfully installed brevitas unfoldNd-0.2.3
+Obtaining file:///home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo/deps/pyverilator
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Requirement already satisfied: tclwrapper>=0.0.1 in /usr/local/lib/python3.10/dist-packages (from PyVerilator==0.4.0) (0.0.1)
+Installing collected packages: PyVerilator
+  Running setup.py develop for PyVerilator
+Successfully installed PyVerilator
+Obtaining file:///home/samu/dev/CEN571-final/finn-vs-vitisai/finn-repo
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Installing collected packages: finn
+  Running setup.py develop for finn
+Successfully installed finn-0.0.0
+[0;33mWARNING: Unable to find /settings64.sh[0m
+[0;33mWARNING: Functionality dependent on Vitis will not be available.[0m
+[0;33mWARNING: If you need Vitis, ensure VITIS_PATH is set correctly and mounted into the Docker container.[0m
+[0;32mFound Vivado at /tools/Xilinx/Vivado/2022.2[0m
+[0;32mFound Vitis HLS at /tools/Xilinx/Vitis_HLS/2022.2[0m
+If you need to enable a beta device, ensure .Xilinx/HLS_init.tcl and/or .Xilinx/Vivado/Vivado_init.tcl are set correctly and mounted
+See https://docs.xilinx.com/r/en-US/ug835-vivado-tcl-commands/Tcl-Initialization-Scripts
+Building dataflow accelerator from cnn_mnist_small_qi.onnx
+Intermediate outputs will be generated in /tmp/finn_qi_int8_sweep
+Final outputs will be generated in /workspace/project/finn/size_sweep_runs/cnn_int8_small_qi_fps3000
+Build log is at /workspace/project/finn/size_sweep_runs/cnn_int8_small_qi_fps3000/build_dataflow.log
+Running step: step_qonnx_to_finn [1/19]
+Running step: step_tidy_up [2/19]
+Running step: step_streamline [3/19]
+Running step: step_convert_to_hw [4/19]
+Running step: step_create_dataflow_partition [5/19]
+Running step: step_specialize_layers [6/19]
+Running step: step_target_fps_parallelization [7/19]
+Running step: step_apply_folding_config [8/19]
+Running step: step_minimize_bit_width [9/19]
+Running step: step_generate_estimate_reports [10/19]
+Running step: step_hw_codegen [11/19]
+Running step: step_hw_ipgen [12/19]
+Running step: step_set_fifo_depths [13/19]
+Running step: step_create_stitched_ip [14/19]
+Running step: step_measure_rtlsim_performance [15/19]
+Running step: step_out_of_context_synthesis [16/19]
+Running step: step_synthesize_bitfile [17/19]
+Running step: step_make_pynq_driver [18/19]
+Running step: step_deployment_package [19/19]
+Completed successfully
+--- Build complete: /workspace/project/finn/size_sweep_runs/cnn_int8_small_qi_fps3000 ---
